@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SLOP.TOPS | Certified Sloppers Portfolio</title>
-<meta name="description" content="Six.. SEVEN! games made for my AI Programming class. Handcrafted, free-range, 100% slop Buy ONE GET one SLOPPYTOPPY only 5.">
+<meta name="description" content="EIGHT! games made for my AI Programming class. Handcrafted, free-range, 100% slop Buy ONE GET one SLOPPYTOPPY only 5.">
 <style>
 :root{
   --bg:#07070d; --panel:#12121c; --line:#262638;
@@ -420,6 +420,18 @@ body.rave{animation:rave 1.2s linear infinite}
     </div>
 
     <div class="game-card reveal">
+      <div class="badge">SLOP LVL RAGE</div>
+      <div class="game-banner game-4"><span>⚔️</span></div>
+      <div class="game-info">
+        <div class="tags"><span class="tag">Retro</span><span class="tag">Fan Game</span><span class="tag">Raid</span></div>
+        <h3>Arena of Ragebait</h3>
+        <p>Think you can handle some ragebait? Try it out in this arena where you swing sloppy swords and upgrade each kill...</p>
+        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>84%</span></div><div class="meter-bar"><div class="meter-fill" data-w="84"></div></div></div>
+        <a href="/arenaofragebait/" class="game-link">Play Game <span>→</span></a>
+      </div>
+    </div>
+
+    <div class="game-card reveal">
       <div class="badge">SLOP LVL 3</div>
       <div class="game-banner game-5"><span>👁️</span></div>
       <div class="game-info">
@@ -455,7 +467,7 @@ body.rave{animation:rave 1.2s linear infinite}
     <p>Extremely scientific data. Peer review pending.</p>
   </div>
   <div class="stats">
-    <div class="stat reveal"><div class="num" data-count="6">0</div><div class="lbl">Games Shipped</div></div>
+    <div class="stat reveal"><div class="num" data-count="8">0</div><div class="lbl">Games Shipped</div></div>
     <div class="stat reveal"><div class="num" data-count="67676767">0</div><div class="lbl">Prompts Sent</div></div>
     <div class="stat reveal"><div class="num" data-count="404">0</div><div class="lbl">Bugs "Fixed"</div></div>
     <div class="stat reveal"><div class="num" data-count="67" data-suffix="%">0</div><div class="lbl">Slop Purity</div></div>
@@ -916,7 +928,7 @@ body.rave{animation:rave 1.2s linear infinite}
   type();
 
   /* random game */
-  var games=['/hollowdeep/','/brainrotarena/','/brainrotkarts/','/warcraftatari/','/nightshift/','/hauntedcollector/'];
+  var games=['/hollowdeep/','/brainrotarena/','/brainrotkarts/','/warcraftatari/','/arenaofragebait/', '/nightshift/','/hauntedcollector/'];
   $('#randomBtn').addEventListener('click',function(){
     toast('Rolling the slop dice... 🎲');
     setTimeout(function(){location.href=games[Math.floor(Math.random()*games.length)]},900);
