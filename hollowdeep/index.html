@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#07090f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2307090f%27/%3E%3Cpath d=%27M7 8h18L16 27z%27 fill=%27%23e7c36a%27/%3E%3C/svg%3E">
+<title>Hollowdeep</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage"></div>
+  <div id="floats"></div>
+  <div id="tip"></div>
+  <div id="vig"></div>
+  <div id="hud" hidden>
+    <div id="unit">
+      <div class="u-top"><span id="uName"></span><span id="uFloor"></span></div>
+      <div class="bar hp"><i class="hpf" id="hpFill"></i><i class="sh" id="shFill"></i><b id="hpTxt"></b></div>
+      <div class="bar pw"><i id="pwFill"></i></div>
+      <div class="bar xp"><i id="xpFill"></i><b id="xpTxt"></b></div>
+      <div class="u-gold"><span id="goldBox"></span><span id="trk"></span></div>
+      <div id="p2box" hidden><div class="u-top"><span id="p2n"></span><span id="p2t"></span></div><div class="bar hp p2"><i class="hpf" id="p2f"></i></div></div>
+    </div>
+    <div id="info"><div id="eFloor"></div><div id="eLeft"></div></div>
+    <div id="powers"></div>
+    <div id="bossbar" hidden><div id="bbName"></div><div class="bbb"><i id="bbGhost"></i><i id="bbFill"></i><u></u><b id="bbTxt"></b></div></div>
+    <div id="banner"></div>
+    <div id="hint"></div>
+    <div id="bar"></div>
+    <div id="meter"><div class="mt"><button type="button" data-m="dmg" class="on">Damage</button><button type="button" data-m="heal">Healing</button><button type="button" data-m="taken">Taken</button><button type="button" id="mreset" title="Reset meter">Reset</button><button type="button" id="mhide" title="Show or hide">–</button></div><div class="mh" id="mhead"></div><div class="mrows" id="mrows"></div></div>
+    <div id="tbtn"><button class="btn" id="tbtnB" type="button">Spells &amp; Talents (N)</button><button class="btn" id="mtogB" type="button">Meter</button><button class="btn" id="fsB" type="button">Fullscreen</button></div>
+    <div id="joy"><i></i></div>
+    <div id="toast"></div>
+    <div id="rot">Turn your device sideways for the best view</div>
+  </div>
+  <div id="screen"><div class="panel" id="panel"></div></div>
+</div>
+
+<script src="lib.js"></script>
+<script src="art/manifest.js"></script>
+<script src="art/settings.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

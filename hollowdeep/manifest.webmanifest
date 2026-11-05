@@ -1,0 +1,9 @@
+{
+  "name": "Hollowdeep",
+  "short_name": "Hollowdeep",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#07090f",
+  "theme_color": "#07090f"
+}

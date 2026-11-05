@@ -1,0 +1,1 @@
+window.HD_ART_SETTINGS={};

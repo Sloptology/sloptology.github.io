@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#07060d">
+<link rel="manifest" href="manifest.webmanifest">
+<title>WARCRAFT: ATARI - an unofficial fan game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div class="brand"><span class="stripes"><i></i><i></i><i></i><i></i></span><b>WARCRAFT: ATARI</b></div>
+    <div id="progress" aria-label="Boss progress"></div>
+    <div class="tools">
+      <button id="roomchip" class="online-only" type="button" title="Copy invite link">ROOM <b id="roomcode">----</b></button>
+      <button id="btn-pause" type="button">PAUSE</button>
+      <button id="btn-mute" type="button">SOUND ON</button>
+      <button id="btn-crt" type="button">CRT ON</button>
+      <button id="btn-full" type="button">FULL</button>
+      <button id="btn-quit" type="button">MENU</button>
+      <button id="btn-leave" type="button">LEAVE</button>
+    </div>
+  </header>
+
+  <main id="stage">
+    <section id="lobby" class="panel" hidden>
+      <div class="menu-inner">
+        <h1 class="logo" aria-label="Warcraft: Atari">WARCRAFT<small>: ATARI</small></h1>
+        <p class="tag">AN UNOFFICIAL FAN GAME &middot; 2 PLAYER CO-OP &middot; 3 RAIDS &middot; 12 CLASSES</p>
+        <label class="field">YOUR NAME
+          <input id="name" type="text" maxlength="12" autocomplete="nickname" autocapitalize="characters" spellcheck="false" placeholder="ENTER NAME">
+        </label>
+        <div class="lobby-grid">
+          <div class="card online-only">
+            <h3>QUICK MATCH</h3>
+            <p>PAIR UP WITH A RANDOM PLAYER.</p>
+            <button id="l-match" type="button" class="big">FIND A PARTNER</button>
+          </div>
+          <div class="card online-only">
+            <h3>PLAY WITH A FRIEND</h3>
+            <p>CREATE A GAME AND SHARE ITS CODE, OR ENTER A FRIEND'S CODE.</p>
+            <button id="l-create" type="button" class="big">CREATE GAME</button>
+            <div class="joinrow">
+              <input id="code" type="text" maxlength="4" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="CODE">
+              <button id="l-join" type="button">JOIN</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>THIS DEVICE</h3>
+            <p>TWO PLAYERS ON ONE KEYBOARD, OR PLAY SOLO.</p>
+            <button id="l-local" type="button" class="big">LOCAL CO-OP / SOLO</button>
+            <button id="l-board" type="button">LEADERBOARD</button>
+          </div>
+        </div>
+        <div id="mm" hidden>
+          <p id="mm-text" class="blink">SEARCHING FOR A PARTNER...</p>
+          <p id="mm-sub" class="dim"></p>
+          <div class="menu-btns"><button id="mm-cancel" type="button">CANCEL</button><button id="mm-solo" type="button" hidden>START SOLO INSTEAD</button></div>
+        </div>
+        <p class="hint" id="lobby-msg"></p>
+        <p class="dim online-only" id="lobby-stats"></p>
+        <p class="legal">WARCRAFT: ATARI IS A FREE, NON-COMMERCIAL FAN-MADE TRIBUTE. IT IS NOT AFFILIATED WITH, ENDORSED BY OR SPONSORED BY BLIZZARD ENTERTAINMENT. WORLD OF WARCRAFT, WARCRAFT AND ALL RELATED NAMES, CHARACTERS AND SETTINGS ARE TRADEMARKS OR PROPERTY OF BLIZZARD ENTERTAINMENT, INC. ALL ART AND SOUND HERE ARE ORIGINAL PIXEL DRAWINGS AND SYNTHESIZED TONES. NO BLIZZARD ASSETS ARE USED.</p>
+      </div>
+    </section>
+
+    <section id="board" class="panel" hidden>
+      <div class="menu-inner">
+        <h2 class="bh">LEADERBOARD</h2>
+        <div class="chips" id="board-filters">
+          <button type="button" data-f="all" class="on">ALL</button>
+          <button type="button" data-f="win">WINS</button>
+          <button type="button" data-f="duo">DUOS</button>
+          <button type="button" data-f="solo">SOLO</button>
+        </div>
+        <div id="board-table" class="tablewrap"></div>
+        <div class="menu-btns"><button id="board-back" type="button">BACK</button></div>
+      </div>
+    </section>
+
+    <div id="room" hidden>
+      <section id="menu">
+        <div class="menu-inner">
+          <div id="roombar"><span>GAME CODE <b id="rb-code">----</b></span><button id="rb-copy" class="online-only" type="button">COPY INVITE LINK</button><span id="rb-who" class="dim"></span></div>
+          <h3 class="sect">1. CHOOSE A RAID <small class="dim" id="raid-note"></small></h3>
+          <div id="raidsel" class="raidsel"></div>
+          <h3 class="sect">2. CHOOSE A CHARACTER <small class="dim">PROGRESS IS SAVED. DYING NEVER DELETES A CHARACTER.</small></h3>
+          <div id="chars" class="chars">
+            <div id="clist" class="clist"></div>
+            <form id="cform" class="cform" autocomplete="off">
+              <input id="cname" type="text" maxlength="12" placeholder="NEW CHARACTER NAME" autocapitalize="characters" spellcheck="false">
+              <select id="ccls" aria-label="Class"></select>
+              <button id="cnew" type="submit">CREATE</button>
+              <span id="cmsg" class="hint"></span>
+            </form>
+            <details class="keys"><summary>PROFILE KEY (MOVE YOUR CHARACTERS TO ANOTHER DEVICE)</summary>
+              <div class="cform"><input id="pkey" type="text" spellcheck="false" autocomplete="off"><button id="pkset" type="button">USE THIS KEY</button></div>
+              <div class="dim">YOUR CHARACTERS ARE STORED ON THE SERVER UNDER THIS KEY. THERE ARE NO ACCOUNTS: ANYONE WITH THE KEY CAN PLAY AND DELETE YOUR CHARACTERS. KEEP IT PRIVATE.</div>
+            </details>
+          </div>
+          <h3 class="sect">OR PLAY AS A GUEST <small class="dim">PICK A CLASS. NO XP, NO TALENTS.</small></h3>
+          <div id="grid" class="grid" role="listbox" aria-label="Classes"></div>
+          <div class="picks">
+            <article class="pick" id="pick0"></article>
+            <article class="pick" id="pick1"></article>
+          </div>
+          <div class="menu-btns">
+            <button id="m-ready0" type="button">P1 READY</button>
+            <button id="m-ready1" type="button">P2 READY</button>
+            <button id="m-join" type="button">ADD PLAYER 2</button>
+          </div>
+          <p class="hint" id="menu-hint"></p>
+          <details class="keys" open>
+            <summary>CONTROLS</summary>
+            <div class="keygrid">
+              <div><b class="c0">KEYS A</b> MOVE <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> SPELLS <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> POTIONS <kbd>Q</kbd><kbd>E</kbd> INTERACT <kbd>F</kbd> READY <kbd>SPACE</kbd></div>
+              <div><b class="c1">KEYS B</b> MOVE <kbd>&larr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd> SPELLS <kbd>7</kbd><kbd>8</kbd><kbd>9</kbd><kbd>0</kbd> POTIONS <kbd>-</kbd><kbd>=</kbd> INTERACT <kbd>/</kbd> READY <kbd>ENTER</kbd></div>
+              <div class="dim">ONLINE OR SOLO, EITHER KEY SET WORKS FOR YOUR PLAYER. IN LOCAL CO-OP P1 AND P2 SPLIT THE KEYBOARD. INTERACT EQUIPS, SWAPS AND BUYS. READY IS ONLY USED IN THIS MENU AND ON THE RESULTS SCREEN. WALK UP THE GATE TO LEAVE A ROOM. GAMEPAD: STICK MOVE, A B X Y SPELLS, LB RB POTIONS, TRIGGERS INTERACT, START READY. <kbd>T</kbd> CHAT. <kbd>ESC</kbd> PAUSE. <kbd>M</kbd> MUTE.</div>
+            </div>
+          </details>
+        </div>
+      </section>
+    <div id="screen" hidden>
+      <canvas id="cv" width="320" height="192"></canvas>
+      <div id="crt"></div>
+      <div id="tips" aria-hidden="true"></div>
+      <div id="feed" aria-hidden="true"></div>
+
+      <div id="end" class="overlay" hidden>
+        <div class="end-inner">
+          <h2 id="end-title"></h2>
+          <p id="end-sub"></p>
+          <div id="end-scores"></div>
+          <p class="blink">PRESS SPACE OR ENTER</p>
+          <div class="menu-btns"><button id="end-btn" type="button">BACK TO MENU</button><button id="end-board" type="button">LEADERBOARD</button></div>
+        </div>
+      </div>
+
+    </div>
+
+    <section id="drops" aria-live="polite"></section>
+    <section id="hud" hidden>
+      <article class="pl" id="pl0"></article>
+      <article class="pl" id="pl1"></article>
+    </section>
+    <section id="log" aria-live="polite"></section>
+    <section id="chat" class="online-only">
+      <div id="chatlog" aria-live="polite"></div>
+      <form id="chatform" autocomplete="off">
+        <input id="chatin" type="text" maxlength="120" placeholder="CHAT (PRESS T)" enterkeyhint="send" autocomplete="off">
+        <button type="submit">SEND</button>
+        <button type="button" id="chatclose" class="tonly">X</button>
+      </form>
+    </section>
+    </div>
+  </main>
+</div>
+<div id="touch" hidden>
+  <div id="tstat"></div>
+  <div id="ttop">
+    <button type="button" id="t-pause" class="tbtn">PAUSE</button>
+    <button type="button" id="t-gear" class="tbtn">GEAR</button>
+    <button type="button" id="t-chat" class="tbtn online-only">CHAT</button>
+    <button type="button" id="t-sound" class="tbtn">SND</button>
+    <button type="button" id="t-full" class="tbtn">FULL</button>
+    <button type="button" id="t-menu" class="tbtn">MENU</button>
+  </div>
+  <div id="joy"><div id="knob"></div></div>
+  <div id="tbtns">
+    <button type="button" class="tsp" data-act="s1"><b></b><u></u><s></s></button>
+    <button type="button" class="tsp" data-act="s2"><b></b><u></u><s></s></button>
+    <button type="button" class="tsp" data-act="s3"><b></b><u></u><s></s></button>
+    <button type="button" class="tsp" data-act="s4"><b></b><u></u><s></s></button>
+    <button type="button" class="tcn" data-act="c1"><b>-</b></button>
+    <button type="button" class="tcn" data-act="c2"><b>-</b></button>
+    <button type="button" id="t-use" class="tuse" data-act="use">USE</button>
+  </div>
+</div>
+<div id="rotate" hidden><div class="end-inner"><div class="phone"></div><h2>ROTATE YOUR DEVICE</h2><p>WARCRAFT: ATARI PLAYS IN LANDSCAPE. TURN YOUR PHONE SIDEWAYS, THEN TAP FULL FOR FULL SCREEN.</p></div></div>
+<div id="gear" hidden></div>
+<div id="tal" class="overlay" hidden><div class="tal-inner" id="tal-inner"></div></div>
+<div id="toast" hidden></div>
+<div id="conn" hidden><div class="end-inner"><h2>NO SIGNAL</h2><p>Waiting for the game server...</p></div></div>
+<script src="config.js"></script>
+<script src="local.js"></script>
+<script src="audio.js"></script>
+<script src="sprites.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

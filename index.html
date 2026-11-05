@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLOP.TOPS | Certified Sloppers Portfolio</title>
+<meta name="description" content="Six.. SEVEN! games made for my AI Programming class. Handcrafted, free-range, 100% slop Buy ONE GET one SLOPPYTOPPY only 5.">
+<style>
+:root{
+  --bg:#07070d; --panel:#12121c; --line:#262638;
+  --purple:#8b5cf6; --lav:#c4b5fd; --pink:#f43f9d; --lime:#a3e635; --cyan:#22d3ee; --amber:#fbbf24;
+  --text:#fff; --muted:#9a9ab0;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Segoe UI',system-ui,Arial,sans-serif;
+  background:var(--bg); color:var(--text); line-height:1.6; overflow-x:hidden;
+}
+body::before{ /* scrolling grid */
+  content:""; position:fixed; inset:0; z-index:-2;
+  background-image:
+    linear-gradient(rgba(139,92,246,.07) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(139,92,246,.07) 1px,transparent 1px);
+  background-size:48px 48px; animation:grid 12s linear infinite;
+}
+body::after{ /* scanlines + vignette */
+  content:""; position:fixed; inset:0; z-index:100; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px),
+    radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%);
+}
+@keyframes grid{to{background-position:48px 48px}}
+a{color:inherit}
+
+/* progress bar */
+#progress{position:fixed;top:0;left:0;height:4px;width:0;z-index:200;
+  background:linear-gradient(90deg,var(--pink),var(--purple),var(--cyan));box-shadow:0 0 12px var(--purple)}
+
+/* HEADER */
+header{
+  position:sticky;top:0;z-index:50;padding:16px 8%;
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(7,7,13,.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+}
+.logo{font-size:1.3rem;font-weight:800;color:var(--lav);letter-spacing:3px;text-decoration:none;font-family:'Courier New',monospace}
+.logo b{color:var(--pink)}
+nav a{color:var(--muted);text-decoration:none;margin-left:25px;position:relative;transition:.3s}
+nav a::after{content:"";position:absolute;left:0;bottom:-4px;height:2px;width:0;background:var(--pink);transition:.3s}
+nav a:hover{color:#fff}nav a:hover::after{width:100%}
+
+/* HERO */
+.hero{position:relative;text-align:center;padding:110px 20px 90px;overflow:hidden;
+  background:radial-gradient(ellipse at top,#2c2050 0%,transparent 65%)}
+.hero-tag{display:inline-block;color:var(--lime);border:1px solid var(--lime);padding:4px 14px;border-radius:99px;
+  text-transform:uppercase;letter-spacing:4px;font-size:.72rem;margin-bottom:26px;font-family:'Courier New',monospace}
+.hero-tag::before{content:"● ";animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.hero h1{font-size:clamp(2.6rem,8vw,6rem);line-height:1.02;margin-bottom:26px;font-weight:900;letter-spacing:-2px}
+.glitch{position:relative;display:inline-block;color:var(--lav)}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;left:0;top:0;width:100%;overflow:hidden}
+.glitch::before{color:var(--pink);transform:translate(3px,0);clip-path:inset(0 0 55% 0);animation:gl1 2.4s infinite steps(1)}
+.glitch::after{color:var(--cyan);transform:translate(-3px,0);clip-path:inset(55% 0 0 0);animation:gl2 2.1s infinite steps(1)}
+@keyframes gl1{0%,88%{transform:translate(0)}90%{transform:translate(-6px,2px)}94%{transform:translate(5px,-2px)}100%{transform:translate(0)}}
+@keyframes gl2{0%,80%{transform:translate(0)}83%{transform:translate(6px,-2px)}87%{transform:translate(-5px,2px)}100%{transform:translate(0)}}
+.hero p{color:var(--muted);max-width:620px;margin:0 auto 14px;font-size:1.1rem}
+.typed{color:var(--lime);font-family:'Courier New',monospace;min-height:1.6em;margin-bottom:30px}
+.typed::after{content:"▋";animation:blink .8s steps(2) infinite}
+.btn-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:14px 30px;border-radius:8px;font-weight:800;text-decoration:none;transition:.25s;border:2px solid transparent;cursor:pointer;font-size:1rem;font-family:inherit}
+.btn.primary{background:var(--purple);color:#fff;box-shadow:0 6px 0 #5b34c4}
+.btn.primary:hover{transform:translateY(-3px);box-shadow:0 9px 0 #5b34c4;background:#9b72ff}
+.btn.primary:active{transform:translateY(4px);box-shadow:0 2px 0 #5b34c4}
+.btn.ghost{border-color:var(--pink);color:var(--pink);background:transparent}
+.btn.ghost:hover{background:var(--pink);color:#fff;transform:rotate(-2deg) scale(1.05)}
+.floaty{position:absolute;font-size:2.2rem;opacity:.35;animation:float 7s ease-in-out infinite;user-select:none}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-26px) rotate(10deg)}}
+
+/* MARQUEE */
+.marquee{overflow:hidden;border-block:1px solid var(--line);background:#0d0d17;padding:12px 0;transform:rotate(-1deg);margin:10px -10px}
+.marquee.alt{transform:rotate(1deg);background:var(--purple)}
+.track{display:flex;gap:50px;width:max-content;animation:scroll 28s linear infinite;
+  font-family:'Courier New',monospace;font-weight:800;text-transform:uppercase;letter-spacing:3px;font-size:.9rem;color:var(--lav)}
+.marquee.alt .track{animation-direction:reverse;color:#fff}
+@keyframes scroll{to{transform:translateX(-50%)}}
+
+/* SECTIONS */
+section{padding:80px 8%;max-width:1400px;margin:auto}
+.section-heading{margin-bottom:44px}
+.section-heading h2{font-size:clamp(1.9rem,4vw,2.8rem);margin-bottom:8px;font-weight:900}
+.section-heading h2 span{color:var(--pink)}
+.section-heading p{color:var(--muted)}
+
+/* GAME CARDS */
+.game-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:28px}
+.game-card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  transition:transform .15s,border-color .3s,box-shadow .3s;transform-style:preserve-3d;will-change:transform}
+.game-card:hover{border-color:var(--purple);box-shadow:0 16px 50px rgba(139,92,246,.25)}
+.badge{position:absolute;top:14px;right:14px;z-index:2;background:#000a;border:1px solid var(--lime);color:var(--lime);
+  font-size:.68rem;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:99px;font-family:'Courier New',monospace;transform:rotate(4deg)}
+.game-banner{height:180px;display:flex;justify-content:center;align-items:center;font-size:4.5rem;position:relative;overflow:hidden}
+.game-banner span{display:inline-block;transition:.4s;filter:drop-shadow(0 8px 14px rgba(0,0,0,.5))}
+.game-card:hover .game-banner span{transform:scale(1.35) rotate(-10deg)}
+.game-banner::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent 0 14px,rgba(255,255,255,.04) 14px 28px)}
+.game-1{background:linear-gradient(135deg,#172d32,#315b53)}
+.game-2{background:linear-gradient(135deg,#481c40,#a52c68)}
+.game-3{background:linear-gradient(135deg,#193b65,#2867a3)}
+.game-4{background:linear-gradient(135deg,#543b19,#a77a2e)}
+.game-5{background:linear-gradient(135deg,#171b30,#452d57)}
+.game-6{background:linear-gradient(135deg,#2a1538,#c2570c)}
+.game-info{padding:24px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tag{font-size:.7rem;padding:2px 9px;border-radius:99px;background:#1e1e2e;color:var(--lav);border:1px solid var(--line);font-weight:700}
+.game-info h3{font-size:1.45rem;margin-bottom:8px}
+.game-info p{color:#a5a5b8;font-size:.95rem;min-height:78px;margin-bottom:16px}
+.meter{margin-bottom:18px}
+.meter-label{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);font-family:'Courier New',monospace;margin-bottom:5px;text-transform:uppercase;letter-spacing:1px}
+.meter-bar{height:9px;background:#1b1b2b;border-radius:99px;overflow:hidden}
+.meter-fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--lime),var(--amber),var(--pink));transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
+.game-link{display:inline-flex;align-items:center;gap:8px;color:var(--lav);text-decoration:none;font-weight:800;transition:.3s}
+.game-link:hover{color:#fff;gap:14px}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 20px;text-align:center;transition:.3s}
+.stat:hover{transform:translateY(-6px) rotate(-1deg);border-color:var(--pink)}
+.stat .num{font-size:2.8rem;font-weight:900;background:linear-gradient(90deg,var(--pink),var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .lbl{color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:1.5px}
+
+/* TERMINAL */
+.terminal{background:#05050a;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-family:'Courier New',monospace;max-width:820px;margin:auto}
+.term-bar{background:#14141f;padding:10px 14px;display:flex;gap:8px;align-items:center;font-size:.75rem;color:var(--muted)}
+.dot{width:12px;height:12px;border-radius:50%}
+.dot:nth-child(1){background:#ff5f57}.dot:nth-child(2){background:#febc2e}.dot:nth-child(3){background:#28c840}
+.term-body{padding:20px;font-size:.9rem;min-height:220px;color:var(--lime)}
+.term-body .dim{color:#6b6b85}.term-body .err{color:var(--pink)}.term-body .ok{color:var(--cyan)}
+
+/* REVIEWS */
+.reviews{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
+.review{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;position:relative;transition:.3s}
+.review:nth-child(odd){transform:rotate(-1deg)}.review:nth-child(even){transform:rotate(1deg)}
+.review:hover{transform:rotate(0) scale(1.03);border-color:var(--amber)}
+.stars{color:var(--amber);letter-spacing:3px;margin-bottom:8px}
+.review p{color:#c3c3d4;font-style:italic;margin-bottom:12px}
+.review small{color:var(--muted)}
+
+/* FAQ */
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;padding:16px 22px;transition:.3s}
+details[open]{border-color:var(--purple)}
+summary{cursor:pointer;font-weight:800;list-style:none;display:flex;justify-content:space-between}
+summary::after{content:"+";color:var(--pink);font-size:1.4rem;line-height:1}
+details[open] summary::after{content:"−"}
+details p{color:var(--muted);margin-top:12px}
+
+/* ABOUT */
+.about{text-align:center;max-width:none;background:linear-gradient(180deg,transparent,#12121c 30%,#12121c 70%,transparent);border:0}
+.about h2{font-size:2.4rem;margin-bottom:15px;font-weight:900}
+.about p{color:var(--muted);max-width:680px;margin:0 auto 16px}
+.jk{display:inline-block;margin-top:10px;font-size:1.6rem;font-weight:900;color:var(--pink);transform:rotate(-3deg);animation:wob 2s ease-in-out infinite}
+@keyframes wob{50%{transform:rotate(3deg) scale(1.08)}}
+#slopbtn{margin-top:26px}
+#slopcount{color:var(--lime);font-family:'Courier New',monospace}
+
+/* FOOTER */
+footer{text-align:center;padding:40px 20px 60px;color:#6a6a82;font-size:.85rem;border-top:1px solid var(--line)}
+footer p+p{margin-top:4px}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .8s,transform .8s}
+.reveal.in{opacity:1;transform:none}
+
+/* toast + particles */
+#toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,120px);background:var(--pink);color:#fff;padding:12px 22px;border-radius:99px;font-weight:800;z-index:300;transition:.4s;box-shadow:0 8px 30px rgba(244,63,157,.5)}
+#toast.show{transform:translate(-50%,0)}
+.trail{position:fixed;pointer-events:none;z-index:150;font-size:1.2rem;animation:fade .9s forwards}
+@keyframes fade{to{opacity:0;transform:translateY(30px) scale(.3) rotate(120deg)}}
+body.rave{animation:rave 1.2s linear infinite}
+@keyframes rave{to{filter:hue-rotate(360deg)}}
+
+/* THE GREAT SLOPENING */
+.manifesto{
+  max-width:1100px;
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(139,92,246,.22),transparent 65%),
+    linear-gradient(180deg,#12121c,#090910);
+  border:1px solid var(--purple);
+  border-radius:20px;
+  box-shadow:0 0 45px rgba(139,92,246,.12);
+  margin-top:40px;
+  margin-bottom:40px;
+}
+.manifesto::before{
+  content:"SLOP SLOP SLOP SLOP SLOP SLOP SLOP";
+  position:absolute;
+  top:15px;
+  left:-20px;
+  color:rgba(244,63,157,.045);
+  font-size:3rem;
+  font-weight:900;
+  white-space:nowrap;
+  transform:rotate(-5deg);
+  pointer-events:none;
+}
+.manifesto-header{
+  text-align:center;
+  position:relative;
+  padding:45px 15px 30px;
+  border-bottom:1px solid var(--line);
+}
+.manifesto-label{
+  color:var(--lime);
+  font-family:'Courier New',monospace;
+  letter-spacing:5px;
+  font-size:.75rem;
+  text-transform:uppercase;
+}
+.manifesto-header h2{
+  font-size:clamp(2.3rem,7vw,5rem);
+  line-height:1.05;
+  font-weight:1000;
+  margin:18px 0;
+  color:var(--lav);
+  text-shadow:3px 3px var(--pink),-3px -3px var(--cyan);
+}
+.manifesto-header p{
+  color:var(--muted);
+  font-family:'Courier New',monospace;
+}
+.manifesto-content{
+  padding:35px clamp(20px,5vw,65px);
+  position:relative;
+}
+.manifesto-content h3{
+  color:var(--pink);
+  font-size:1.5rem;
+  margin:38px 0 12px;
+  font-weight:900;
+}
+.manifesto-content h3:first-child{margin-top:0}
+.manifesto-content p{
+  color:#c3c3d4;
+  margin-bottom:16px;
+  font-size:1rem;
+  line-height:1.85;
+}
+.manifesto-content strong{color:var(--lime)}
+.manifesto-quote{
+  margin:28px 0;
+  padding:24px;
+  border-left:4px solid var(--pink);
+  background:rgba(244,63,157,.07);
+  color:var(--lav);
+  font-size:1.15rem;
+  font-weight:900;
+  font-family:'Courier New',monospace;
+}
+.manifesto-list{
+  list-style:none;
+  margin:18px 0 28px;
+}
+.manifesto-list li{
+  padding:12px 16px;
+  margin-bottom:9px;
+  background:#171725;
+  border:1px solid var(--line);
+  border-radius:8px;
+  color:#c3c3d4;
+}
+.manifesto-list li::before{
+  content:"☠ ";
+  color:var(--pink);
+}
+.manifesto-end{
+  text-align:center;
+  padding:35px 15px;
+  background:linear-gradient(90deg,rgba(139,92,246,.12),rgba(244,63,157,.12));
+  border-top:1px solid var(--line);
+}
+.manifesto-end h3{
+  font-size:clamp(1.8rem,5vw,3.5rem);
+  color:var(--lime);
+  text-shadow:0 0 20px rgba(163,230,53,.35);
+  margin:10px 0;
+}
+.manifesto-end p{
+  color:var(--muted);
+  font-family:'Courier New',monospace;
+}
+.slop-stamp{
+  display:inline-block;
+  color:var(--lime);
+  border:2px dashed var(--lime);
+  padding:9px 18px;
+  transform:rotate(-4deg);
+  font-family:'Courier New',monospace;
+  font-weight:900;
+  letter-spacing:2px;
+  margin:20px 0;
+}
+
+@media(max-width:700px){
+  header{flex-direction:column;gap:10px}
+  nav a{margin:0 10px}
+  section{padding:60px 6%}
+  .floaty{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<header>
+  <a class="logo" href="#home">GAME <small>slop</small><b>.</b>DEV</a>
+  <nav>
+    <a href="#home">Top</a>
+    <a href="#games">The Slop</a>
+    <a href="#log">Slop Log</a>
+    <a href="#manifesto">The Manifesto</a>
+    <a href="#reviews">Slopviews</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<div class="hero" id="home">
+  <span class="floaty" style="left:8%;top:22%">⚔️</span>
+  <span class="floaty" style="right:9%;top:18%;animation-delay:-2s">💀</span>
+  <span class="floaty" style="left:14%;bottom:12%;animation-delay:-4s">🏎️</span>
+  <span class="floaty" style="right:15%;bottom:16%;animation-delay:-1s">👁️</span>
+  <span class="floaty" style="left:46%;top:6%;animation-delay:-3s">🛡️</span>
+  <span class="floaty" style="left:28%;bottom:6%;animation-delay:-5s">👻</span>
+
+  <div class="hero-tag">Game Development Portfolio</div>
+  <h1>Welcome to <br><span class="glitch" data-text="THE SLOPPENING.">THE SLOPPENING.</span></h1>
+  <p>
+    A collection of slop games I made for my programming class. From dungeon
+    crawlers to horror experiences, take a look at my sloprojects!
+  </p>
+  <div class="typed" id="typed"></div>
+  <div class="btn-row">
+    <a href="#games" class="btn primary">Look at my Slop</a>
+    <button class="btn ghost" id="randomBtn">🎲 Play Random Slop</button>
+  </div>
+</div>
+
+<div class="marquee"><div class="track" id="m1"></div></div>
+
+<!-- GAMES -->
+<section id="games">
+  <div class="section-heading reveal">
+    <h2>My Sloppy <span>Slop</span></h2>
+    <p>Six sloppers. Six different experiences. All built in pure classly slop. all have a certified poop rating of jozerto to chuckles</p>
+  </div>
+
+  <div class="game-grid">
+
+    <div class="game-card reveal">
+      <div class="badge">SLOP LVL 3</div>
+      <div class="game-banner game-1"><span>⚔️</span></div>
+      <div class="game-info">
+        <div class="tags"><span class="tag">Dungeon Crawler</span><span class="tag">Spooky</span></div>
+        <h3>Hollowdeep</h3>
+        <p>Descend into the depths of a dangerous dungeon in this dungeon crawler adventure. Explore, survive, and face whatever lurks below. MOBILE FRIENDLY</p>
+        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>53%</span></div><div class="meter-bar"><div class="meter-fill" data-w="53"></div></div></div>
+        <a href="/hollowdeep/" class="game-link">Play Game <span>→</span></a>
+      </div>
+    </div>
+
+    <div class="game-card reveal">
+      <div class="badge">SLOP LVL 50</div>
+      <div class="game-banner game-2"><span>💀</span></div>
+      <div class="game-info">
+        <div class="tags"><span class="tag">Deathmatch</span><span class="tag">Brainrot</span><span class="tag">Unhinged</span></div>
+        <h3>Brainrot Arena</h3>
+        <p>Enter a chaotic brainrot deathmatch where internet culture meets all-out combat. Only one player can come out on top. straight peak absolute cinmea poop rating 10/10</p>
+        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>67%</span></div><div class="meter-bar"><div class="meter-fill" data-w="67"></div></div></div>
+        <a href="/brainrotarena/" class="game-link">Play Game <span>→</span></a>
+      </div>
+    </div>
+
+    <div class="game-card reveal">
+      <div class="badge">SLOP LVL 49.3</div>
+      <div class="game-banner game-3"><span>🏎️</span></div>
+      <div class="game-info">
+        <div class="tags"><span class="tag">Racing</span><span class="tag">Brainrot</span></div>
+        <h3>Brainrot Karts</h3>
+        <p>Get behind the wheel in this ridiculous racing experience inspired by Mario Kart. Race your way to victory! poop rating 10000/10</p>
+        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>67%</span></div><div class="meter-bar"><div class="meter-fill" data-w="67"></div></div></div>
+        <a href="/brainrotkarts/" class="game-link">Play Game <span>→</span></a>
+      </div>
+    </div>
+
+    <div class="game-card reveal">
+      <div class="badge">EXTREME SLOP LEVEL 67</div>
+      <div class="game-banner game-3"><span>🏎️</span></div>
+      <div class="game-info">
+        <div class="tags"><span class="tag">Curse of</span><span class="tag">Ohioshire</span></div>
+        <h3>Curse of Ohioshire</h3>
+        <p>Dive into a the gamemaxxing slop of Ohioshire in this boomer style text RPG game! poop rating 10000/10</p>
+        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>67%</span></div><div class="meter-bar"><div class="meter-fill" data-w="67"></div></div></div>
+        <a href="/ohioshire/" class="game-link">Play Game <span>→</span></a>
+      </div>
+    </div>
+
+    <div class="game-card reveal">
+      <div class="badge">SLOP LVL 8-BIT</div>
+      <div class="game-banner game-4"><span>🛡️</span></div>
+      <div class="game-info">
+        <div class="tags"><span class="tag">Retro</span><span class="tag">Fan Game</span><span class="tag">Raid</span></div>
+        <h3>WoW Atari Raid</h3>
+        <p>What if World of Warcraft raiding existed on an Atari? Experience this retro-inspired fan game based on WoW raids. Tank, heal, and pray to the RNG gods in glorious 8-bit. aboslute cinema</p>
+        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>84%</span></div><div class="meter-bar"><div class="meter-fill" data-w="84"></div></div></div>
+        <a href="/warcraftatari/" class="game-link">Play Game <span>→</span></a>
+      </div>
+    </div>
+
+    <div class="game-card reveal">
+      <div class="badge">SLOP LVL 3</div>
+      <div class="game-banner game-5"><span>👁️</span></div>
+      <div class="game-info">
+        <div class="tags"><span class="tag">Horror</span><span class="tag">Survival</span></div>
+        <h3>Nightshift</h3>
+        <p>Spend the night working in an AI data center. Something isn't right, and surviving until morning might be harder than you think.</p>
+        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>666%</span></div><div class="meter-bar"><div class="meter-fill" data-w="68"></div></div></div>
+        <a href="/nightshift/" class="game-link">Play Game <span>→</span></a>
+      </div>
+    </div>
+
+    <div class="game-card reveal">
+      <div class="badge">SLOP LVL 6.7</div>
+      <div class="game-banner game-6"><span>👻</span></div>
+      <div class="game-info">
+        <div class="tags"><span class="tag">Haunted</span><span class="tag">Collector</span><span class="tag">Spooky</span></div>
+        <h3>The Haunted Collector</h3>
+        <p>Hunt down ghosts, collect cursed treasures, and try not to get spooked into next week. Gotta haunt 'em all. poop rating: boo/10</p>
+        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>77%</span></div><div class="meter-bar"><div class="meter-fill" data-w="77"></div></div></div>
+        <a href="/hauntedcollector/" class="game-link">Play Game <span>→</span></a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="marquee alt"><div class="track" id="m2"></div></div>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="section-heading reveal">
+    <h2>The <span>Numbers</span></h2>
+    <p>Extremely scientific data. Peer review pending.</p>
+  </div>
+  <div class="stats">
+    <div class="stat reveal"><div class="num" data-count="6">0</div><div class="lbl">Games Shipped</div></div>
+    <div class="stat reveal"><div class="num" data-count="67676767">0</div><div class="lbl">Prompts Sent</div></div>
+    <div class="stat reveal"><div class="num" data-count="404">0</div><div class="lbl">Bugs "Fixed"</div></div>
+    <div class="stat reveal"><div class="num" data-count="67" data-suffix="%">0</div><div class="lbl">Slop Purity</div></div>
+  </div>
+</section>
+
+<!-- BUILD LOG -->
+<section id="log">
+  <div class="section-heading reveal">
+    <h2>Slopper <span>Log</span></h2>
+    <p>How to make slop like me.</p>
+  </div>
+  <div class="terminal reveal">
+    <div class="term-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span style="margin-left:10px">slop@70bb-games:~</span></div>
+    <div class="term-body" id="term"></div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section id="reviews">
+  <div class="section-heading reveal">
+    <h2>Certified <span>Slopviews</span></h2>
+    <p>Sourced from people of culture.</p>
+  </div>
+  <div class="reviews">
+    
+<div class="review reveal">
+  <div class="stars">★★★★★</div>
+  <p>"I entered this website as a normal human being. I left as a Level 67 Certified Slopper."</p>
+  <small>— Formerly Functional Adult</small>
+</div>
+
+<div class="review reveal">
+  <div class="stars">★★★★★</div>
+  <p>"I played Brainrot Arena for 4 hours straight."</p>
+  <small>— Victim of Slop</small>
+</div>
+
+<div class="review reveal">
+  <div class="stars">★★★★★</div>
+  <p>"Slopology changed my life. I went in searching for copper and came out with bronze: A PhD in Advanced Dungeon Slopology."</p>
+  <small>— Professional Slopper</small>
+</div>
+
+<div class="review reveal">
+  <div class="stars">★★★★★</div>
+  <p>"Brainrot Karts made me realize that speed isn't about winning. It's about spreading sloppiness at 200 miles per hour."</p>
+  <small>— NASCAR Slop Division</small>
+</div>
+
+<div class="review reveal">
+  <div class="stars">★★★★★</div>
+  <p>"Slopology is proof that humanity is peaking. Absolute cinema."</p>
+  <small>— Senior Researcher of "Giving a Sloppy"</small>
+</div>
+
+<div class="review reveal">
+  <div class="stars">★★★★★</div>
+  <p>"Nightshift made me afraid of AI data centers. I now unplug my computer before bed and whisper 'HNNUUGUNGUGUGUG.'"</p>
+  <small>— Bobert - IT Guy</small>
+</div>
+
+<div class="review reveal">
+  <div class="stars">★★★★★</div>
+  <p>"I used to have dreams and aspirations. Now I dream in 6767x6767 AI-generated images of muscular frogs touching me. Thank you, uhuhhhhhhhhhhhhhhhhhhuuuuuuuuuh."</p>
+  <small>— Former Grass Toucher</small>
+</div>
+
+<div class="review reveal">
+  <div class="stars">★★★★★</div>
+  <p>"Best top in years, Easy 10/10. AND IT WAS BOGO so my wife's boyfriend got one too."</p>
+  <small>— Chuckles</small>
+</div>
+
+<div class="review reveal">
+  <div class="stars">★★★★★</div>
+  <p>"I came looking for poop. Instead I found my calling. My legal name is now 'The Socioeconomic Implications of Unregulated Slop.'"</p>
+  <small>— James</small>
+</div>
+
+<div class="review reveal">
+  <div class="stars">★★★★★</div>
+  <p>"10/10. Five stars. Would get brain damage from algorithmic overstimulation again."</p>
+  <small>— Supreme Slopping Enthusiast</small>
+</div>
+
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="section-heading reveal">
+    <h2>Frequently Asked <span>Slop</span></h2>
+  </div>
+  <div class="reveal">
+      
+<details>
+  <summary>What exactly is Slopology?</summary>
+  <p>Slopology is the advanced academic discipline dedicated to the generation, consumption, distribution, and theoretical advancement of artificial nonsense. It is currently being pioneered thousands of professional slopper toppers around the world. Our research is peer-reviewed by the algorithm.</p>
+</details>
+
+<details>
+  <summary>Who is the Slop King?</summary>
+  <p>The Slop King is the prophesied ruler of the digital slop dimension. He shall rise from the GPU mines, wield the sacred prompt, and unleash unimaginable levels of brainrot upon the internet. Some say he is already <b>among us.</b></p>
+</details>
+
+<details>
+  <summary>What is a sloppy toppy?</summary>
+  <p>Sloppy toppy is the ritual preformed of the Slop King. Nothing else does the Slop King enjoy more than pushing out pure sloppy toppys to his slopists. If one is truly blessed, they shall recieve an intense toe to mouth tickle.</p>
+</details>
+
+<details>
+  <summary>How much for a sloppy toppy?</summary>
+  <p>6</p>
+</details>
+
+<details>
+  <summary>Are toes in the sloppy toppy?</summary>
+  <p>7</p>
+</details>
+<details>
+  <summary>Will I be the sloppy second?</summary>
+  <p>If you're lucky.</p>
+</details>
+
+<details>
+  <summary>Is this some kind of cult?</summary>
+  <p>Absolutely not. This is a fully legitimate academic institution dedicated to the advancement of digital sloppiness. Please disregard the suspicious robes, the GPU-shaped altar, and the 9000 AI-generated portraits of the Sloppy Toppy King.</p>
+</details>
+
+<details>
+  <summary>What happens if the Slop King achieves maximum power?</summary>
+  <p>The internet will enter a new era. And sloppy toppys will no longer be BOGO but FREE to all denizens.</p>
+</details>
+
+<details>
+  <summary>How to I get a refund?</summary>
+  <p>You have already drinken my pure tasty slop. You have consumed my slop. Your brain has been marinated in 47 gallons of premium AI-generated brainrot. Your search history is compromised. Your GPU has sworn allegiance. Every time you close your eyes, you see a buff Minion riding a your dad through the gates of Slop Heaven. There is no escape. There is no salvation. There is only SLOP. Welcome home, little slopper. 💀</p>
+</details>
+
+  </div>
+</section>
+
+
+<!-- THE GREAT SLOPENING -->
+<section class="manifesto reveal" id="manifesto">
+
+  <div class="manifesto-header">
+    <div class="manifesto-label">⚠ CLASSIFIED SLOP DOCUMENT ⚠</div>
+    <h2>THE GREAT<br>SLOPENING</h2>
+    <p>DOCUMENT NO. 0001 // THE OFFICIAL DECLARATION OF SLOPOLOGY</p>
+    <div class="slop-stamp">CERTIFIED SLOPOLOGIST</div>
+  </div>
+
+  <div class="manifesto-content">
+
+    <h3>📜 PREAMBLE: THE AWAKENING</h3>
+
+    <p>
+      There comes a time in every programmer's life when they must look
+      into the abyss of artificial intelligence and ask themselves one
+      simple question:
+    </p>
+
+    <div class="manifesto-quote">
+      "What if I made something so unbelievably stupid that it became
+      a masterpiece?"
+    </div>
+
+    <p>
+      I have reached that point. I have crossed the threshold. I have
+      stared directly into the algorithmic void, and the algorithmic
+      void stared back with six fingers, 9000 teeth, and a suspiciously
+      realistic picture of a raccoon holding a gaming laptop.
+    </p>
+
+    <p>
+      I am no longer simply a programmer. I am no longer merely an
+      enthusiast of artificial intelligence. I am evolving. My brain
+      has been reformatted. My neurons are now powered by GPU cores.
+      My thoughts are generated at approximately 4000 tokens per second.
+    </p>
+
+    <p>
+      I AM BECOMING A PROFESSIONAL SLOPOLOGIST.
+    </p>
+
+    <h3>🎓 CHAPTER I: THE STUDY OF SLOPOLOGY</h3>
+
+    <p>
+      Slopology is not a science for the weak. It is a discipline.
+      An academic pursuit. A way of life. It is the rigorous study
+      of artificially generated nonsense and its effects on the
+      collective human brain.
+    </p>
+
+    <p>
+      I have dedicated myself to understanding the deepest mysteries
+      of this emerging field. Why does AI generate pictures of people
+      with seven fingers? Why are there 4000 Facebook posts depicting
+      muscular grandmothers lifting cars? Why does every AI-generated
+      image contain at least one object that should not physically
+      exist?
+    </p>
+
+    <p>
+      These are not bugs. These are unanswered scientific questions.
+      And I WILL ANSWER THEM.
+    </p>
+
+    <p>
+      My academic qualifications shall include:
+    </p>
+
+    <ul class="manifesto-list">
+      <li>PhD in Advanced Artificial Slop Generation.</li>
+      <li>Master's Degree in Brainrot Distribution.</li>
+      <li>Doctorate of Philosophy in Prompt Engineering Gone Wrong.</li>
+      <li>Certified Professional Facebook AI Image Enjoyer.</li>
+      <li>Minor in Synthetic Goblin Economics.</li>
+      <li>Tenured Professor of Unnecessary AI Applications.</li>
+      <li>Honorary Degree in Making Things Nobody Asked For.</li>
+    </ul>
+
+    <p>
+      I shall establish the world's first accredited University of
+      Slopology. Students will attend lectures, write research papers,
+      and generate increasingly incomprehensible images until their
+      GPUs beg for mercy.
+    </p>
+
+    <h3>💻 CHAPTER II: THE SACRED ART OF GENERATION</h3>
+
+    <p>
+      My methodology is simple. I take an idea, feed it into the
+      machine, and wait for the digital gods to deliver something
+      that would make a normal person question the direction of
+      human civilization.
+    </p>
+
+    <p>
+      Sometimes the result is beautiful. Sometimes it is horrifying.
+      Sometimes it looks like an unholy combination of Shrek,
+      a microwave, and the economy of Venezuela.
+    </p>
+
+    <p>
+      Regardless of the outcome, I shall publish it.
+    </p>
+
+    <p>
+      I will prompt at dawn. I will prompt at midnight. I will prompt
+      when the servers are overloaded. I will prompt when the GPUs
+      are overheating. I will prompt until the NVIDIA stock market
+      experiences a medically concerning spike.
+    </p>
+
+    <div class="manifesto-quote">
+      THE SLOP MUST FLOW. THE PROMPT MUST BE SENT. THE CONTENT MUST
+      BE GENERATED.
+    </div>
+
+    <h3>🧠 CHAPTER III: THE FIVE PILLARS OF SLOP</h3>
+
+    <ul class="manifesto-list">
+      <li><strong>Quantity:</strong> If one piece of slop exists, there must be one million more.</li>
+      <li><strong>Absurdity:</strong> If it makes no sense, it is probably working.</li>
+      <li><strong>Engagement:</strong> Every scroll, click, and bewildered reaction fuels the machine.</li>
+      <li><strong>Innovation:</strong> Never ask whether something should be generated. Ask whether it CAN be generated.</li>
+      <li><strong>Persistence:</strong> The slopper never stops. The slopper never sleeps. The slopper ships.</li>
+    </ul>
+
+    <h3>👑 CHAPTER IV: THE ASCENSION OF THE SLOP KING</h3>
+
+    <p>
+      There is a throne waiting for me. A throne constructed entirely
+      of discarded prompts, broken HTML files, abandoned JavaScript
+      functions, and the remains of 47 failed AI generations.
+    </p>
+
+    <p>
+      I shall sit upon it.
+    </p>
+
+    <p>
+      My crown shall be forged from GPU silicon. My royal cape shall
+      be stitched together from corrupted PNG files. My royal guards
+      shall be an army of AI-generated medieval knights with
+      inexplicable facial anatomy.
+    </p>
+
+    <p>
+      I shall rule over the digital kingdom with an iron mouse and
+      an unbreakable keyboard.
+    </p>
+
+    <p>
+      The algorithm shall recognize me. The servers shall fear me.
+      The recommendation systems shall bow before my content.
+    </p>
+
+    <p>
+      No platform shall be spared. No feed shall remain untouched.
+      From YouTube Shorts to Instagram Reels, from Facebook to
+      whatever cursed social media platform gets invented next,
+      my influence shall spread.
+    </p>
+
+    <div class="manifesto-quote">
+      I DO NOT CONSUME SLOP. I AM THE SOURCE OF THE SLOP.
+    </div>
+
+    <h3>🌎 CHAPTER V: THE GLOBAL SLOPPIFICATION</h3>
+
+    <p>
+      My ambition does not end with a simple portfolio. I seek
+      something much greater. I seek the total and complete
+      transformation of digital civilization.
+    </p>
+
+    <p>
+      Every website shall contain at least one unnecessary AI image.
+      Every application shall have a completely pointless generative
+      feature. Every computer shall have an emergency slop button.
+      Every household shall possess a dedicated slop-generating device.
+    </p>
+
+    <p>
+      Children shall learn the fundamentals of prompt engineering
+      before they learn long division. Universities shall offer
+      advanced degrees in meme generation. Governments shall appoint
+      Chief Slop Officers.
+    </p>
+
+    <p>
+      The global economy shall be measured not in dollars, but in
+      tokens generated per second.
+    </p>
+
+    <p>
+      The United Nations shall gather to discuss the ethical
+      implications of an AI-generated image depicting 8000
+      hyper-realistic lobsters riding motorcycles.
+    </p>
+
+    <p>
+      And when they ask who started this madness, there shall be
+      only one answer.
+    </p>
+
+    <p style="text-align:center;color:var(--pink);font-size:1.5rem;font-weight:900">
+      ME.
+    </p>
+
+    <h3>⚔️ CHAPTER VI: THE FINAL PROPHECY</h3>
+
+    <p>
+      Historians will one day look back upon this era and recognize
+      the turning point. They will call it the Great Slopening of
+      2026.
+    </p>
+
+    <p>
+      They will study my repositories. They will inspect my commits.
+      They will analyze my questionable design decisions and wonder
+      how a single individual managed to produce such an extraordinary
+      quantity of digital nonsense.
+    </p>
+
+    <p>
+      My legacy will not be measured by the number of bugs fixed,
+      the number of lines of code written, or the number of successful
+      deployments.
+    </p>
+
+    <p>
+      It will be measured by the sheer magnitude of my sloppiness.
+    </p>
+
+    <p>
+      And when the final GPU shuts down, when the last prompt is sent,
+      and when the last AI-generated Minion disappears into the
+      digital sunset, one message shall remain:
+    </p>
+
+    <div class="manifesto-quote">
+      THE SLOP WAS NEVER ABOUT THE DESTINATION. IT WAS ABOUT THE
+      BRAINROT WE GENERATED ALONG THE WAY.
+    </div>
+
+  </div>
+
+  <div class="manifesto-end">
+    <p>THE DECLARATION IS FINAL.</p>
+    <h3>I SHALL BECOME THE SLOP KING.</h3>
+    <p>LONG LIVE THE SLOP. LONG LIVE THE GENERATION.</p>
+    <div class="slop-stamp">SLOPOLOGY IS THE FUTURE</div>
+    <p>END OF DOCUMENT // BEGINNING OF THE SLOPPENING</p>
+  </div>
+
+</section>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <h2 class="reveal">About This Portfolio</h2>
+  <p class="reveal">
+    This website showcases the games I've created as part of my AI Programming class.
+    Each project represents an opportunity to experiment with game design, programming,
+    creativity, and AI-assisted development. Thanks for checking out my work!
+  </p>
+  <div class="jk reveal">jk it's all pure slop</div>
+  <div class="reveal">
+    <button class="btn primary" id="slopbtn">🫠 Click for Slop</button>
+    <p style="margin-top:14px">Slop clicked: <span id="slopcount">0</span></p>
+  </div>
+  <p class="reveal" style="margin-top:20px;font-size:.8rem;opacity:.5">psst... try the Konami code ↑ ↑ ↓ ↓ ← → ← → B A</p>
+</section>
+
+<footer>
+  <p>© 2026 Sloppy</p>
+  <p>Built with HTML, CSS &amp; a little JS | Hosted on GitHub Pages | And love from YOUR DAD</p>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* scroll progress */
+  window.addEventListener('scroll',function(){
+    var h=document.documentElement;
+    $('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+  },{passive:true});
+
+  /* marquees */
+  function fill(id,items){
+    var s=items.join(' ✦ ')+' ✦ ';
+    $(id).innerHTML='<span>'+s+s+'</span><span>'+s+s+'</span>';
+  }
+  fill('#m1',['100% ORGANIC SLOP','FREE-RANGE PIXELS','NO REFUNDS','ARTISANAL BUGS','AI-ASSISTED','HANDCRAFTED(ISH)','SLOP FOR THE PEOPLE']);
+  fill('#m2',['PLAY NOW','TOUCH GRASS LATER','BRAINROT APPROVED','ONE MORE GAME','SLOPPERS ONLY','CERTIFIED SLOPTASTIC','GRADE PENDING']);
+
+  /* typed tagline */
+  var lines=['> loading slop.exe ...','> compiling brainrot ...','> asking the AI to fix it ...','> it works?? shipping it.','> 6 games. 0 regrets. some regrets.'];
+  var li=0,ci=0,del=false,el=$('#typed');
+  function type(){
+    var t=lines[li];
+    if(reduce){el.textContent=t;li=(li+1)%lines.length;return setTimeout(type,2500)}
+    el.textContent=t.slice(0,ci);
+    if(!del&&ci<t.length){ci++;return setTimeout(type,55)}
+    if(!del){del=true;return setTimeout(type,1300)}
+    if(ci>0){ci--;return setTimeout(type,25)}
+    del=false;li=(li+1)%lines.length;setTimeout(type,300);
+  }
+  type();
+
+  /* random game */
+  var games=['/hollowdeep/','/brainrotarena/','/brainrotkarts/','/warcraftatari/','/nightshift/','/hauntedcollector/'];
+  $('#randomBtn').addEventListener('click',function(){
+    toast('Rolling the slop dice... 🎲');
+    setTimeout(function(){location.href=games[Math.floor(Math.random()*games.length)]},900);
+  });
+
+  /* reveal + meters + counters */
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting)return;
+      e.target.classList.add('in');
+      var f=e.target.querySelector('.meter-fill');
+      if(f)f.style.width=f.dataset.w+'%';
+      var n=e.target.querySelector('[data-count]');
+      if(n)count(n);
+      io.unobserve(e.target);
+    });
+  },{threshold:.15});
+  $$('.reveal').forEach(function(el){io.observe(el)});
+
+  function count(n){
+    var to=+n.dataset.count,suf=n.dataset.suffix||'',start=null;
+    function step(ts){
+      if(!start)start=ts;
+      var p=Math.min((ts-start)/1400,1);
+      n.textContent=Math.floor(to*(1-Math.pow(1-p,3)))+suf;
+      if(p<1)requestAnimationFrame(step);
+    }
+    reduce?(n.textContent=to.toLocaleString()+suf):requestAnimationFrame(step);
+  }
+
+  /* 3D tilt cards */
+  if(!reduce&&window.matchMedia('(hover:hover)').matches){
+    $$('.game-card').forEach(function(c){
+      c.addEventListener('mousemove',function(e){
+        var r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+        c.style.transform='perspective(800px) rotateY('+(x*10)+'deg) rotateX('+(-y*10)+'deg) translateY(-8px)';
+      });
+      c.addEventListener('mouseleave',function(){c.style.transform=''});
+    });
+  }
+
+  /* fake terminal */
+  var script=[
+    ['<span class="dim">$</span> git commit -m "fixed it"','',500],
+    ['<span class="err">ERROR:</span> everything is on fire','',700],
+    ['<span class="dim">$</span> ask-ai --please "fix everything"','',700],
+    ['<span class="ok">AI:</span> Great question! Here is the fix.','',800],
+    ['<span class="err">ERROR:</span> new, different fire','',700],
+    ['<span class="dim">$</span> git commit -m "fixed it (for real)"','',700],
+    ['<span class="ok">SUCCESS:</span> 6 games deployed. Nobody check the console.','',700]
+  ];
+  var tdone=false;
+  new IntersectionObserver(function(en,ob){
+    if(!en[0].isIntersecting||tdone)return;tdone=true;ob.disconnect();
+    var t=$('#term'),i=0;
+    (function next(){
+      if(i>=script.length){t.insertAdjacentHTML('beforeend','<div class="dim">$ <span style="animation:blink 1s steps(2) infinite">▋</span></div>');return}
+      t.insertAdjacentHTML('beforeend','<div>'+script[i][0]+'</div>');
+      var d=script[i][2];i++;setTimeout(next,reduce?0:d);
+    })();
+  },{threshold:.4}).observe($('#term'));
+
+  /* slop clicker */
+  var clicks=0,msgs=[
+    'Slop acquired 🫠','More slop!','Slop economy booming 📈','Certified slopper','Your slop is ready',
+    'Please touch grass','Slop overflow!','You are now a slop influencer'
+  ];
+  $('#slopbtn').addEventListener('click',function(e){
+    clicks++;$('#slopcount').textContent=clicks;
+    if(clicks%5===0)toast(msgs[Math.floor(Math.random()*msgs.length)]);
+    if(clicks===25)toast('🏆 Achievement: Professional Slopper');
+    burst(e.clientX,e.clientY);
+  });
+
+  /* emoji trail */
+  var em=['🫠','💀','⚔️','🏎️','👁️','🛡️','👻','✨'],last=0;
+  if(!reduce)document.addEventListener('mousemove',function(e){
+    var now=Date.now();if(now-last<90)return;last=now;
+    spawn(e.clientX,e.clientY);
+  });
+  function spawn(x,y){
+    var s=document.createElement('span');s.className='trail';
+    s.textContent=em[Math.floor(Math.random()*em.length)];
+    s.style.left=x+'px';s.style.top=y+'px';
+    document.body.appendChild(s);setTimeout(function(){s.remove()},900);
+  }
+  function burst(x,y){if(reduce)return;for(var i=0;i<10;i++)spawn(x+(Math.random()-.5)*100,y+(Math.random()-.5)*60)}
+
+  /* toast */
+  var tt;
+  function toast(m){
+    var t=$('#toast');t.textContent=m;t.classList.add('show');
+    clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show')},2200);
+  }
+
+  /* konami */
+  var code=[38,38,40,40,37,39,37,39,66,65],pos=0;
+  document.addEventListener('keydown',function(e){
+    pos=(e.keyCode===code[pos])?pos+1:0;
+    if(pos===code.length){
+      pos=0;document.body.classList.toggle('rave');
+      toast(document.body.classList.contains('rave')?'🌈 MAXIMUM SLOP MODE ACTIVATED':'Slop mode disabled. Boring.');
+    }
+  });
+})();
+</script>
+</body>
+</html>

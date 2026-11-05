@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SIX-SEVEN: The Aura Crusade of Ohioshire</title>
+<style>
+:root{--bg:#f3eedf;--fg:#1d2a1f;--dim:#5d6e5f;--acc:#8a5a00;--good:#0a7a2e;--bad:#b3261e;--card:#e6dfcb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0b0d10;--fg:#c9f7d0;--dim:#6f9a78;--acc:#ffd23f;--good:#5dff8a;--bad:#ff6b6b;--card:#141a17}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0b0d10;--fg:#c9f7d0;--dim:#6f9a78;--acc:#ffd23f;--good:#5dff8a;--bad:#ff6b6b;--card:#141a17}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column}
+h1{font-size:15px;margin:0;padding:10px 12px 2px;color:var(--acc);letter-spacing:.5px}
+#st{padding:2px 12px 8px;color:var(--dim);font-size:13px;border-bottom:1px solid var(--dim)}
+#log{flex:1;overflow-y:auto;padding:10px 12px}
+#log div{margin:0 0 8px;white-space:pre-wrap}
+.r{color:var(--acc);font-weight:700}.d{color:var(--dim)}.g{color:var(--good)}.b{color:var(--bad)}.u{color:var(--dim)}
+#bar{display:flex;flex-wrap:wrap;gap:6px;padding:6px 12px}
+#bar button{background:var(--card);color:var(--fg);border:1px solid var(--dim);border-radius:6px;padding:6px 10px;font:inherit;cursor:pointer}
+#in{display:flex;gap:6px;padding:0 12px 10px}
+#in input{flex:1;min-width:0;background:var(--card);color:var(--fg);border:1px solid var(--dim);border-radius:6px;padding:8px;font:inherit}
+</style></head><body>
+<h1>⚔️ SIX-SEVEN: THE AURA CRUSADE OF OHIOSHIRE</h1>
+<div id="st"></div><div id="log"></div>
+<div id="bar"></div>
+<div id="in"><input id="cmd" placeholder="type a command (try: help)" autocomplete="off" autocapitalize="off"><button id="go">GO</button></div>
+<script>
+const $=i=>document.getElementById(i),R=a=>a[Math.random()*a.length|0],N=(a,b)=>a+(Math.random()*(b-a+1)|0);
+const OPP={n:"s",s:"n",e:"w",w:"e"},ND={n:"north",s:"south",e:"east",w:"west"};
+const RM={
+gate:["Ohio Castle Gate","A drawbridge of suspicious planks. A guard mews so hard his jaw could slice bread.","Guard Chadwick"],
+market:["Fanum Tax Market","Every vendor taxes your fries with their eyes. A pig sells ‘authentic’ rizz.","Fanum the Merchant"],
+tavern:["The Sigma Tavern","Dim and silent. Everyone is vibing alone, on purpose.","Barkeep Gronk"],
+moat:["Skibidi Moat","The water hums an unholy beat. Toilets bob and sing in unison.","a talking toilet"],
+forest:["Rizzler Forest","The trees lean in to watch you walk. One winks.","a goblin in a tiny Labubu"],
+swamp:["Looksmaxx Swamp","Hags sell mud masks. Everything smells like a hot take.","the Swamp Hag"],
+monastery:["Mewing Monastery","Monks sit in silence, jawlines like cliffs. Nobody has blinked since Tuesday.","Brother Mewington"],
+gorge:["Gyatt Gorge","A vast canyon. The echo only says one word and it’s mostly unprintable.","the wizard Skibidwin"],
+dungeon:["Dungeon of Doomscrolling","Skeletons slump on thrones, thumbs frozen mid-scroll. A huge door reads: AURA 670 REQUIRED.","a doomscrolling skeleton"],
+throne:["Throne Room of the Ohio Dragon","Obsidian everywhere. A dragon in sunglasses lounges on a hoard of rizz.","the Ohio Dragon"]};
+const EX=[["gate","n","market"],["gate","w","forest"],["gate","e","moat"],["market","n","monastery"],["market","e","tavern"],["tavern","n","gorge"],["tavern","s","moat"],["monastery","e","gorge"],["gorge","e","dungeon"],["dungeon","n","throne"],["forest","w","swamp"]];
+const X={};for(const k in RM)X[k]={};EX.forEach(([a,d,b])=>{X[a][d]=b;X[b][OPP[d]]=a});
+const IT={sword:["Rizz Sword","sword rizz","+4 damage. Radiates unearned confidence."],shield:["Sigma Shield","shield sigma","Blocks 2 damage. Does not blink."],scroll:["Mewing Scroll","scroll mewing","Use it for aura."],potion:["Skibidi Potion","potion skibidi","Heals you. Tastes like regret."],coin:["Fanum Tax Coin","coin fanum","Spend it at the market. Elsewhere it gets taxed."],amulet:["Amulet of 67","amulet 67 six seven","It vibrates the number."],chicken:["Chicken Jockey","chicken jockey","It screams. Aura follows."],glasses:["Sunglasses of Destiny","sunglasses glasses destiny","Wear at night for double drip."]};
+const EV=[["A bard drops a diss track about you. You stare into the middle distance. Maximum aura.",15,0],["You trip in front of a baker. The whole town watched. Aura leaks out.",-12,-1],["A knight calls you a ‘skibidi NPC’. You don’t blink. He apologizes.",10,0],["A pigeon steals your bread. You let it. Alpha behavior.",8,0],["A bush yells ‘SIX SEVEN!’ You throw both hands up and juggle the air. A child weeps with joy.",7,0],["A rat in a crown sells you a ‘mystery shield’. It was a pizza box.",-8,0],["A ghost does the Griddy. You match it perfectly.",14,0],["You step in something. It is NOT Fanum tax. It is real.",-6,-2],["Peasants chant ‘ONLY IN OHIO’ and nothing else happens. Spooky.",0,0],["A dragon in the distance yells ‘gyatt’ and torches a village. Not your problem.",3,0],["A jester challenges you to a rizz-off. You say ‘ay’. He faints.",20,0],["A raven lands on your shoulder and stares into your soul. Your hair improves.",9,0],["You cough mid-flex. Everyone saw. Bro...",-15,0],["A noble tips his hat. You tip your helm. Respect between two chads.",12,0],["A wizard casts Looksmaxx. Your jawline gets 4% sharper.",11,0],["A goat in sunglasses walks by, unbothered. You study its walk.",6,0],["An arrow whizzes past your head. You don’t flinch. The archer drops his bow, shaking.",18,0],["A peasant hands you questionable stew. You eat it. Your stomach gets Ohio’d.",-4,-4],["Your squire films you from a bush. The footage goes viral by crow.",16,0],["A cursed cabbage whispers ‘67’. You cannot unhear it.",7,0],["A stranger asks the year. ‘Medieval, bro.’ He nods, deeply moved.",9,0],["Lightning nearly hits you. You walk away in slow motion. Sunglasses appear from nowhere.",17,0],["A snail passes you. It has better aura. You accept this.",-7,0],["A bard sings your name wrong on purpose. You let it slide. Big boss energy.",13,0]];
+const EN=[["Skibidi Toilet Knight",12,4,30],["Ohio Goblin",10,3,25],["Mewing Troll",14,4,35],["Fanum Tax Collector",9,3,20],["Rizzless Peasant Mob",11,3,25],["Cursed Labubu",13,5,40],["Baby Gronk Wraith",12,4,35],["Grimace Shake Golem",16,5,45],["Sus Imposter Squire",8,3,20]];
+const FARM=[["You pose in a puddle. Your reflection nods.",12,0],["You mew at a wall for 45 seconds. The wall respects you.",10,0],["You mutter ‘nah I’d win’ to nobody.",14,0],["You attempt a backflip. Gravity wins.",-12,-2],["You gaze at the horizon, wind in hair. A bird applauds.",16,0],["You do the 67 hands: one up, one down, repeat. Time slows.",7,0],["You say ‘ts pmo’ in a monotone and a crow bows.",11,0],["You flex at a cow. The cow flexes back. Tension.",-9,0],["You walk in slow motion for no reason. Violins appear.",18,0]];
+const LINES=["Bro really said ‘no cap’ on a crusade. Respect.","They say whisper six seven into a well and it whispers back seven six.","My cousin farmed so much aura he got his own weather.","Beware the Ohio Dragon. He final-bossed a village for fun.","I saw a man fall off a horse and still gain aura. Be that man.","Never trust a skeleton who says he’s ‘just resting’.","Look at nothing, say nothing, win everything.","Legend says 670 aura opens the dungeon door. Legend also says the wifi is bad.","Sigma is a state of mind. Mid is a state of Ohio.","Careful in the moat. The toilets are organizing.","Aura isn’t gained, it’s farmed. Plant your pose, water it with silence.","My dad left for milk and came back with 6 aura and 7 regrets."];
+const AMB=["Somewhere, a goblin yells six seven.","A distant lute plays a lo-fi beat.","You feel the number 67 watching you.","A crow does a perfect nod.","The wind whispers ‘sigma’.","Someone nearby is clearly mewing.","A peasant in the distance does the Griddy and fades away.","Your aura meter hums quietly."];
+const L=$("log");let g;
+const p=(t,c)=>{const d=document.createElement("div");d.className=c||"";d.textContent=t;L.append(d);L.scrollTop=L.scrollHeight};
+const rank=a=>a<50?"NPC":a<150?"Side Character":a<300?"Main Character":a<500?"Sigma":a<670?"Ohio Final Boss":"67 ASCENDED";
+const st=()=>{$("st").textContent=`HP ${g.hp}/30 · AURA ${g.aura}/670 · ${rank(g.aura)} · ${RM[g.room][0]}`};
+function fx(m,a,h){a=Math.max(a,-g.aura);let t=m;if(a)t+=` [${a>0?"+":""}${a} AURA]`;if(h)t+=` [${h>0?"+":""}${h} HP]`;g.aura+=a;g.hp=Math.min(30,g.hp+h);p(t,(a<0||h<0)?"b":a||h?"g":"d");st();if(g.hp<=0)die()}
+function die(){g.over=1;p(`☠ You got Ohio’d. Final aura: ${g.aura}. Rank: ${rank(g.aura)}. Type ‘new’ to run it back.`,"b")}
+function has(i){return g.inv.includes(i)}
+function find(list,w){w=w.toLowerCase();return list.find(i=>w.length>1&&IT[i][1].split(" ").some(k=>k.startsWith(w)||w.startsWith(k)))}
+function look(){const r=RM[g.room];p(r[0],"r");p(r[1]);p(R(AMB),"d");if(g.loc[g.room].length)p("On the ground: "+g.loc[g.room].map(i=>IT[i][0]).join(", ")+".","g");p("Exits: "+Object.keys(X[g.room]).map(d=>ND[d]).join(", ")+".","d");if(g.enemy)p(`⚔ ${g.enemy.n} is here! (${g.enemy.hp} HP)`,"b")}
+function start(){L.innerHTML="";const pl=Object.keys(RM).filter(k=>k!="throne");g={room:"gate",aura:0,hp:30,inv:[],loc:{},enemy:null,turn:0,fc:0,over:0};Object.keys(RM).forEach(k=>g.loc[k]=[]);Object.keys(IT).forEach(i=>g.loc[R(pl)].push(i));
+g.name=R(["Sir","Lady","Lord","Ser"])+" "+R(["Rizzalot","Mewsalot","Skibidi","Gyattrick","Auraldo","Sigmund","Chadrick","Fanumiel"])+" the "+R(["Unbothered","Mid","Lowkey","Based","Aura-Lacking","Chronically Online"]);
+p("SIX-SEVEN: THE AURA CRUSADE OF OHIOSHIRE","r");p(R(["King Mogglesworth sneezes and declares","A raven in a trench coat informs you","A scroll falls from the sky, screaming","A peasant with a megaphone announces"])+`: ${g.name}, farm 670 AURA, open the Dungeon of Doomscrolling, and slay the Ohio Dragon. Kingdom depends on it. Bring snacks.`);p("Type ‘help’ for commands. Every run shuffles items, foes and fate.","d");look();st()}
+function spawn(boss){const e=boss?["The Ohio Dragon",40,7,0]:R(EN);g.enemy={n:e[0],hp:e[1],atk:e[2],rw:e[3],boss};p(boss?"THE OHIO DRAGON lowers his sunglasses. ‘You’re cooked, chat.’":`⚔ A ${e[0]} appears! Type attack or flee.`,"b")}
+function move(d){if(g.enemy)return p("You can’t just walk away! Fight it or flee.","b");const to=X[g.room][d];if(!to)return fx("You bonk into nothing. Embarrassing.",-3,0);if(to=="throne"&&g.aura<670)return fx("The door rejects you: ‘AURA TOO LOW. COME BACK WHEN SIGMA.’",-5,0);g.room=to;g.fc=0;g.turn++;look();st();if(to=="throne")return spawn(1);const r=Math.random();if(r<.22)spawn();else if(r<.62){const e=R(EV);fx(...e)}}
+function atk(){if(!g.enemy)return fx("You shadowbox the air. Looks sick.",3,0);const e=g.enemy,d=N(3,7)+(has("sword")?4:0);e.hp-=d;p(R(["You hit "+e.n+" with a drip-heavy strike","You say ‘ratio’ and swing","You land a hit while maintaining eye contact"])+` for ${d}.`);
+if(e.hp<=0){g.enemy=null;if(e.boss){g.over=1;p(`The Ohio Dragon collapses, whispers ‘six... seven...’ and ascends. KINGDOM SAVED. ${g.name} finished with ${g.aura} aura in ${g.turn} moves. Rank: ${rank(g.aura)}. Type ‘new’ for another run.`,"g");return st()}return fx(`${e.n} is defeated! Victory pose achieved.`,e.rw,3)}
+const h=Math.max(1,N(1,e.atk)-(has("shield")?2:0));fx(`${e.n} ${R(["bonks","yells ‘gyatt’ at","fanum-taxes"])} you.`,0,-h);if(!g.over)p(`${e.n}: ${e.hp} HP left.`,"d")}
+function flee(){if(!g.enemy)return p("Nothing to flee from. Pure paranoia.","d");if(Math.random()<(g.enemy.boss?.4:.65)){g.enemy=null;fx("You escape using Aura Legs. Peak cowardice, still drippy.",-5,0)}else{const h=Math.max(1,N(1,g.enemy.atk)-(has("shield")?2:0));fx("You fail to flee and get clipped.",0,-h)}}
+function use(w){const i=find(g.inv,w);if(!i)return p("You don’t have that.","d");const rm=()=>g.inv.splice(g.inv.indexOf(i),1);
+if(i=="scroll"){rm();fx("You read it aloud. Your jaw unlocks a new tier.",50,0)}
+else if(i=="potion"){rm();fx("Tastes like Prime and regret. Wounds close.",10,15)}
+else if(i=="amulet"){rm();fx("The amulet pulses: 6... 7... Reality blinks.",67,0)}
+else if(i=="chicken"){rm();fx("The Chicken Jockey screams and rides off into legend.",25,0)}
+else if(i=="glasses"){rm();fx("You wear them at night. The moon looks away.",30,0)}
+else if(i=="coin"){rm();g.room=="market"?fx("Fanum taxes you, then respects you.",35,0):fx("A tax collector appears from nowhere and takes it.",-5,0)}
+else p(IT[i][0]+" is already working by vibes.","d")}
+function farm(){if(g.enemy)return p("Not mid-fight!","b");g.fc++;if(g.fc>3)return fx("This spot is aura-farmed out. You look desperate. Move on.",-6,0);const e=R(FARM);if(Math.random()<.1)return fx("CRITICAL AURA: the sky opens, a choir yells ‘SIX SEVEN’.",N(30,67),0);fx(...e)}
+function talk(){if(g.enemy)return p("The enemy has no time for chit-chat.","b");const n=RM[g.room][2];p(`${n}: “${R(LINES)}”`);if(Math.random()<.45)fx("They respected your silence.",N(5,15),0)}
+function run(c){c=c.trim().toLowerCase();if(!c)return;p("> "+c,"u");const [v,...r]=c.split(/\s+/),a=r.join(" ").replace(/^(the|a|my)\s+/,"");
+if(["new","restart"].includes(v))return start();if(g.over)return p("Game over. Type ‘new’.","d");
+const dirs={n:"n",north:"n",s:"s",south:"s",e:"e",east:"e",w:"w",west:"w"};
+if(dirs[v])move(dirs[v]);else if(v=="go"&&dirs[a])move(dirs[a]);
+else if(["look","l"].includes(v))look();
+else if(["i","inv","inventory"].includes(v))p(g.inv.length?"You carry: "+g.inv.map(i=>IT[i][0]+" ("+IT[i][2]+")").join("; "):"You carry nothing but vibes.");
+else if(["take","get","grab","pick"].includes(v)){const i=find(g.loc[g.room],a.replace(/^up\s+/,""));if(!i)p("Nothing like that here.","d");else{g.loc[g.room].splice(g.loc[g.room].indexOf(i),1);g.inv.push(i);fx(`Taken: ${IT[i][0]}.`,3,0)}}
+else if(["use","read","drink","wear","spend"].includes(v))use(a);
+else if(["farm","aura","flex","mew","pose"].includes(v))farm();
+else if(["talk","speak","chat"].includes(v))talk();
+else if(["attack","fight","hit","kill"].includes(v))atk();
+else if(["flee","run"].includes(v))flee();
+else if(v=="help")p("Commands: n/s/e/w, look, take X, use X, inv, talk, farm (flex/mew/pose), attack, flee, new.\nGoal: reach 670 aura, enter the throne room via the Dungeon, slay the Ohio Dragon. Items change place every run.","d");
+else p(R(["Bro what? Try ‘help’.","That command has no aura.","The kingdom does not understand your Ohio dialect."]),"d");st()}
+const bar=$("bar");["n","s","e","w","look","inv","farm","talk","attack","flee","use","help"].forEach(c=>{const b=document.createElement("button");b.textContent=c;b.onclick=()=>{if(c=="use")$("cmd").value="use ";else run(c);$("cmd").focus()};bar.append(b)});
+const go=()=>{const i=$("cmd");run(i.value);i.value=""};$("go").onclick=go;$("cmd").addEventListener("keydown",e=>{if(e.key=="Enter")go()});
+start();
+</script></body></html>
