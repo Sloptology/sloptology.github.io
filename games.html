@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Slop Vault | All Games</title>
+<meta name="description" content="Every game in the SLOP.TOPS portfolio. Search, filter and sort the slop.">
+<style>
+:root{
+  --bg:#07070d; --panel:#12121c; --line:#262638;
+  --purple:#8b5cf6; --lav:#c4b5fd; --pink:#f43f9d; --lime:#a3e635; --cyan:#22d3ee; --amber:#fbbf24;
+  --text:#fff; --muted:#9a9ab0;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;z-index:-2;
+  background-image:linear-gradient(rgba(139,92,246,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,.07) 1px,transparent 1px);
+  background-size:48px 48px;animation:grid 12s linear infinite}
+@keyframes grid{to{background-position:48px 48px}}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+
+header{position:sticky;top:0;z-index:50;padding:16px 8%;display:flex;justify-content:space-between;align-items:center;
+  background:rgba(7,7,13,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.logo{font-size:1.3rem;font-weight:800;color:var(--lav);letter-spacing:3px;text-decoration:none;font-family:'Courier New',monospace}
+.logo b{color:var(--pink)}
+nav a{color:var(--muted);text-decoration:none;margin-left:25px;transition:.3s}
+nav a:hover,nav a[aria-current]{color:#fff}
+
+main{max-width:1400px;margin:auto;padding:56px 8% 80px}
+.page-head h1{font-size:clamp(2.2rem,6vw,4rem);font-weight:900;letter-spacing:-1px;line-height:1.05;color:var(--lav);margin-bottom:10px}
+.page-head p{color:var(--muted);max-width:560px}
+
+/* controls */
+.controls{position:sticky;top:67px;z-index:40;margin:32px -8px 0;padding:14px 8px;background:linear-gradient(180deg,var(--bg) 80%,transparent)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.search{flex:1 1 260px;position:relative}
+.search input{width:100%;padding:12px 44px 12px 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:#fff;font:inherit}
+.search input::placeholder{color:#6b6b85}
+.search input:focus{border-color:var(--purple);outline:none;box-shadow:0 0 0 3px rgba(139,92,246,.25)}
+.search kbd{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:'Courier New',monospace;font-size:.75rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 7px}
+select,.seg button,.btn{font:inherit;color:#fff;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 14px;cursor:pointer}
+select:hover,.seg button:hover,.btn:hover{border-color:var(--purple)}
+.seg{display:flex}
+.seg button{border-radius:0;padding:11px 16px}
+.seg button:first-child{border-radius:10px 0 0 10px}
+.seg button:last-child{border-radius:0 10px 10px 0;border-left:0}
+.seg button[aria-pressed="true"]{background:var(--purple);border-color:var(--purple)}
+.btn.rand{border-color:var(--pink);color:var(--pink);font-weight:800}
+.btn.rand:hover{background:var(--pink);color:#fff}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{font:inherit;font-size:.85rem;font-weight:700;color:var(--lav);background:transparent;border:1px solid var(--line);border-radius:99px;padding:5px 14px;cursor:pointer;transition:.2s}
+.chip:hover{border-color:var(--purple)}
+.chip[aria-pressed="true"]{background:var(--lime);color:#0a0a0f;border-color:var(--lime)}
+.chip small{opacity:.6;margin-left:4px;font-weight:600}
+
+.count{color:var(--muted);font-size:.9rem;margin:22px 0 16px;font-family:'Courier New',monospace}
+
+/* grid view */
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;text-decoration:none;
+  transition:transform .2s,border-color .2s,box-shadow .2s}
+.card:hover{transform:translateY(-4px);border-color:var(--purple);box-shadow:0 14px 40px rgba(139,92,246,.22)}
+.banner{height:110px;display:grid;place-items:center;font-size:3.2rem;position:relative}
+.banner::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent 0 14px,rgba(255,255,255,.04) 14px 28px)}
+.banner span{position:relative;z-index:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5));transition:transform .3s}
+.card:hover .banner span{transform:scale(1.2) rotate(-8deg)}
+.new{position:absolute;top:10px;left:10px;z-index:2;background:var(--pink);color:#fff;font-size:.7rem;font-weight:800;padding:2px 9px;border-radius:99px}
+.body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.body h3{font-size:1.15rem;line-height:1.25}
+.desc{color:#a5a5b8;font-size:.88rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:.7rem;padding:1px 9px;border-radius:99px;background:#1e1e2e;color:var(--lav);border:1px solid var(--line);font-weight:700}
+.slop{margin-top:auto;padding-top:6px}
+.slop-top{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);font-family:'Courier New',monospace;margin-bottom:4px}
+.bar{height:6px;background:#1b1b2b;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--lime),var(--amber),var(--pink))}
+
+/* compact list view */
+.list.compact{grid-template-columns:1fr;gap:8px}
+.list.compact .card{flex-direction:row;align-items:center;border-radius:10px}
+.list.compact .banner{height:auto;width:64px;align-self:stretch;font-size:1.7rem;flex:none}
+.list.compact .new{top:4px;left:4px;font-size:.6rem;padding:0 6px}
+.list.compact .body{flex-direction:row;align-items:center;gap:16px;padding:10px 16px;flex-wrap:wrap}
+.list.compact .body h3{font-size:1rem;flex:1 1 180px}
+.list.compact .desc{display:none}
+.list.compact .tags{flex:2 1 200px}
+.list.compact .slop{margin:0;padding:0;width:110px;flex:none}
+
+.empty{text-align:center;padding:60px 20px;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+.empty strong{display:block;color:#fff;font-size:1.2rem;margin-bottom:6px}
+.empty .btn{margin-top:16px}
+
+footer{text-align:center;padding:40px 20px 60px;color:#6a6a82;font-size:.85rem;border-top:1px solid var(--line)}
+
+@media(max-width:700px){
+  header{flex-direction:column;gap:6px;padding:12px 6%}
+  nav a{margin:0 10px}
+  main{padding:36px 6% 60px}
+  .controls{top:84px}
+  .search kbd{display:none}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/">GAME <small>slop</small><b>.</b>DEV</a>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/games.html" aria-current="page">All Games</a>
+    <a href="/#manifesto">The Manifesto</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-head">
+    <h1>The Slop Vault</h1>
+    <p>Every game in one place. Search by name, filter by genre, or just roll the dice.</p>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <div class="search">
+        <input id="q" type="search" placeholder="Search games, tags, vibes..." aria-label="Search games" autocomplete="off">
+        <kbd>/</kbd>
+      </div>
+      <select id="sort" aria-label="Sort games">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="slop">Most slop</option>
+        <option value="az">A to Z</option>
+      </select>
+      <div class="seg" role="group" aria-label="View">
+        <button id="vGrid" aria-pressed="true" title="Card view">Cards</button>
+        <button id="vList" aria-pressed="false" title="Compact list view">List</button>
+      </div>
+      <button class="btn rand" id="rand">Random game</button>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Filter by genre"></div>
+  </div>
+
+  <div class="count" id="count" aria-live="polite"></div>
+  <div class="list" id="list"></div>
+</main>
+
+<footer>
+  <p>&copy; 2026 Sloppy | <a href="/">Back to the portfolio</a></p>
+</footer>
+
+<script>
+/* ============================================================
+   ADD A NEW GAME: copy one line below, paste it at the BOTTOM of
+   the list, and change the values. That's it. Nothing else to edit.
+   - path:  the folder of the game on your site
+   - genre: one word, it becomes a filter button automatically
+   - slop:  0 to 100 (the bar caps at 100)
+   - new:   true shows a NEW badge (optional)
+   ============================================================ */
+var GAMES = [
+  { title:"Hollowdeep", path:"/hollowdeep/", emoji:"⚔️", genre:"RPG", tags:["Dungeon Crawler","Spooky","Mobile friendly"], slop:53,
+    desc:"Descend into the depths of a dangerous dungeon. Explore, survive, and face whatever lurks below.",
+    bg:"linear-gradient(135deg,#172d32,#315b53)" },
+
+  { title:"Brainrot Arena", path:"/brainrotarena/", emoji:"💀", genre:"Action", tags:["Deathmatch","Brainrot","Unhinged"], slop:67,
+    desc:"A chaotic brainrot deathmatch where internet culture meets all-out combat. Only one player comes out on top.",
+    bg:"linear-gradient(135deg,#481c40,#a52c68)" },
+
+  { title:"Brainrot Karts", path:"/brainrotkarts/", emoji:"🏎️", genre:"Racing", tags:["Racing","Brainrot","Mario Kart-ish"], slop:67,
+    desc:"A ridiculous racing experience inspired by Mario Kart. Race your way to victory.",
+    bg:"linear-gradient(135deg,#193b65,#2867a3)" },
+
+  { title:"Curse of Ohioshire", path:"/ohioshire/", emoji:"📜", genre:"RPG", tags:["Text RPG","Ohio","Boomer style"], slop:67,
+    desc:"Dive into the gamemaxxing slop of Ohioshire in this boomer-style text RPG.",
+    bg:"linear-gradient(135deg,#2a3b19,#5b8a2e)" },
+
+  { title:"WoW Atari Raid", path:"/warcraftatari/", emoji:"🛡️", genre:"Retro", tags:["Retro","Fan Game","Raid"], slop:84,
+    desc:"What if World of Warcraft raiding existed on an Atari? Tank, heal, and pray to the RNG gods in glorious 8-bit.",
+    bg:"linear-gradient(135deg,#543b19,#a77a2e)" },
+
+  { title:"Arena of Ragebait", path:"/arenaofragebait/", emoji:"🗡️", genre:"Action", tags:["Melee","Arena","Ragebait"], slop:84,
+    desc:"Think you can handle some ragebait? Swing sloppy swords in the arena and upgrade with each kill.",
+    bg:"linear-gradient(135deg,#3b1717,#a52c2c)" },
+
+  { title:"A Chat with Haven", path:"/chatwithhaven/", emoji:"🗣️", genre:"Story", tags:["AI","Therapy","Based on a true story"], slop:84,
+    desc:"Haven was an old beta model from around 2024, one of the first of its kind: a therapy bot.",
+    bg:"linear-gradient(135deg,#17303b,#2d6a7a)" },
+
+  { title:"The Last Christmas", path:"/lastchristmas/", emoji:"🎅", genre:"Horror", tags:["Angry","Santa","Hoe hoe die"], slop:84,
+    desc:"Santa just wants to talk, bro.",
+    bg:"linear-gradient(135deg,#3b1717,#1f5a2e)" },
+
+  { title:"The Last Show", path:"/thelastshow/", emoji:"🤡", genre:"Horror", tags:["Clowns","Circus","1989"], slop:5,
+    desc:"What if you were alive in 1989? Trust me, you weren't if you're here, and you went to a circus.",
+    bg:"linear-gradient(135deg,#3b2a17,#a5442c)" },
+
+  { title:"Help Desk", path:"/helpdesk/", emoji:"🖥️", genre:"Story", tags:["Help desk","Based on a true story"], slop:2,
+    desc:"Play and work...",
+    bg:"linear-gradient(135deg,#171b30,#2d4057)" },
+
+  { title:"Nightshift", path:"/nightshift/", emoji:"👁️", genre:"Horror", tags:["Horror","Survival","AI data center"], slop:100, slopLabel:"666%",
+    desc:"Spend the night working in an AI data center. Surviving until morning might be harder than you think.",
+    bg:"linear-gradient(135deg,#171b30,#452d57)" },
+
+  { title:"The Haunted Collector", path:"/hauntedcollector/", emoji:"👻", genre:"Horror", tags:["Haunted","Collector","Spooky"], slop:77, new:true,
+    desc:"Hunt down ghosts, collect cursed treasures, and try not to get spooked into next week.",
+    bg:"linear-gradient(135deg,#2a1538,#c2570c)" }
+];
+
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var list=$('#list'), q=$('#q'), sortEl=$('#sort'), chipsEl=$('#chips'), countEl=$('#count');
+  var state={genre:'All',view:'grid'};
+
+  // remember order added so "newest" works from array position
+  GAMES.forEach(function(g,i){g._i=i});
+
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+
+  /* genre chips, generated from the data */
+  function buildChips(){
+    var counts={};
+    GAMES.forEach(function(g){counts[g.genre]=(counts[g.genre]||0)+1});
+    var names=['All'].concat(Object.keys(counts).sort());
+    chipsEl.innerHTML=names.map(function(n){
+      var c=n==='All'?GAMES.length:counts[n];
+      return '<button class="chip" data-g="'+esc(n)+'" aria-pressed="'+(n===state.genre)+'">'+esc(n)+'<small>'+c+'</small></button>';
+    }).join('');
+  }
+  chipsEl.addEventListener('click',function(e){
+    var b=e.target.closest('.chip');if(!b)return;
+    state.genre=b.dataset.g;
+    chipsEl.querySelectorAll('.chip').forEach(function(c){c.setAttribute('aria-pressed',c===b)});
+    render();
+  });
+
+  function visible(){
+    var term=q.value.trim().toLowerCase();
+    var out=GAMES.filter(function(g){
+      if(state.genre!=='All'&&g.genre!==state.genre)return false;
+      if(!term)return true;
+      var hay=(g.title+' '+g.genre+' '+g.tags.join(' ')+' '+g.desc).toLowerCase();
+      return term.split(/\s+/).every(function(w){return hay.indexOf(w)>-1});
+    });
+    var s=sortEl.value;
+    out.sort(function(a,b){
+      if(s==='oldest')return a._i-b._i;
+      if(s==='slop')return b.slop-a.slop||b._i-a._i;
+      if(s==='az')return a.title.localeCompare(b.title);
+      return b._i-a._i;
+    });
+    return out;
+  }
+
+  function card(g){
+    return '<a class="card" href="'+esc(g.path)+'">'+
+      '<div class="banner" style="background:'+g.bg+'">'+(g.new?'<div class="new">NEW</div>':'')+'<span>'+g.emoji+'</span></div>'+
+      '<div class="body"><h3>'+esc(g.title)+'</h3>'+
+      '<p class="desc">'+esc(g.desc)+'</p>'+
+      '<div class="tags">'+g.tags.map(function(t){return '<span class="tag">'+esc(t)+'</span>'}).join('')+'</div>'+
+      '<div class="slop"><div class="slop-top"><span>Slop</span><span>'+esc(g.slopLabel||g.slop+'%')+'</span></div>'+
+      '<div class="bar"><i style="width:'+Math.min(g.slop,100)+'%"></i></div></div>'+
+      '</div></a>';
+  }
+
+  function render(){
+    var items=visible();
+    list.classList.toggle('compact',state.view==='list');
+    countEl.textContent=items.length===GAMES.length
+      ? GAMES.length+' games'
+      : 'Showing '+items.length+' of '+GAMES.length+' games';
+    if(!items.length){
+      list.innerHTML='<div class="empty" style="grid-column:1/-1"><strong>No slop found</strong>Try a different word or genre.<br><button class="btn" id="clear">Clear filters</button></div>';
+      $('#clear').addEventListener('click',reset);
+      return;
+    }
+    list.innerHTML=items.map(card).join('');
+  }
+
+  function reset(){
+    q.value='';state.genre='All';sortEl.value='newest';
+    chipsEl.querySelectorAll('.chip').forEach(function(c){c.setAttribute('aria-pressed',c.dataset.g==='All')});
+    render();q.focus();
+  }
+
+  q.addEventListener('input',render);
+  sortEl.addEventListener('change',render);
+
+  function setView(v){
+    state.view=v;
+    $('#vGrid').setAttribute('aria-pressed',v==='grid');
+    $('#vList').setAttribute('aria-pressed',v==='list');
+    try{localStorage.setItem('slopView',v)}catch(e){}
+    render();
+  }
+  $('#vGrid').addEventListener('click',function(){setView('grid')});
+  $('#vList').addEventListener('click',function(){setView('list')});
+
+  $('#rand').addEventListener('click',function(){
+    var pool=visible();if(!pool.length)pool=GAMES;
+    location.href=pool[Math.floor(Math.random()*pool.length)].path;
+  });
+
+  /* "/" focuses search, Escape clears it */
+  document.addEventListener('keydown',function(e){
+    var typing=/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName);
+    if(e.key==='/'&&!typing){e.preventDefault();q.focus()}
+    if(e.key==='Escape'&&document.activeElement===q){q.value='';render();q.blur()}
+  });
+
+  /* allow links like games.html?genre=Horror or ?q=kart */
+  var params=new URLSearchParams(location.search);
+  if(params.get('q'))q.value=params.get('q');
+  if(params.get('genre'))state.genre=params.get('genre');
+  try{var sv=localStorage.getItem('slopView');if(sv==='list'||sv==='grid')state.view=sv}catch(e){}
+  $('#vGrid').setAttribute('aria-pressed',state.view==='grid');
+  $('#vList').setAttribute('aria-pressed',state.view==='list');
+
+  buildChips();
+  render();
+})();
+</script>
+</body>
+</html>

@@ -119,6 +119,19 @@ section{padding:80px 8%;max-width:1400px;margin:auto}
 .meter-fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--lime),var(--amber),var(--pink));transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
 .game-link{display:inline-flex;align-items:center;gap:8px;color:var(--lav);text-decoration:none;font-weight:800;transition:.3s}
 .game-link:hover{color:#fff;gap:14px}
+.all-games{text-align:center;margin-top:40px}
+.all-games p{color:var(--muted);margin-top:16px;font-size:.9rem}
+
+.vault{text-align:center;padding:110px 8%}
+.vault h2{font-size:clamp(1.9rem,4vw,2.8rem);margin-bottom:8px;font-weight:900}
+.vault h2 span{color:var(--pink)}
+.vault p{color:var(--muted)}
+.vault-btn{display:inline-block;margin:36px 0 18px;padding:30px clamp(28px,7vw,80px);border-radius:14px;
+  background:var(--purple);color:#fff;text-decoration:none;font-weight:900;letter-spacing:2px;
+  font-size:clamp(1.4rem,5vw,2.8rem);line-height:1.1;box-shadow:0 10px 0 #5b34c4;transition:.25s}
+.vault-btn:hover{transform:translateY(-4px);box-shadow:0 14px 0 #5b34c4;background:#9b72ff}
+.vault-btn:active{transform:translateY(6px);box-shadow:0 3px 0 #5b34c4}
+.vault-sub{font-size:.9rem}
 
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
@@ -320,6 +333,7 @@ body.rave{animation:rave 1.2s linear infinite}
   <nav>
     <a href="#home">Top</a>
     <a href="#games">The Slop</a>
+    <a href="/games.html">All Games</a>
     <a href="#log">Slop Log</a>
     <a href="#manifesto">The Manifesto</a>
     <a href="#reviews">Slopviews</a>
@@ -350,123 +364,13 @@ body.rave{animation:rave 1.2s linear infinite}
 
 <div class="marquee"><div class="track" id="m1"></div></div>
 
-<!-- GAMES -->
-<section id="games">
-  <div class="section-heading reveal">
+<!-- GAMES: the full list lives in /games.html -->
+<section id="games" class="vault">
+  <div class="reveal">
     <h2>My Sloppy <span>Slop</span></h2>
-    <p>Six sloppers. Six different experiences. All built in pure classly slop. all have a certified poop rating of jozerto to chuckles</p>
-  </div>
-
-  <div class="game-grid">
-
-    <div class="game-card reveal">
-      <div class="badge">SLOP LVL 3</div>
-      <div class="game-banner game-1"><span>⚔️</span></div>
-      <div class="game-info">
-        <div class="tags"><span class="tag">Dungeon Crawler</span><span class="tag">Spooky</span></div>
-        <h3>Hollowdeep</h3>
-        <p>Descend into the depths of a dangerous dungeon in this dungeon crawler adventure. Explore, survive, and face whatever lurks below. MOBILE FRIENDLY</p>
-        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>53%</span></div><div class="meter-bar"><div class="meter-fill" data-w="53"></div></div></div>
-        <a href="/hollowdeep/" class="game-link">Play Game <span>→</span></a>
-      </div>
-    </div>
-
-    <div class="game-card reveal">
-      <div class="badge">SLOP LVL 50</div>
-      <div class="game-banner game-2"><span>💀</span></div>
-      <div class="game-info">
-        <div class="tags"><span class="tag">Deathmatch</span><span class="tag">Brainrot</span><span class="tag">Unhinged</span></div>
-        <h3>Brainrot Arena</h3>
-        <p>Enter a chaotic brainrot deathmatch where internet culture meets all-out combat. Only one player can come out on top. straight peak absolute cinmea poop rating 10/10</p>
-        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>67%</span></div><div class="meter-bar"><div class="meter-fill" data-w="67"></div></div></div>
-        <a href="/brainrotarena/" class="game-link">Play Game <span>→</span></a>
-      </div>
-    </div>
-
-    <div class="game-card reveal">
-      <div class="badge">SLOP LVL 49.3</div>
-      <div class="game-banner game-3"><span>🏎️</span></div>
-      <div class="game-info">
-        <div class="tags"><span class="tag">Racing</span><span class="tag">Brainrot</span></div>
-        <h3>Brainrot Karts</h3>
-        <p>Get behind the wheel in this ridiculous racing experience inspired by Mario Kart. Race your way to victory! poop rating 10000/10</p>
-        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>67%</span></div><div class="meter-bar"><div class="meter-fill" data-w="67"></div></div></div>
-        <a href="/brainrotkarts/" class="game-link">Play Game <span>→</span></a>
-      </div>
-    </div>
-
-    <div class="game-card reveal">
-      <div class="badge">EXTREME SLOP LEVEL 67</div>
-      <div class="game-banner game-3"><span>🏎️</span></div>
-      <div class="game-info">
-        <div class="tags"><span class="tag">Curse of</span><span class="tag">Ohioshire</span></div>
-        <h3>Curse of Ohioshire</h3>
-        <p>Dive into a the gamemaxxing slop of Ohioshire in this boomer style text RPG game! poop rating 10000/10</p>
-        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>67%</span></div><div class="meter-bar"><div class="meter-fill" data-w="67"></div></div></div>
-        <a href="/ohioshire/" class="game-link">Play Game <span>→</span></a>
-      </div>
-    </div>
-
-    <div class="game-card reveal">
-      <div class="badge">SLOP LVL 8-BIT</div>
-      <div class="game-banner game-4"><span>🛡️</span></div>
-      <div class="game-info">
-        <div class="tags"><span class="tag">Retro</span><span class="tag">Fan Game</span><span class="tag">Raid</span></div>
-        <h3>WoW Atari Raid</h3>
-        <p>What if World of Warcraft raiding existed on an Atari? Experience this retro-inspired fan game based on WoW raids. Tank, heal, and pray to the RNG gods in glorious 8-bit. aboslute cinema</p>
-        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>84%</span></div><div class="meter-bar"><div class="meter-fill" data-w="84"></div></div></div>
-        <a href="/warcraftatari/" class="game-link">Play Game <span>→</span></a>
-      </div>
-    </div>
-
-    <div class="game-card reveal">
-      <div class="badge">SLOP LVL RAGE</div>
-      <div class="game-banner game-4"><span>⚔️</span></div>
-      <div class="game-info">
-        <div class="tags"><span class="tag">Retro</span><span class="tag">Fan Game</span><span class="tag">Raid</span></div>
-        <h3>Arena of Ragebait</h3>
-        <p>Think you can handle some ragebait? Try it out in this arena where you swing sloppy swords and upgrade each kill...</p>
-        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>84%</span></div><div class="meter-bar"><div class="meter-fill" data-w="84"></div></div></div>
-        <a href="/arenaofragebait/" class="game-link">Play Game <span>→</span></a>
-      </div>
-    </div>
-
-    <div class="game-card reveal">
-      <div class="badge">SLOP LEVEL THERAPY</div>
-      <div class="game-banner game-4"><span>🗣️</span></div>
-      <div class="game-info">
-        <div class="tags"><span class="tag">AI</span><span class="tag">THERAPY</span><span class="tag">BASED ON A TRUE STORY</span></div>
-        <h3>A Chat with Haven</h3>
-        <p>Real talk... Haven was an old beta model from 2024ish era, it wasn't very known and needed a beta to chat but it was one of the first of it's kind: A Therapy bot...</p>
-        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>84%</span></div><div class="meter-bar"><div class="meter-fill" data-w="84"></div></div></div>
-        <a href="/chatwithhaven/" class="game-link">Play Game <span>→</span></a>
-      </div>
-    </div>
-
-    <div class="game-card reveal">
-      <div class="badge">SLOP LVL 3</div>
-      <div class="game-banner game-5"><span>👁️</span></div>
-      <div class="game-info">
-        <div class="tags"><span class="tag">Horror</span><span class="tag">Survival</span></div>
-        <h3>Nightshift</h3>
-        <p>Spend the night working in an AI data center. Something isn't right, and surviving until morning might be harder than you think.</p>
-        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>666%</span></div><div class="meter-bar"><div class="meter-fill" data-w="68"></div></div></div>
-        <a href="/nightshift/" class="game-link">Play Game <span>→</span></a>
-      </div>
-    </div>
-
-    <div class="game-card reveal">
-      <div class="badge">SLOP LVL 6.7</div>
-      <div class="game-banner game-6"><span>👻</span></div>
-      <div class="game-info">
-        <div class="tags"><span class="tag">Haunted</span><span class="tag">Collector</span><span class="tag">Spooky</span></div>
-        <h3>The Haunted Collector</h3>
-        <p>Hunt down ghosts, collect cursed treasures, and try not to get spooked into next week. Gotta haunt 'em all. poop rating: boo/10</p>
-        <div class="meter"><div class="meter-label"><span>Slop Content</span><span>77%</span></div><div class="meter-bar"><div class="meter-fill" data-w="77"></div></div></div>
-        <a href="/hauntedcollector/" class="game-link">Play Game <span>→</span></a>
-      </div>
-    </div>
-
+    <p>Every game I've made, all in one place.</p>
+    <a href="/games.html" class="vault-btn">ENTER THE SLOP VAULT</a>
+    <p class="vault-sub">Search, filter by genre, or roll the dice.</p>
   </div>
 </section>
 
@@ -479,7 +383,7 @@ body.rave{animation:rave 1.2s linear infinite}
     <p>Extremely scientific data. Peer review pending.</p>
   </div>
   <div class="stats">
-    <div class="stat reveal"><div class="num" data-count="9">0</div><div class="lbl">Games Shipped</div></div>
+    <div class="stat reveal"><div class="num" data-count="12">0</div><div class="lbl">Games Shipped</div></div>
     <div class="stat reveal"><div class="num" data-count="67676767">0</div><div class="lbl">Prompts Sent</div></div>
     <div class="stat reveal"><div class="num" data-count="404">0</div><div class="lbl">Bugs "Fixed"</div></div>
     <div class="stat reveal"><div class="num" data-count="67" data-suffix="%">0</div><div class="lbl">Slop Purity</div></div>
@@ -926,7 +830,7 @@ body.rave{animation:rave 1.2s linear infinite}
   fill('#m2',['PLAY NOW','TOUCH GRASS LATER','BRAINROT APPROVED','ONE MORE GAME','SLOPPERS ONLY','CERTIFIED SLOPTASTIC','GRADE PENDING']);
 
   /* typed tagline */
-  var lines=['> loading slop.exe ...','> compiling brainrot ...','> asking the AI to fix it ...','> it works?? shipping it.','> 6 games. 0 regrets. some regrets.'];
+  var lines=['> loading slop.exe ...','> compiling brainrot ...','> asking the AI to fix it ...','> it works?? shipping it.','> 12 games. 0 regrets. some regrets.'];
   var li=0,ci=0,del=false,el=$('#typed');
   function type(){
     var t=lines[li];
@@ -939,8 +843,8 @@ body.rave{animation:rave 1.2s linear infinite}
   }
   type();
 
-  /* random game */
-  var games=['/hollowdeep/','/brainrotarena/','/brainrotkarts/','/warcraftatari/','/arenaofragebait/', '/nightshift/','/hauntedcollector/'];
+  /* random game (all 12; add new paths here too) */
+  var games=['/hollowdeep/','/brainrotarena/','/brainrotkarts/','/ohioshire/','/warcraftatari/','/arenaofragebait/','/chatwithhaven/','/lastchristmas/','/thelastshow/','/helpdesk/','/nightshift/','/hauntedcollector/'];
   $('#randomBtn').addEventListener('click',function(){
     toast('Rolling the slop dice... 🎲');
     setTimeout(function(){location.href=games[Math.floor(Math.random()*games.length)]},900);
@@ -990,7 +894,7 @@ body.rave{animation:rave 1.2s linear infinite}
     ['<span class="ok">AI:</span> Great question! Here is the fix.','',800],
     ['<span class="err">ERROR:</span> new, different fire','',700],
     ['<span class="dim">$</span> git commit -m "fixed it (for real)"','',700],
-    ['<span class="ok">SUCCESS:</span> 6 games deployed. Nobody check the console.','',700]
+    ['<span class="ok">SUCCESS:</span> 12 games deployed. Nobody check the console.','',700]
   ];
   var tdone=false;
   new IntersectionObserver(function(en,ob){
