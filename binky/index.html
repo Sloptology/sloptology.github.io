@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Binky’s Playhouse</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=VT323&display=swap">
+<style>
+:root{--bg:#07060c;--ink:#d8d4c8;--dim:#8a8596;--w:min(100vw,calc((100dvh - 40px)*.96));box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:'VT323','Courier New',monospace}
+#stage{width:100%;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg)}
+.tv{position:relative;width:var(--w);aspect-ratio:4/3;background:#000;overflow:hidden;border:4px solid #3a3a4c;touch-action:none}
+canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+.tv::after{content:"";position:absolute;inset:0;z-index:9;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.55))}
+.ov{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5%;gap:calc(var(--w)/60)}
+.ov.on{display:flex}
+#title{background:linear-gradient(#4aa8ff 0 22%,#7ccaff 22% 44%,#ffe9a8 44% 62%,#4cc04c 62% 82%,#2f9a3c 82%)}
+#title h1{font-family:'Fredoka',sans-serif;font-size:calc(var(--w)/11);margin:0;line-height:1.05;text-shadow:3px 3px 0 #fff8}
+#title h1 span{display:inline-block}
+#title p{margin:0;color:#2c2140;max-width:36ch;font-size:calc(var(--w)/32)}
+#title .warn{background:#1a1a7a;color:#ffff55;padding:4px 12px;border:3px double #ccc;font-size:calc(var(--w)/34)}
+.tv.after #title{filter:saturate(.35) brightness(.7)}
+button{font:inherit;font-size:calc(var(--w)/26);background:#c0c0c0;color:#000;border:0;padding:calc(var(--w)/120) calc(var(--w)/34);cursor:pointer;box-shadow:inset -3px -3px #555,inset 3px 3px #fff,3px 3px 0 #0008}
+button:active{box-shadow:inset 3px 3px #555,inset -3px -3px #fff}
+button:focus-visible{outline:3px solid #ffff55;outline-offset:3px}
+#fs{position:absolute;z-index:12;top:7%;right:1.5%;font-size:calc(var(--w)/44);padding:2px 8px;opacity:.75}
+#card{background:#000;color:#cfc9bd;font-size:calc(var(--w)/9);opacity:0;transition:opacity 1.2s}
+#card.on{display:flex}#card.show{opacity:1}
+#card small{font-size:calc(var(--w)/30);color:#8a8596;max-width:30ch}
+#ch{background:#000c}
+#ch p{margin:0 0 6px;color:#cfc9bd;font-size:calc(var(--w)/26)}
+#end{background:#000;color:#cfc9bd;font-size:calc(var(--w)/24)}
+#end p{margin:0;max-width:30ch;opacity:0;transition:opacity 2s}#end p.show{opacity:1}
+#dlg{width:var(--w);min-height:calc(var(--w)/4);background:#0a0a5a;color:#e8e8e8;border:5px double #b8b8b8;padding:6px 14px;cursor:pointer;font-size:calc(var(--w)/27)}
+#hud,#rec{position:absolute;z-index:8;top:1.5%;font-size:calc(var(--w)/32);color:#fff;text-shadow:1px 1px #000;pointer-events:none}#hud{left:2%}#rec{right:2%;color:#ff3030;display:none;animation:bl 1.2s steps(1) infinite}
+#opts{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:8px}#opts button{font-size:calc(var(--w)/31);text-align:left}
+#sp{color:#ffff55;min-height:1.1em}
+#tx{line-height:1.1}
+#tx::after{content:"_";animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){#card,#end p{transition:none}#rec{animation:none}#tx::after{animation:none}}
+</style></head><body>
+<div id="stage"><div class="tv" id="tv">
+<button id="fs">Full screen</button><div id="hud"></div><div id="rec">● REC</div>
+<canvas id="c" width="320" height="240" aria-label="Game view"></canvas>
+<div class="ov on" id="title">
+<h1><span style="color:#e63950">Binky’s</span> <span style="color:#2b7de9">Playhouse</span></h1>
+<p>A Tumbleberry Studios production, 1998.<br>Help Binky the Friendly Bunny and his four friends get ready for the Friendship Festival!<br>A storybook for little ones. Read along with the Narrator, click the text to continue, and choose what Binky does with the buttons.</p>
+<p id="save" style="display:none;color:#7a1c1c">SAVE DATA FOUND: BINKY. DAY 8.</p>
+<p class="warn">Headphones advised.</p>
+<button id="go">Press Start</button>
+</div>
+<div class="ov" id="card"></div>
+<div class="ov" id="ch"><p>SCENE 1. TAKE 7.</p><button id="b1">Clap the board</button><button id="b2">Turn it off</button></div>
+<div class="ov" id="end"></div>
+</div>
+<div id="dlg" role="status" aria-live="polite"><div id="sp"></div><div id="tx">Press Start.</div><div id="opts"></div></div>
+</div>
+<script>
+const $=s=>document.querySelector(s),C=$('#c'),X=C.getContext('2d',{willReadFrequently:true});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const B={a:'rabbit',c:'#f4f4ff'};
+const F=[{n:'Dottie',r:'Lily',a:'duck',c:'#ffd23f'},{n:'Barnaby',r:'Tom',a:'bear',c:'#b5693a'},{n:'Pim',r:'Sam',a:'squirrel',c:'#ee8a2e'},{n:'Fern',r:'Ruth',a:'fawn',c:'#f0c48a'}];
+const FP=[[70,150],[255,145],[115,212],[215,208]],AG=[8,10,9,7];
+const IT=['bunting','lantern','cake','music box','photograph','tape reel','clapperboard'];
+const IP=[[160,128],[40,205],[285,200],[170,135],[30,140],[280,130],[160,150]];
+const IM=["You spot the bunting! Hooray! Now the village looks just like the show.","You spot the lantern. It's warm, like a stage light.","You spot the cake. The candles are already lit. Nobody lit them.","You spot the music box. It plays the theme backwards, with a child humming along.","You spot a photograph. Five children in animal masks. One face is scratched out.","You spot a tape. TAPE 6: 'Cut. Cut! Who locked the studio door? Somebody open the door.'","SCENE 1, TAKE 7. Voice actor: BINKY (age 9). The slate is dated the day they stopped filming."];
+const N=["Welcome to Binky's Happy Hug Club! Click a friend to walk over and say hello. Today's lesson: sharing!","Six days until the Friendship Festival! Today's lesson: honesty. Say hello. Say hello.","Five days. Today's lesson: including everyone. Is everyone here?","Four days. Today's lesson: saying sorry. Keep the music on.","Three days. Today's lesson: being brave. The village is quiet now. That's alright.","Two days. Today's lesson: looking after friends. Nobody is coming to the festival.","The last day. Go inside. They're waiting on set."];
+const C6=F.concat([{n:'Mr. Ribbit',r:'Jon',a:'frog',c:'#4cb84c'},{n:'Old Hoot',r:'Ella',a:'owl',c:'#a09070'}]);
+const AR=[0,1,2,0,1,2],AN=['MEADOW','POND','WOODS'],NPP=[[75,160],[80,172],[235,176],[240,150],[235,166],[80,166]];
+const TK=[{t:'Sharing'},{t:'Honesty'},{t:'Including others'},{t:'Saying sorry'},{t:'Being brave'},{t:'Looking after friends'},{t:'Keeping promises'}];
+const LS=["Sharing is caring.","Honesty keeps the lights on.","Everyone belongs here.","Saying sorry makes it better. Say it louder.","Being brave means going in anyway.","Good friends never leave. Never."];
+const SG=["♪ Hug, hug, hug, hug, hooray! ♪","♪ Hug, hug, hug, hug, hooray! Hooray? ♪","♪ Hug, hug, hug, hug, stay, stay... ♪","♪ Hug, hug, hug, hug, hold on tight ♪","♪ Hug, hug, hug, hug, don't let go ♪","♪ Hug, hug, hug, hug, no one leaves ♪"];
+const EX=[["Ribbit! Lovely day for a hug, Binky!","Hoo hoo! Hug time is the best time!"],["Ribbit. Did you hear the song get slower?","Hoo. Who. Who. Who's watching the show?"],["The water's cold. It's so cold. Please don't leave us here.","Finish the show and we all go dark. Please. Stop walking."]];
+const L=[["Good morning, Binky! The Friendship Festival is nearly here. I'm so excited!","Friends are the best thing in the whole wide world!","I love songs. Do you love songs? Everybody loves songs!","We'll all be together forever, Binky. Isn't that nice?"],
+["Morning, Binky! The Friendship Festival is so near. Isn't it exciting?","Friends are the best thing in the whole wide world. The whole wide world.","Do you love songs? Everybody loves songs. Everybody.","Together forever. Isn't that nice? Isn't that nice, Binky?"],
+["Good morning, ...Binky? What's my name? It starts with a D. It starts with a D.","I had a name once. It was on a badge. Have you seen my badge?","Pim. Pip. Pam. Nobody says it, so it doesn't stay.","Say my name, Binky. Please. I can't remember how it ends."],
+["Can you hear that? Under the music. Somebody is crying.","The lights in here are so warm. Too warm. Take me outside.","We sang it forty times. They wouldn't let us stop.","Mum said she'd come at six. It's six, isn't it? It's always six."],
+["Everyone's gone quiet. Where did the others go? Don't look in the windows.","Don't look at the windows, Binky. They're only watching.","They stopped the tape. We stayed inside the song.","You were the fifth. You were the fifth and you left first."],
+["You aren't Binky. Binky stopped a long time ago. You're the one holding the controller.","Please switch it off. If you finish the game, we stay.","The game ends when you reach the door. Every time. Every time.","Why did you leave us? We waited in the dark. We were so good."],
+["Lily. My name was Lily. Write it down somewhere real.","Tom. I'm Tom. Don't let them put the lights back on.","Sam. I was nine. I'd like to go home now.","Ruth. We kept the door open for you. Why didn't you come back?"]];
+const END={c:["You open the door.","Beyond it: a bedroom, dark, a television glowing.","On the screen, a rabbit stands very still. Before the screen, a child sits very close, holding something.","The rabbit turns around. Binky has your face. Or you have his.","The door closes behind you. It was always going to."],a:["SCENE 1. TAKE 7.","The music starts. Every colour comes back.","Four friends wave from the village, perfectly still.","You wait for Binky to move.","He doesn't. You are the one holding the board."],
+b:["You hold the button. The screen fades to grey.","It was only a game, you tell yourself.","In the black glass, behind your own face: four small shapes. Then a fifth.","Nobody asked you to stay. Nobody had to."]};
+const FIN=["Tape label: BINKY’S PLAYHOUSE. UNFINISHED. DO NOT DUPLICATE.","Your controller is warm. You don't remember starting.","SAVE DATA FOUND: BINKY. DAY 8."];
+let pg=0,gone=[],cast=[],last=1,shock=0,area=0,stp=0,want=-1,day=1,t=0,mode='title',px=160,py=190,tgt=null,sp=[0,0,0,0],got=false,msg=null,cool=[0,0,0,0],stare={i:-1,u:0},keys={},wob=.5,ended=false;
+/* ---------- audio ---------- */
+let AC,mg,nb,si=0;const SC=[0,2,4,7,9,12,9,7,4,2,0,4,7,4,2,0];
+function audio(){if(AC)return;AC=new(window.AudioContext||window.webkitAudioContext)();mg=AC.createGain();mg.gain.value=.5;mg.connect(AC.destination);nb=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;step();setInterval(cry,3600)}
+function tone(f,dur,ty,v,det){const o=AC.createOscillator(),g=AC.createGain(),n=AC.currentTime;o.type=ty;o.frequency.value=f;o.detune.value=det||0;g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.0001,n+dur);o.connect(g).connect(mg);o.start();o.stop(n+dur+.02)}
+function step(){const slow=1,beat=(240+day*45)*slow;if(mode=='play'||mode=='card'||mode=='choice'){if(!(day>=6&&Math.random()<.3)){const f=523.25*Math.pow(2,SC[si%16]/12);tone(f,beat/1000*.9,day>=5?'triangle':'square',.06,day>2?(Math.random()-.5)*day*14:0);if(si%4==0)tone(130.8,beat/500,'triangle',.08,day>3?-day*20:0)}si++}setTimeout(step,beat)}
+function cry(){if(!AC||day<4||mode=='end'||mode=='title')return;const o=AC.createOscillator(),g=AC.createGain(),f=AC.createBiquadFilter(),n=AC.currentTime;o.type='sawtooth';f.type='lowpass';f.frequency.value=800;o.frequency.setValueAtTime(620,n);o.frequency.linearRampToValueAtTime(380,n+1.6);g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(.012*(day-3),n+.4);g.gain.linearRampToValueAtTime(0,n+1.8);o.connect(f).connect(g).connect(mg);o.start();o.stop(n+1.9)}
+function hiss(){if(!AC)return;const s=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();s.buffer=nb;f.type='highpass';f.frequency.value=2500;g.gain.setValueAtTime(.07,AC.currentTime);g.gain.linearRampToValueAtTime(0,AC.currentTime+.3);s.connect(f).connect(g).connect(mg);s.start()}
+/* ---------- drawing ---------- */
+function P(pts,col){X.fillStyle=col;X.beginPath();pts.forEach((p,i)=>{const x=Math.round(p[0]+Math.sin(t*2.1+i*1.7)*wob),y=Math.round(p[1]+Math.cos(t*1.9+i*2.3)*wob);i?X.lineTo(x,y):X.moveTo(x,y)});X.closePath();X.fill();if(!col.startsWith('rgba')&&X.globalAlpha>.5){let a=1e9,b=-1e9,c=1e9,d=-1e9;pts.forEach(q=>{a=Math.min(a,q[0]);b=Math.max(b,q[0]);c=Math.min(c,q[1]);d=Math.max(d,q[1])});if(b-a>7||d-c>7){X.strokeStyle='#000';X.lineWidth=1;X.stroke()}}}
+const mix=(a,b,k)=>`rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*k))})`;
+function animal(x,y,f,cam,self){
+const k=.55+y/240*.75,R=p=>p.map(a=>[x+a[0]*k,y+a[1]*k]),kid=day>=6&&!self,c=f.c;
+P(R([[-12,0],[12,0],[10,3],[-10,3]]),'rgba(0,0,0,.35)');
+if(kid){P(R([[-4,-2],[-1,-2],[-1,9],[-4,9]]),'#d8cfc4');P(R([[1,-2],[4,-2],[4,9],[1,9]]),'#d8cfc4')}
+if(f.a=='squirrel')P(R([[6,-12],[20,-24],[15,-40],[5,-24]]),'#c96a1c');
+P(R([[-9,-16],[9,-16],[11,-3],[6,0],[-6,0],[-11,-3]]),c);P(R([[-5,-14],[3,-14],[3,-4],[-5,-4]]),'rgba(255,255,255,.2)');
+if(self)P(R([[-8,-15],[8,-15],[9,-5],[0,-3],[-9,-5]]),'#3a6fd8');
+if(f.a=='fawn')[[-4,-11],[4,-9],[0,-6]].forEach(s=>P(R([[s[0]-1,s[1]-1],[s[0]+1,s[1]-1],[s[0]+1,s[1]+1],[s[0]-1,s[1]+1]]),'#fff'));
+P(R([[-8,-31],[8,-31],[10,-21],[0,-15],[-10,-21]]),c);
+if(f.a=='rabbit'){P(R([[-6,-31],[-2,-31],[-3,-50],[-7,-48]]),c);P(R([[2,-31],[6,-31],[7,-48],[3,-50]]),c);P(R([[-5,-33],[-3,-33],[-4,-46],[-6,-45]]),'#f6a7c1')}
+else if(f.a=='duck')P(R([[-4,-23],[6,-23],[9,-20],[-4,-19]]),'#ff8a1f');
+else if(f.a=='bear'){P(R([[-11,-35],[-5,-35],[-5,-30],[-11,-30]]),c);P(R([[5,-35],[11,-35],[11,-30],[5,-30]]),c)}
+else if(f.a=='frog'){P(R([[-9,-35],[-3,-35],[-3,-30],[-9,-30]]),c);P(R([[3,-35],[9,-35],[9,-30],[3,-30]]),c)}else if(f.a=='owl'){P(R([[-10,-36],[-4,-31],[-10,-31]]),c);P(R([[10,-36],[10,-31],[4,-31]]),c);P(R([[-2,-23],[2,-23],[0,-19]]),'#ff9a1f')}
+else if(f.a=='fawn'){P(R([[-14,-32],[-7,-31],[-8,-27],[-13,-28]]),c);P(R([[7,-31],[14,-32],[13,-28],[8,-27]]),c)}
+else{P(R([[-9,-36],[-5,-31],[-9,-31]]),c);P(R([[9,-36],[9,-31],[5,-31]]),c)}
+const dd=Math.sign(px-x);
+[-4,4].forEach(ex=>{if(self)return;
+if(day>=6&&!self&&Math.sin(t*3+ex)>.2)P(R([[ex-3,-28],[ex+3,-28],[ex+3,-21],[ex-3,-21]]),'#000');
+else if(cam){P(R([[ex-3,-28],[ex+3,-28],[ex+3,-22],[ex-3,-22]]),'#fff');P(R([[ex-1,-26],[ex+1,-26],[ex+1,-24],[ex-1,-24]]),'#000')}
+else{P(R([[ex-2,-27],[ex+2,-27],[ex+2,-23],[ex-2,-23]]),'#fff');P(R([[ex-1+dd*.8,-26],[ex+1+dd*.8,-26],[ex+1+dd*.8,-24],[ex-1+dd*.8,-24]]),'#000')}});
+if(day>=5&&!self)P(R([[-3,-20],[3,-20],[2,-16],[-2,-16]]),'#000');else if(!self)P(R([[-2,-19],[2,-19],[2,-18],[-2,-18]]),'#733');
+}
+function village(k){
+for(let i=0;i<6;i++){const a=[110,190,255].map((v,j)=>v+([255,230,160][j]-v)*i/5),b=[70,60,70].map((v,j)=>v+([120,90,90][j]-v)*i/5);X.fillStyle=mix(a,b,k);X.fillRect(0,i*20,320,21)}
+X.fillStyle=mix([90,200,90],[60,70,60],k);X.fillRect(0,110,320,130);
+X.fillStyle=mix([70,170,70],[50,58,52],k);X.fillRect(0,170,320,70);X.fillStyle=mix([40,140,50],[40,50,45],k);for(let i=0;i<45;i++){const x=(i*53+day*7)%316,y=118+(i*37)%118;X.fillRect(x,y,1,3);X.fillRect(x+2,y+1,1,2)}
+P([[-10,112],[60,72],[140,112]],mix([60,170,80],[50,60,55],k));P([[120,112],[220,66],[330,112]],mix([70,180,85],[55,65,60],k));
+if(day<6){const s=[];for(let i=0;i<10;i++)s.push([270+Math.cos(i*.628)*14,38+Math.sin(i*.628)*14]);P(s,mix([255,230,80],[170,50,50],k))}
+if(area==0){for(let i=0;i<8-day*1;i++){const x=10+i*45;P([[x,80+Math.sin(i)*4],[x+8,92],[x+16,80+Math.sin(i+1)*4]],['#e63950','#2b7de9','#f2a900','#2fa84f'][i%4])}
+[[20,100],[150,96],[262,100]].forEach((h,i)=>{const x=h[0]+Math.sin(day*2.3+i)*10,y=h[1];
+P([[x,y],[x+50,y],[x+50,y+40],[x,y+40]],mix([250,215,170],[110,100,100],k));P([[x-6,y],[x+25,y-24],[x+56,y]],mix([220,60,60],[80,40,50],k));
+P([[x+6,y+14],[x+18,y+14],[x+18,y+40],[x+6,y+40]],'#5a3a2a');
+const lit=day<4||i>day-4;P([[x+28,y+10],[x+44,y+10],[x+44,y+26],[x+28,y+26]],lit?'#ffe98a':'#0a0810');
+if(day>=5&&i!=1){P([[x+34,y+14],[x+38,y+14],[x+38,y+18],[x+34,y+18]],'#d9d4c8');P([[x+32,y+19],[x+40,y+19],[x+40,y+26],[x+32,y+26]],'#d9d4c8')}});
+}
+if(area==1){P([[30,116],[290,116],[312,140],[8,140]],mix([60,140,230],[30,40,60],k));for(let i=0;i<9;i++)P([[20+i*34,124+i%3*5],[32+i*34,124+i%3*5],[32+i*34,126+i%3*5],[20+i*34,126+i%3*5]],'rgba(255,255,255,.3)');P([[250,124],[262,124],[262,128],[250,128]],mix([60,170,60],[40,60,50],k))}
+if(area==2){P([[170,70],[206,70],[206,94],[170,94]],'#8a5a30');P([[166,70],[188,52],[210,70]],'#a33');P([[180,76],[194,76],[194,88],[180,88]],day<5?'#ffe98a':'#0a0810');P([[190,94],[196,94],[196,132],[190,132]],'#6b4423')}
+const TRA=[[[30,128],[95,122],[200,125],[300,128],[250,135],[10,160]],[[25,126],[300,128],[285,172]],[[20,125],[60,142],[110,122],[180,128],[285,125],[35,175],[265,178],[150,182]]],TR=TRA[area],n=day<5?TR.length:Math.max(2,TR.length-(day-4)*2);
+for(let i=0;i<n;i++){const x=TR[i][0],y=TR[i][1];
+P([[x-3,y],[x+3,y],[x+3,y+22],[x-3,y+22]],'#6b4423');
+if(day>=2&&i<day-1)P([[x-2,y+10],[x+2,y+10],[x+2,y+22],[x-2,y+22]],day>=5?'#ffeaa0':'#1a0f08');
+if(day>=5&&i==2&&Math.sin(t*.8)>.2){P([[x+3,y+2],[x+8,y+2],[x+8,y+30],[x+3,y+30]],'#d9d4c8');P([[x+4,y+6],[x+5,y+6],[x+5,y+8],[x+4,y+8]],'#000');P([[x+6,y+6],[x+7,y+6],[x+7,y+8],[x+6,y+8]],'#000')}
+P([[x-16,y+2],[x,y-30],[x+16,y+2]],mix([40,150,60],[30,45,40],k))}}
+function studio(){
+X.fillStyle='#120c14';X.fillRect(0,0,320,240);
+P([[40,25],[280,25],[280,100],[40,100]],'#5f8fb0');
+for(let i=0;i<5;i++)P([[60+i*48,100],[76+i*48+Math.sin(t+i)*3,62],[92+i*48,100]],'#3d7a4a');
+X.fillStyle='#2a2030';X.fillRect(0,100,320,140);
+X.strokeStyle='#4a3a55';X.lineWidth=1;
+for(let i=-8;i<=8;i++){X.beginPath();X.moveTo(160+i*20,100);X.lineTo(160+i*66,240);X.stroke()}
+for(let j=0;j<6;j++){const y=104+j*j*4+j*8;X.beginPath();X.moveTo(0,y);X.lineTo(320,y);X.stroke()}
+P([[140,56],[180,56],[180,104],[140,104]],'#050308');
+P([[146,44],[174,44],[174,54],[146,54]],Math.sin(t*5)>-.6?'#d01818':'#400808');
+X.globalAlpha=.13;[[50,0],[160,0],[270,0]].forEach((s,i)=>{const sw=Math.sin(t*.6+i*2)*30;P([[s[0]-6,0],[s[0]+6,0],[s[0]+sw+40,170],[s[0]+sw-40,170]],'#fff7c0')});X.globalAlpha=1;
+P([[0,150],[24,130],[24,240],[0,240]],'#050308');P([[296,130],[320,150],[320,240],[296,240]],'#050308');
+P([[8,120],[26,120],[26,134],[8,134]],'#050308');
+}
+function eyeCam(i){return(stare.i==i&&t<stare.u)}
+function draw(){
+wob=.45+day*.1;X.setTransform(1,0,0,1,0,0);X.globalAlpha=1;
+C.style.filter=`saturate(${Math.max(.3,1.3-day*.15)}) contrast(1.1) brightness(${1-day*.07})`;
+if(day==7)X.setTransform(1,Math.sin(t*.7)*.015,Math.sin(t*.5)*.01,1,0,0);
+day==7?studio():village(Math.min((day-1)/6,1));
+if(day>=3&&day<7&&Math.sin(t*.7+day)>-.3){const wx=(day*61+pg*37)%250+35,h=12+day*5;P([[wx-3,114],[wx+3,114],[wx+4,114-h],[wx,108-h],[wx-4,114-h]],'#d9d4c8');P([[wx-2,112-h],[wx-1,112-h],[wx-1,110-h],[wx-2,110-h]],'#000');P([[wx+1,112-h],[wx+2,112-h],[wx+2,110-h],[wx+1,110-h]],'#000')}
+const E=[{y:py,f:()=>animal(px,py,B,false,true)}];
+npcs().forEach(i=>E.push({y:pos(i)[1],f:()=>{const q=pos(i);X.globalAlpha=day>=5?.85:1;animal(q[0],q[1]+Math.sin(t*2+i),C6[i],eyeCam(i)||(day>=6&&Math.random()<.015),false);X.globalAlpha=1;if(isTgt(i)){const by=q[1]-64+Math.sin(t*5)*2;P([[q[0]-4,by],[q[0]+4,by],[q[0],by+6]],day<5?'#ffe14d':'#ff4040')}}}));
+if(day==7)gone.forEach(i=>E.push({y:FP[i][1],f:()=>{const q=FP[i];P([[q[0]-11,q[1]-16],[q[0]+11,q[1]-16],[q[0]+11,q[1]],[q[0]-11,q[1]]],'#3a2a40');P([[q[0]-6,q[1]-12],[q[0]+6,q[1]-12],[q[0]+6,q[1]-3],[q[0]-6,q[1]-3]],C6[i].c);P([[q[0]-4,q[1]-9],[q[0]-2,q[1]-9],[q[0]-2,q[1]-7],[q[0]-4,q[1]-7]],'#000');P([[q[0]+2,q[1]-9],[q[0]+4,q[1]-9],[q[0]+4,q[1]-7],[q[0]+2,q[1]-9]],'#000')}}));
+if(itemOn())E.push({y:IP[day-1][1],f:()=>{const x=IP[day-1][0],y=IP[day-1][1]-8+Math.sin(t*3)*2;P([[x,y-9],[x+3,y-3],[x+9,y-3],[x+4,y+1],[x+6,y+8],[x,y+4],[x-6,y+8],[x-4,y+1],[x-9,y-3],[x-3,y-3]],day<4?'#ffe14d':'#c9c3b0')}});
+E.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
+X.setTransform(1,0,0,1,0,0);
+const n=day-1;if(!reduce)for(let i=0;i<n;i++)if(Math.random()<.5){const bx=Math.random()*304|0,by=Math.random()*228|0;X.drawImage(C,bx,by,16,8,bx+(Math.random()*16-8|0),by+(Math.random()*6-3|0),16,8)}
+if(t<shock)for(let i=0;i<260;i++){const v=Math.random()*255|0;X.fillStyle=`rgb(${v},${v},${v})`;X.fillRect(Math.random()*320|0,Math.random()*240|0,24,2)}
+dither();
+}
+const BY=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+function dither(){const id=X.getImageData(0,0,320,240),d=id.data,L=day<3?6:day<6?5:4;for(let y=0,i=0;y<240;y++)for(let x=0;x<320;x++,i+=4){const th=(BY[(y&3)<<2|(x&3)]/16-.47)*.42;for(let c=0;c<3;c++){const v=d[i+c]/255*(L-1)+th;d[i+c]=Math.max(0,Math.min(L-1,Math.round(v)))*255/(L-1)}}X.putImageData(id,0,0)}
+const itemOn=()=>false;
+const SL=[[[150,175]],[[135,170],[215,170]],[[120,165],[185,172],[250,165]],[[110,160],[165,172],[220,172],[270,160]]],npcs=()=>cast,pos=i=>day==7?FP[i]:SL[cast.length-1][cast.indexOf(i)];
+const isTgt=()=>false;
+/* ---------- dialogue ---------- */
+const nm=i=>day<3?C6[i].n:day==3?['D_tt_e','Barn...','P?m','F','R_bb_t','H?t'][i]:day<7?'???':`${C6[i].r} (age ${AG[i]})`;
+function show(s,text,cb){msg={s,text,i:0,cb};$('#sp').textContent=s}
+function adv(){if(!msg)return;if(msg.i<msg.text.length){msg.i=msg.text.length;return}if(msg.opts)return;const cb=msg.cb;msg=null;$('#sp').textContent='';$('#tx').textContent='';cb&&cb()}
+setInterval(()=>{if(!msg)return;if(msg.i<msg.text.length)msg.i++;let s=msg.text.slice(0,msg.i);if(day>=4&&s.length>3&&Math.random()<.05*(day-3)){const p=Math.random()*s.length|0;s=s.slice(0,p)+'#▒█?'[Math.random()*4|0]+s.slice(p+1)}if(msg.i>=msg.text.length&&msg.opts&&!msg.shown){msg.shown=1;renderOpts(msg.opts)}$('#tx').textContent=s},30);
+/* ---------- flow ---------- */
+function check(){if(day==7&&sp.every(v=>v)&&got)choice()}
+const PG=[
+{d:1,a:0,c:[0,3],t:"Hello, boys and girls! Welcome to Binky’s Playhouse! Dottie baked one big cake, and there is only one slice left. Fern looks hungry. What should Binky do? (Choose with the buttons.)",o:[["Give the slice to Fern","Fern beams. “Sharing is caring!” Dottie claps her wings. Her smile stays up a little too long.",1],["Cut it in two","Dottie holds the knife very still. “That’s what we do here,” she says. “We make everything smaller until it fits.”",0]]},
+{d:1,a:1,c:[1,4],t:"Hooray! Now to the pond. Mr. Ribbit’s lily pad is crowded, and Barnaby has none. What should Binky do?",o:[["Ask Mr. Ribbit to share","Ribbit scoots over. Barnaby sits. The lily pad sinks half an inch lower. Nobody mentions it.",1],["Make Barnaby wait","Barnaby waits. He is still waiting at the end of the day. He does not blink.",0]]},
+{d:2,a:0,c:[0,4],t:"Today we learn about honesty! Mr. Ribbit broke Dottie’s lantern. Dottie asks Binky, “Do you know who did it?”",o:[["Tell the truth","“Thank you for telling me,” says Dottie. Ribbit does not look at her. He looks at Binky. “You told,” he says, “so now I have to go quiet.”",1],["Say you don’t know","Dottie nods. “Of course you don’t.” The lantern lights by itself. Inside it, something is pressed against the glass.",0]]},
+{d:2,a:2,c:[5,2],t:"In the woods, Old Hoot has a secret. Pim begs to hear it. What should Binky do?",o:[["Tell Hoot to share it","“The studio is still recording,” Hoot whispers. Pim laughs the way a speaker laughs when the tape skips.",1],["Keep the secret","Hoot looks relieved. Pim goes quiet. A long way off, a door closes, and the cheerful music takes a breath.",0]]},
+{d:3,a:1,c:[3,1,5],t:"Today we learn that everyone belongs! But the name badges have gone blurry, and nobody can remember their own name. Would Binky like to read them out?",o:[["Read the names out loud","“Dottie.” “Barnaby.” “Pim.” “Fern.” Each one flinches, as if a name were a hand on a bruise. “Louder,” says someone. Nobody said it.",1],["Let them choose new names","“I’m Duck.” “I’m Bear.” They reach Pim, who says, “I don’t want to be a squirrel.” Nobody laughs.",0]]},
+{d:3,a:2,c:[2,5],t:"Pim is hiding behind the big tree. Old Hoot says Pim is frightened of Binky. What should Binky do?",o:[["Hug Pim","Pim is cold. Colder than a hug should be. “Thank you,” he says into your shoulder. “It was dark for so long.”",1],["Leave Pim alone","Pim watches you go. Every time you turn around, he is a little closer to the middle of the picture.",0]]},
+{d:4,a:2,c:[1,2,4],t:"Barnaby shouted at Pim, and now Pim is crying. Can you hear it? Under the music. It has always been under the music. Who should say sorry?",o:[["Barnaby","“Sorry,” says Barnaby. “Sorry. Sorry. Sorry.” He keeps saying it. The crying doesn’t stop. It only gets quieter the more he says it.",1],["Binky","Binky opens his mouth. The Narrator speaks over him: “He’s sorry.” The crying stops. You never heard Binky say it.",1]]},
+{d:4,a:0,c:[3,0],t:"Fern looks up at the sky. “Mum said she’d come at six. It’s six, isn’t it?” What should Binky say?",o:[["“It’s six.”","Fern smiles. The clock in the sky has no hands. “Then she’s late,” says Fern, “and I’ll wait.”",1],["“It isn’t six.”","Fern’s face doesn’t fall. It just stops. “That’s what you said last time,” she says, “and the time before.”",0]]},
+{d:5,a:0,c:[0],t:"Today we are brave! The village has gone so quiet. Dottie says there is a light on in the old studio shed. Dare Binky look inside?",o:[["Look inside","Five small chairs. Four masks, on four of the chairs. One chair has no mask. It is Binky-sized. It is still warm.",1],["Walk away","Dottie follows one step behind all the way across the meadow. “Brave means going in,” she says. “Brave means going in.”",0]]},
+{d:5,a:2,c:[2,5,4],t:"Old Hoot whispers: “Don’t look in the windows.” But the windows are so close. What should Binky do?",o:[["Look","A small face in every window. All of them are mouthing the same word. The word is “Binky.”",1],["Close your eyes","When you open them, there is one friend fewer on the screen. The Narrator says nothing. The Narrator is also counting.",0,4]]},
+{d:6,a:1,c:[0,1,2,3],t:"Boys and girls, this is the most important lesson of all. Good friends hold the door. Somebody must hold it shut so that everyone else can stay safe inside the song. Who will hold the door?",o:[["Dottie","Dottie waddles over. “Okay, Binky,” she says. She doesn’t say goodbye. Ducks don’t. The door shuts on a sound like a tape being pulled out.",1,0],["Barnaby","Barnaby hugs everyone first. Longer than anyone asked. Then he goes. The door is very warm afterwards.",1,1],["Pim","“Please,” says Pim, “I’ll be good.” He says it until the door makes him stop.",1,2],["Fern","Fern doesn’t argue. “Is it six?” she asks, and doesn’t wait for the answer.",1,3]]},
+{d:6,a:1,c:[0,1,2,3],t:"Everyone who is left is very quiet. The Narrator’s voice is shaking. “You’re doing so well, Binky. But you’re not Binky, are you? Who is holding the controller?”",o:[["Keep reading along","“Thank you,” says everyone, and the smallest voice adds, “for not leaving.”",1],["Stop","The screen doesn’t stop. The music gets slower. A voice says: “Take seven. Take seven. Take seven.”",0]]},
+{d:7,a:0,c:[0,1,2,3],t:()=>"Welcome to the studio, boys and girls. This is where the show was always made. Four chairs, four masks, one door."+(gone.length?" One chair is empty. Nobody is sure who sat there.":"")+" Binky is very tired. What should Binky do?",o:[["Sit down with them","Binky sits. The masks turn toward him all together, like a flock. “Good,” they say. “Now we can start again.”",1],["Walk toward the door","Every step, the floor gets longer. The friends don’t follow. They watch the way you watch someone leave a station.",0]]},
+{d:7,a:0,c:[0,1,2,3],t:"Take seven. The red light is on. The board is in Binky’s hands. Somebody, far away, is holding the controller. What should Binky do?",o:()=>[last?["Clap the board","Clap. The music starts, bright, and every colour comes back.",1,-1,'a']:["Open the door","The handle is warm, like a hand.",1,-1,'c'],["Turn it off","You find the button. You hold it.",0,-1,'b']]}
+];
+function showPage(){const p=PG[pg];day=p.d;area=p.a;px=58;py=236;cast=p.c.filter(i=>!gone.includes(i));$('#hud').textContent=`DAY ${day}/7: ${TK[day-1].t.toUpperCase()}`;$('#rec').style.display=day>=5?'block':'none';$('#opts').innerHTML='';show('Narrator',typeof p.t=='function'?p.t():p.t);msg.opts=typeof p.o=='function'?p.o():p.o}
+function renderOpts(o){const box=$('#opts');box.innerHTML='';o.forEach(x=>{const b=document.createElement('button');b.textContent=x[0];b.onclick=()=>choose(x);box.appendChild(b)})}
+function choose(o){$('#opts').innerHTML='';last=o[2];if(o[3]>=0){gone.push(o[3]);cast=cast.filter(i=>!gone.includes(i))}shock=t+.4;if(day>=2)hiss();if(AC)tone(330,.5,'triangle',.07,-day*25);msg=null;show('Narrator',o[1],()=>o[4]?finish(o[4]):next())}
+function next(){pg++;if(PG[pg].d!==day)lesson();else showPage()}
+function lesson(){mode='card';const c=$('#card');c.innerHTML=`<small>Today we learned:</small><span style="font-size:.5em;max-width:22ch">${LS[day-1]}</span><small>${SG[day-1]}</small>`;c.classList.add('on');setTimeout(()=>c.classList.add('show'),30);setTimeout(()=>{c.classList.remove('show');setTimeout(()=>{c.classList.remove('on');day++;begin()},1200)},4800)}
+function begin(){mode='card';area=0;stp=0;want=-1;sp=[0,0,0,0];got=false;px=160;py=190;tgt=null;cool=[60,60,60,60];
+const c=$('#card');c.innerHTML=`Day ${day}<small>${day<4?'Lesson: '+TK[day-1].t:day<7?'.':'Studio 4'}</small>`;c.classList.add('on');setTimeout(()=>c.classList.add('show'),30);
+setTimeout(()=>{c.classList.remove('show');setTimeout(()=>{c.classList.remove('on');mode='play';showPage()},1200)},2300)}
+function choice(){mode='choice';$('#ch').classList.add('on')}
+function finish(k){$('#ch').classList.remove('on');mode='end';const e=$('#end');e.innerHTML='';e.classList.add('on');$('#tv').classList.remove('after');
+const lines=END[k].concat(gone.length?['Cast list: '+gone.length+' name'+(gone.length>1?'s':'')+' missing. Nobody is sure whose.']:[],FIN);lines.forEach((l,i)=>setTimeout(()=>{const p=document.createElement('p');p.textContent=l;e.appendChild(p);setTimeout(()=>p.classList.add('show'),30);if(i==2||i==lines.length-1)cry2()},i*3300));
+setTimeout(()=>{const b=document.createElement('button');b.textContent='Return to title';b.onclick=toTitle;e.appendChild(b)},lines.length*3300+800)}
+function cry2(){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain(),n=AC.currentTime;o.type='sine';o.frequency.setValueAtTime(440,n);o.frequency.linearRampToValueAtTime(330,n+2);g.gain.setValueAtTime(.015,n);g.gain.linearRampToValueAtTime(0,n+2.2);o.connect(g).connect(mg);o.start();o.stop(n+2.3)}
+function toTitle(){$('#end').classList.remove('on');$('#title').classList.add('on');$('#save').style.display='block';$('#tv').classList.add('after');$('#go').textContent='Press Start';ended=true;mode='title';day=1;$('#tx').textContent='';$('#sp').textContent='';document.querySelectorAll('#title h1 span').forEach((s,i)=>s.style.transform=`rotate(${(i-2)*4}deg) translateY(${i*3}px)`)}
+$('#go').onclick=()=>{audio();AC.resume();pg=0;gone=[];last=1;$('#title').classList.remove('on');$('#tv').classList.remove('after');day=1;begin()};
+{const fe=$('#stage'),rq=fe.requestFullscreen||fe.webkitRequestFullscreen;if(!rq)$('#fs').style.display='none';$('#fs').onclick=()=>{try{const r=document.fullscreenElement?document.exitFullscreen():rq.call(fe);r&&r.catch&&r.catch(()=>{})}catch(e){}}}
+$('#b1').onclick=()=>finish('a');$('#b2').onclick=()=>finish('b');
+/* ---------- input & loop ---------- */
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=1;if(e.key==' '||e.key=='Enter')adv();if(e.key.startsWith('Arrow')||e.key==' ')e.preventDefault()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
+$('#dlg').onclick=adv;
+C.addEventListener('pointerdown',adv);
+setInterval(()=>{if(mode=='play'&&day>=2){stare={i:Math.random()*4|0,u:t+1.3};if(!reduce)hiss()}},7000);
+function update(){}
+function loop(ms){t=ms/1000;update();if(mode!='title'&&mode!='end')draw();requestAnimationFrame(loop)}
+X.fillStyle='#000';X.fillRect(0,0,320,240);requestAnimationFrame(loop);
+</script></body></html>

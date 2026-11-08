@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Last Train Home</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+:root{--bg:#050708;--fg:#cfd8d3;--dim:#74827d;--tube:#a9e0cc;--line:#d6b046;--blood:#b0302a;--box:#0b1012;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 Georgia,"Times New Roman",serif;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+#app{height:100%;display:flex;flex-direction:column;max-width:900px;margin:0 auto}
+.sign{font-family:"Helvetica Neue",Arial,sans-serif;font-weight:700}
+#hud{display:flex;gap:14px;align-items:center;padding:8px 12px;border-bottom:3px solid var(--line);background:#0a0f11;font-size:13px}
+#sname{flex:1;font-size:18px;letter-spacing:.02em}
+.m{display:flex;flex-direction:column;gap:2px;min-width:78px;color:var(--dim)}
+.bar{height:6px;background:#1a2326;border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--tube);transition:width .4s}
+#dist i{background:var(--blood)}
+#scene{position:relative;flex:1;min-height:180px;overflow:hidden;--mx:50%;--my:50%;--r:28vmin;transition:background 1.2s}
+#scene::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:4;background:radial-gradient(circle var(--r) at var(--mx) var(--my),rgba(0,0,0,0) 0,rgba(0,0,0,.55) 45%,rgba(0,0,0,.97) 100%);transition:opacity .1s}
+#scene.fl::after{opacity:.45}
+#scene.out::after{background:#000;opacity:1}
+.floor{position:absolute;left:0;right:0;bottom:0;height:34%;background:linear-gradient(#0000,#0008);border-top:4px solid var(--line);opacity:.5}
+#bg{position:absolute;inset:0;width:100%;height:100%}.tb{animation:tf 4s infinite}@keyframes tf{0%,90%,94%,100%{opacity:1}91%{opacity:.2}93%{opacity:.6}}#cap{position:absolute;z-index:6;top:8px;left:12px;font-size:15px;text-shadow:0 0 8px #000;pointer-events:none}.obj{position:absolute;z-index:5;transform:translate(-50%,-50%);width:clamp(46px,10vmin,76px);aspect-ratio:1;background:none;border:0;padding:0;opacity:.22;filter:drop-shadow(0 0 6px #000);transition:transform .15s}.obj:hover,.obj:focus-visible{transform:translate(-50%,-50%) scale(1.14);filter:drop-shadow(0 0 10px var(--tube))}
+.obj.seen{filter:grayscale(1) brightness(.6)}
+#fig{position:absolute;z-index:5;bottom:18%;width:70px;height:170px;background:linear-gradient(#0c0f10,#000);border-radius:35px 35px 6px 6px;transform-origin:bottom;touch-action:none;cursor:crosshair;box-shadow:0 0 30px #000}
+#fig::before,#fig::after{content:"";position:absolute;top:26px;width:6px;height:3px;background:#dfe;opacity:0;border-radius:3px}
+#fig::before{left:18px}#fig::after{right:18px}
+#fig.g::before,#fig.g::after{opacity:1;box-shadow:0 0 10px #dfe}
+#gz{position:absolute;z-index:6;left:50%;bottom:6px;width:160px;margin-left:-80px;height:4px;background:#1a2326;border-radius:2px;overflow:hidden;opacity:0;transition:opacity .3s}
+#gz i{display:block;height:100%;width:0;background:var(--blood)}
+#gz.on{opacity:1}
+#panel{background:var(--box);border-top:1px solid #1d282b;padding:10px 12px;min-height:84px;max-height:30%;overflow:auto}
+#log{margin:0 0 6px}
+#tt{background:#0a0f11;border-top:3px solid var(--line);padding:8px 12px 12px}
+.tr{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #162023;font-size:14px}
+.tr .l{flex:1}.tr .c{color:var(--line);min-width:52px;text-align:right}
+.tr button{background:#14201f;border:1px solid var(--tube);border-radius:4px;padding:4px 14px}
+.tr button:disabled{opacity:.3;border-color:var(--dim);cursor:default}
+.ch{display:inline-block;margin:4px 8px 0 0;background:#14201f;border:1px solid var(--tube);border-radius:4px;padding:6px 14px}
+.ov{position:fixed;inset:0;z-index:20;background:#030506;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
+.ov>div{max-width:520px}
+h1{font:700 clamp(30px,8vw,58px)/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.04em;margin:0 0 6px;color:var(--tube);text-shadow:0 0 18px #3a7;animation:fk 6s infinite}
+h2{font:700 30px "Helvetica Neue",Arial,sans-serif;margin:0 0 10px;color:var(--tube)}
+@keyframes fk{0%,92%,96%,100%{opacity:1}93%{opacity:.3}95%{opacity:.7}97%{opacity:.2}}
+input{font:inherit;background:#0b1012;color:var(--fg);border:1px solid var(--dim);padding:8px 12px;border-radius:4px;text-align:center;width:240px}
+.go{margin-top:14px;background:var(--tube);color:#031;border:0;border-radius:4px;padding:10px 26px;font-weight:700}
+.dim{color:var(--dim);font-size:14px}
+:focus-visible{outline:2px solid var(--line);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){h1{animation:none}}
+img{display:block;width:100%;height:100%;image-rendering:pixelated}html,body{font-family:VT323,'Courier New',monospace;font-size:21px;line-height:1.2}.sign,h1,h2,.go,.ch{font-family:'Press Start 2P','Courier New',monospace;font-weight:400}#hud{font-size:9px}#sname{font-size:11px;letter-spacing:0}h1{font-size:clamp(20px,5.5vw,38px);line-height:1.3;text-shadow:3px 3px 0 #000}h2{font-size:18px;line-height:1.4}.go,.ch,.tr button{font-size:10px}.tr{font-size:18px}.dim{font-size:18px}#cap{font-size:10px}#bg{image-rendering:pixelated;object-fit:cover}#scene{filter:grayscale(.45) contrast(1.1)}#scene::before{content:'';position:absolute;inset:0;z-index:7;pointer-events:none;background:repeating-linear-gradient(0deg,#0000 0 2px,#0004 2px 3px)}#fig{background-size:100% 100%;border-radius:0;box-shadow:none;image-rendering:pixelated}#fig::before{left:25px}#fig::after{right:25px}#ec{display:block;width:min(100%,480px);aspect-ratio:160/96;image-rendering:pixelated;margin:0 auto 14px;border:3px solid var(--line)}#goal{background:#10201d;border-top:2px solid var(--tube);padding:4px 12px;font-size:18px;color:var(--tube)}
+</style></head><body>
+<div id="app">
+ <div id="hud" class="sign"><div id="sname"></div>
+  <div class="m"><span>Mind</span><div class="bar" id="san"><i></i></div></div>
+  <div class="m"><span>Figure</span><div class="bar" id="dist"><i></i></div></div>
+  <div class="m"><span id="cc">Clues 0/6</span></div>
+  <button id="mute" class="sign" style="background:none;border:1px solid var(--dim);border-radius:4px;padding:2px 8px" aria-label="Toggle sound">Sound on</button></div>
+ <div id="scene"><canvas id="bg" width="160" height="96"></canvas><div class="floor"></div><div id="fig" title="Hold to look"></div><div id="gz"><i></i></div><div id="cap" class="sign"></div></div>
+ <div id="panel"><p id="log"></p><div id="ch"></div></div>
+ <div id="goal"></div><div id="tt"></div>
+</div>
+<div class="ov" id="intro"><div>
+ <h1>LAST TRAIN HOME</h1>
+ <p class="dim">A story from the space between stations.</p>
+ <p>Submitted for your consideration: Walter Ames, 52, a salesman of reading lamps. Tonight he wants one small thing, his own front door and the porch light his wife Marian leaves burning. He has stepped onto the 11:47. It is not on any timetable.</p>
+ <p class="dim" style="text-align:left">GOAL: find the 6 clues hidden in the stations, then get Walter home.<br>1. Move your light (mouse or finger). Click the objects it shows.<br>2. Use the timetable at the bottom. When a train says Doors open, press Board.<br>3. A figure follows you and gets closer with every ride and every minute you linger. Do not stare at it: holding your gaze makes it move.<br>4. Keep your Mind bar up. Red shortcut trains save time but cost more.</p>
+ 
+ <button class="go" id="start">Board the train</button>
+ <p class="dim" id="found"></p></div></div>
+<div class="ov" id="ride" style="display:none"><div><p id="rt" style="font-size:19px"></p></div></div>
+<div class="ov" id="end" style="display:none"><div><canvas id="ec" width="160" height="96"></canvas><h2 id="et"></h2><p id="eb"></p><p class="dim" id="ef"></p><button class="go" id="again">Ride again</button></div></div>
+<script>
+const $=s=>document.querySelector(s),rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
+const CL={ticket:"A ticket stamped with your name. 11:47 PM.",news:"A newspaper: NIGHT EXPRESS LEAVES THE RAILS. NO SURVIVORS LISTED.",journal:"A journal in your own handwriting: “They never made it home.”",token:"A brass token: ONE FARE HOME.",photo:"A photograph of a lit doorway. Someone is waiting behind the glass.",log:"The conductor’s log: same passenger, every night. No name recorded."};
+const ST={
+hollow:{n:"Hollow Street",c:"#12302b",t:"Sweating tiles. No one has used this platform in years. A tube stutters over an empty bench.",
+ o:[{x:28,y:62,k:"Torn ticket",t:"Stamped with {N}. Dated tonight. The ink is still wet.",c:"ticket"},{x:68,y:38,k:"Wall map",t:"Every line loops back on itself. Four stations are circled in red. None has an exit."},{x:50,y:72,k:"Bench",t:"Warm, as if someone just stood up."},{x:82,y:60,k:"Vending machine",t:"It sells tickets to places named after people."}],
+ tr:[{to:"market",l:"Line A to Lantern Market"},{to:"junction",l:"Line C express to Ashfall Junction",risk:1}]},
+market:{n:"Lantern Market",c:"#33260f",t:"Paper lanterns sway without wind. Passengers stand perfectly still, then turn their heads together.",
+ o:[{x:22,y:55,k:"Woman with bags",t:"“Eleven forty-seven,” she says. “It is always eleven forty-seven.” She does not blink."},{x:50,y:30,k:"Newspaper stand",t:"Every paper carries the same headline.",c:"news"},{x:74,y:64,k:"Abandoned satchel",t:"Inside is a journal. The handwriting is yours.",c:"journal"},{x:40,y:76,k:"Stall of clocks",t:"Every clock has stopped. Every hand points the same way."}],
+ tr:[{to:"junction",l:"Line B to Ashfall Junction"},{to:"archive",l:"Line D to Drowned Archive"}]},
+junction:{n:"Ashfall Junction",c:"#2a1514",t:"A hub of dead escalators. Ash drifts upward. The departure board lists one stop that is not on any map.",
+ o:[{x:25,y:48,k:"Ticket booth",t:"Behind the glass sits a brass token. The slot opens when you touch it.",c:"token"},{x:62,y:28,k:"Departure board",t:"The last line reads: FINAL STOP — {N}."},{x:80,y:70,k:"Child’s shoe",t:"Small. Left on the stairs. Lace still tied."}],
+ tr:[{to:"market",l:"Line B to Lantern Market"},{to:"archive",l:"Line D to Drowned Archive"},{to:"terminus",l:"Line 9 to {N}",risk:1}]},
+archive:{n:"Drowned Archive",c:"#0f2433",t:"Ankle-deep black water. Shelves of case files reach into the dark. Something drips in time with your heart.",
+ o:[{x:30,y:55,k:"Flooded files",t:"One folder floats up to you.",c:"photo"},{x:70,y:42,k:"Conductor’s booth",t:"A logbook, open to tonight.",c:"log"},{x:52,y:75,k:"Clock on the wall",t:"11:47. It has always been 11:47."}],
+ tr:[{to:"junction",l:"Line D to Ashfall Junction"},{to:"hollow",l:"Line E to Hollow Street"}]},
+terminus:{n:"{N}",c:"#1a1a1a",t:"The final stop. One bench. One lamp. The figure sits beside it, waiting for you to look.",
+ o:[{x:50,y:34,k:"Station sign",t:"{N}. It has always said {N}."},{x:30,y:66,k:"Bench",t:"Two seats. One for you."}],tr:[]}};
+const FOL=[
+ ["The lights die. When they return, it is closer.",1,10],
+ ["“{N}.” Your own voice, from just behind your ear.",0,15],
+ ["Its face is a window. Through it: a platform. Through that: you.",0,20],
+ ["It does not move. You simply find you are looking at it from nearer.",1,8]];
+const RIDE=['In the dark glass Walter sees himself, and behind him a second man in a hat, not smiling.','Someone down the carriage whispers “Walter” like the name of a stop on the line.','The train brakes for a station that was not there a moment ago.','Every passenger turns. Not toward Walter. Toward whoever is behind him.'];
+const sv=i=>'<svg viewBox="0 0 40 40" width="100%" height="100%" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+i+'</svg>';
+const SPold={paper:sv('<path d="M9 6h16l6 6v22H9z" fill="#d9d2b8" stroke="#2a2418"/><path d="M13 16h14M13 21h14M13 26h9" stroke="#6b5f3e"/>'),frame:sv('<rect x="5" y="7" width="30" height="26" fill="#2b3a36" stroke="#9fb5ad"/><path d="M10 14l7 8 5-5 8 9" stroke="#c9d3cf"/><circle cx="14" cy="26" r="3" stroke="#b0302a"/>'),bench:sv('<path d="M5 20h30v5H5zM8 25v9M32 25v9M7 14h26" fill="#4a3a28" stroke="#cfd8d3"/>'),box:sv('<rect x="8" y="5" width="24" height="31" fill="#1d3a4a" stroke="#9fd"/><rect x="12" y="9" width="16" height="12" fill="#a9e0cc" stroke="none"/><rect x="14" y="27" width="12" height="5" fill="#000"/>'),person:sv('<circle cx="20" cy="9" r="5" fill="#3a3330" stroke="#cfd8d3"/><path d="M11 36c0-12 3-19 9-19s9 7 9 19z" fill="#3a3330" stroke="#cfd8d3"/><path d="M7 28h5v8H7z" fill="#7a4a2a" stroke="#cfd8d3"/>'),bag:sv('<path d="M8 16h24l2 20H6z" fill="#5a3b24" stroke="#d6b046"/><path d="M14 16c0-8 12-8 12 0" stroke="#d6b046"/>'),clock:sv('<circle cx="20" cy="20" r="15" fill="#d9d2b8" stroke="#2a2418"/><path d="M20 20V10M20 20l8 4" stroke="#2a2418"/>'),board:sv('<rect x="3" y="8" width="34" height="22" fill="#10251f" stroke="#a9e0cc"/><path d="M7 14h26M7 19h20M7 24h26M12 30v6M28 30v6" stroke="#a9e0cc"/>'),shoe:sv('<path d="M6 26c6 0 8-6 8-12h8c0 6 4 8 12 9v6H6z" fill="#7a2a2a" stroke="#d9d2b8"/>'),folder:sv('<path d="M5 12h12l3 4h15v18H5z" fill="#c8b25a" stroke="#2a2418"/><path d="M5 20h30" stroke="#2a2418"/>'),book:sv('<path d="M6 8h28v26H6z" fill="#3a1e1e" stroke="#d6b046"/><path d="M20 8v26M10 14h6M24 14h6M10 19h6" stroke="#d6b046"/>'),sign:sv('<rect x="4" y="10" width="32" height="14" fill="#1b4a44" stroke="#d9d2b8"/><path d="M10 17h20M20 24v12" stroke="#d9d2b8"/>'),coin:sv('<circle cx="20" cy="20" r="13" fill="#c8a03c" stroke="#5a4310"/><circle cx="20" cy="20" r="8" stroke="#5a4310"/>')};
+const GM={"Torn ticket":"paper","Wall map":"frame","Bench":"bench","Vending machine":"box","Woman with bags":"person","Newspaper stand":"paper","Abandoned satchel":"bag","Stall of clocks":"clock","Ticket booth":"box","Departure board":"board","Child’s shoe":"shoe","Flooded files":"folder","Conductor’s booth":"book","Clock on the wall":"clock","Station sign":"sign"};
+const CM={ticket:"paper",news:"paper",journal:"book",token:"coin",photo:"frame",log:"book"};
+function bgOld(id,c){const X={market:[1,2,3,4].map(i=>'<path d="M'+(14+i*18)+' 0v6" stroke="#0008" stroke-width=".3"/><circle cx="'+(14+i*18)+'" cy="'+(8+i%2*4)+'" r="2.2" fill="#e0902a" opacity=".85"/>').join(''),archive:'<rect y="47" width="100" height="13" fill="#0b2a3d" opacity=".75"/><path d="M0 52h100M0 56h100" stroke="#6fb7d6" stroke-width=".2" opacity=".5"/>',junction:'<path d="M66 46L90 28M72 46L96 28M78 46L100 34" stroke="#7a6b66" stroke-width=".6"/><path d="M4 40l16-12" stroke="#7a6b66" stroke-width=".6"/>',terminus:'<path d="M44 0h12l10 46H34z" fill="#d9f0e5" opacity=".1"/><rect x="49.4" width=".6" height="6" fill="#555"/><circle cx="50" cy="7" r="1.6" fill="#ffe9b0"/>',hollow:''};
+return '<defs><linearGradient id="gw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+c+'"/><stop offset="1" stop-color="#050708"/></linearGradient></defs><rect width="100" height="60" fill="url(#gw)"/><path d="M0 0L40 22M100 0L60 22M0 46L40 34M100 46L60 34" stroke="#fff3" stroke-width=".25"/><rect x="40" y="22" width="20" height="12" fill="#000"/><rect x="6" width="4" height="46" fill="#ffffff0f"/><rect x="90" width="4" height="46" fill="#ffffff0f"/>'+(id==='terminus'?'':'<g class="tb"><path d="M14 4h16l5 40H9zM64 4h16l5 40H59z" fill="#a9e0cc" opacity=".05"/><rect x="14" y="3" width="16" height="1" fill="#a9e0cc"/><rect x="64" y="3" width="16" height="1" fill="#a9e0cc"/></g>')+(X[id]||'')+'<rect y="46" width="100" height="14" fill="#0a0e0f"/><rect y="46" width="100" height="1.1" fill="#d6b046"/><path d="M0 55H100M0 58H100" stroke="#3a4448" stroke-width=".4"/>'}
+const mk=fn=>{const c=document.createElement('canvas');c.width=c.height=16;const g=c.getContext('2d');fn((x,y,w,h,k)=>{g.fillStyle=k;g.fillRect(x,y,w,h)});return '<img src="'+c.toDataURL()+'" alt="">'};
+const SP={paper:mk(r=>{r(3,1,10,14,'#1a1710');r(4,2,8,12,'#d9d2b8');r(5,5,6,1,'#6b5f3e');r(5,8,6,1,'#6b5f3e');r(5,11,4,1,'#6b5f3e');r(9,1,4,4,'#a79e82')}),frame:mk(r=>{r(1,2,14,12,'#101312');r(2,3,12,10,'#2b3a36');r(3,4,10,8,'#3d524c');r(4,9,3,2,'#b0302a');r(7,7,5,1,'#9fb5ad');r(9,6,3,1,'#9fb5ad')}),bench:mk(r=>{r(1,6,14,3,'#1a1208');r(2,6,12,2,'#6a4b2e');r(2,9,2,6,'#1a1208');r(12,9,2,6,'#1a1208');r(1,2,14,2,'#4a3a28')}),box:mk(r=>{r(3,1,10,14,'#0b1a22');r(4,2,8,12,'#1d3a4a');r(5,3,6,4,'#a9e0cc');r(5,9,6,3,'#000');r(10,8,1,1,'#d6b046')}),person:mk(r=>{r(5,1,6,5,'#0d0c0b');r(6,2,4,3,'#c9a98a');r(4,6,8,9,'#0d0c0b');r(5,7,6,7,'#4a423c');r(1,10,4,5,'#5a3b24');r(2,9,2,1,'#d6b046')}),bag:mk(r=>{r(2,6,12,9,'#1a1208');r(3,7,10,7,'#5a3b24');r(5,3,1,3,'#d6b046');r(10,3,1,3,'#d6b046');r(5,3,6,1,'#d6b046');r(7,9,2,2,'#d6b046')}),clock:mk(r=>{r(2,2,12,12,'#1a1710');r(3,3,10,10,'#d9d2b8');r(8,4,1,5,'#1a1710');r(8,8,3,1,'#1a1710');r(1,6,1,4,'#1a1710')}),board:mk(r=>{r(1,2,14,8,'#04100c');r(2,3,12,6,'#10251f');r(3,4,10,1,'#a9e0cc');r(3,6,7,1,'#a9e0cc');r(3,8,10,1,'#a9e0cc');r(3,10,2,5,'#222');r(11,10,2,5,'#222')}),shoe:mk(r=>{r(2,6,5,6,'#1a0d0d');r(3,7,3,4,'#7a2a2a');r(2,11,12,3,'#1a0d0d');r(3,11,10,2,'#7a2a2a');r(7,9,6,2,'#7a2a2a');r(4,8,2,1,'#d9d2b8')}),folder:mk(r=>{r(1,3,6,2,'#1a1710');r(1,4,14,10,'#1a1710');r(2,5,12,8,'#c8b25a');r(2,8,12,1,'#8a7a30')}),book:mk(r=>{r(2,2,12,13,'#1a0d0d');r(3,3,10,11,'#3a1e1e');r(4,3,1,11,'#d6b046');r(6,5,5,1,'#d6b046');r(6,8,4,1,'#d6b046')}),sign:mk(r=>{r(1,3,14,7,'#04100c');r(2,4,12,5,'#1b4a44');r(4,6,8,1,'#d9d2b8');r(7,10,2,5,'#222')}),coin:mk(r=>{r(4,2,8,12,'#4a3410');r(2,4,12,8,'#4a3410');r(3,4,10,8,'#c8a03c');r(4,3,8,10,'#c8a03c');r(6,6,4,4,'#8a6a1a');r(7,7,2,2,'#e0c060')})};
+function bg(id,c){const G=$('#bg').getContext('2d'),r=(x,y,w,h,k)=>{G.fillStyle=k;G.fillRect(x,y,w,h)};
+r(0,0,160,96,'#050606');r(0,0,160,50,c);for(let y=0;y<50;y+=5)r(0,y,160,1,'#0003');for(let x=0;x<160;x+=10)r(x,0,1,50,'#0002');r(0,0,160,5,'#080a0a');
+if(id!=='terminus')[18,68,118].forEach(x=>{r(x,5,24,2,'#c9f0e0');r(x+2,7,20,40,'#c9f0e00a')});
+r(62,20,36,30,'#010202');r(60,18,40,3,'#262d2d');r(0,50,160,22,'#161b1c');for(let x=0;x<160;x+=14)r(x,58,6,1,'#222a2b');
+r(0,68,160,4,'#d6b046');r(0,72,160,24,'#040606');r(0,80,160,2,'#3a4447');r(0,90,160,2,'#3a4447');for(let x=0;x<160;x+=9)r(x,78,3,16,'#17120d');r(3,5,5,45,'#0007');r(152,5,5,45,'#0007');
+const E={market:()=>{for(let i=0;i<6;i++){const x=12+i*26;r(x+3,5,1,7,'#000');r(x,12,7,8,'#d98a2b');r(x+1,13,5,6,'#ffd27a')}},archive:()=>{r(0,52,160,20,'#0a2a3e');for(let i=0;i<14;i++)r(i*12+(i*7%5),56+(i*5%12),9,1,'#4f9ab8');for(const x of[16,116]){r(x,12,28,36,'#1b272b');for(let y=20;y<48;y+=9)r(x,y,28,2,'#0a1012')}},junction:()=>{for(let i=0;i<36;i++){r(96+i,48-i,5,2,'#6d6460');r(96+i,52-i,5,1,'#0008')}},terminus:()=>{r(78,0,2,12,'#444');r(72,12,14,4,'#ffe9b0');r(58,16,44,32,'#ffe9b012');r(66,16,28,32,'#ffe9b012')},hollow:()=>{r(118,18,16,22,'#7e7c62');r(120,22,12,2,'#3a3a2a');r(120,27,10,2,'#3a3a2a');r(20,30,1,18,'#0006');r(21,40,3,1,'#0006')}};(E[id]||(()=>0))()}
+function goal(){if(!S||!S.st)return;const n=S.clues.size,here=ST[S.st].o.filter(o=>o.c&&!S.clues.has(o.c)).length;let t;if(S.st==='terminus')t='The final stop. Say your name only when you are ready.';else if(n>=6)t='All 6 clues found. At Ashfall Junction take Line 0 Home, or Line 9 to face the figure.';else t='Goal: find all 6 clues ('+(6-n)+' left). '+(here?'This station still hides '+here+'.':'Nothing left here, take a train.')+(S.clues.has('token')?' You hold the token: Line 0 Home appears at Ashfall Junction.':'');$('#goal').textContent=t}
+function ecene(id){const G=$('#ec').getContext('2d'),r=(x,y,w,h,k)=>{G.fillStyle=k;G.fillRect(x,y,w,h)},man=(x,y,k)=>{r(x+2,y,6,2,k);r(x,y+2,10,1,k);r(x+2,y+3,6,5,'#c9a98a');r(x,y+8,10,16,k);r(x+1,y+24,3,6,k);r(x+6,y+24,3,6,k)},hand=(a,l,w,k)=>{for(let i=0;i<l;i++)r(Math.round(80+Math.sin(a)*i),Math.round(40-Math.cos(a)*i),w,w,k)};r(0,0,160,96,'#050606');
+const S6={final:()=>{r(0,0,160,96,'#10151a');r(0,0,160,3,'#6a1c18');for(let i=0;i<3;i++){r(10+i*50,12,36,30,'#020303');r(10+i*50,26,36,1,'#1c2a30')}r(0,70,160,26,'#0a0d10');for(let i=0;i<4;i++){r(8+i*40,46,26,14,'#3a251b');r(8+i*40,60,26,6,'#2a1a14');if(i!==2){r(18+i*40,38,8,8,'#0b0c0d');r(16+i*40,46,12,10,'#0b0c0d')}}r(72,34,8,8,'#c9a98a');r(70,32,12,3,'#3a3f4a');r(70,42,12,18,'#3a3f4a')},
+lost:()=>{[[20,30],[60,66],[120,20],[140,70],[96,44],[34,58]].forEach(p=>{r(p[0],p[1],2,1,'#dfe');r(p[0]+5,p[1],2,1,'#dfe')});r(60,5,40,1,'#a9e0cc55');r(77,60,6,4,'#555');r(76,64,8,12,'#333')},
+loop:()=>{r(0,0,160,96,'#0e1214');for(let y=-31;y<=31;y++){const w=Math.floor(Math.sqrt(961-y*y));r(80-w,40+y,w*2,1,'#1a1710')}for(let y=-28;y<=28;y++){const w=Math.floor(Math.sqrt(784-y*y));r(80-w,40+y,w*2,1,'#d9d2b8')}hand(6.17,13,3,'#1a1710');hand(4.92,22,2,'#1a1710');r(0,84,160,3,'#3a4447');r(16,74,60,10,'#2a3438');for(let i=0;i<5;i++)r(20+i*11,76,7,4,'#d6b046')},
+empty:()=>{r(0,0,160,70,'#1a2230');r(104,10,30,34,'#0a1a2e');r(120,18,8,8,'#e8e4c8');r(0,70,160,26,'#2a1f18');r(20,48,60,22,'#3a4a5a');r(22,48,14,8,'#d9d2b8');r(24,42,10,8,'#c9a98a');r(22,40,12,4,'#3a2a1a');r(36,50,44,16,'#52606f');r(100,52,16,22,'#5a3b24');r(102,46,12,16,'#3a3f4a');man(138,36,'#9fb5ad55')},
+home:()=>{r(0,0,160,14,'#4a5a8a');r(0,14,160,14,'#a8708a');r(0,28,160,14,'#e0a070');r(0,42,160,54,'#2a2a1a');r(54,14,82,10,'#3a2a22');r(60,24,70,48,'#7a5a42');r(88,38,20,34,'#ffd27a');r(86,32,24,3,'#fff3b0');r(66,34,14,14,'#ffd27a');r(116,34,10,14,'#ffd27a');r(94,44,8,8,'#c9a98a');r(93,41,10,5,'#3a2a1a');r(92,52,10,20,'#c0506a');r(0,72,160,4,'#4a4030');man(40,44,'#3a3f4a')},
+accept:()=>{['#2a2418','#4a3c28','#7a6040','#b08a58','#d9b878','#ffe9b0','#fff6d8','#fff'].forEach((k,i)=>r(30+i*8,4+i*4,100-i*16,80-i*8,k));r(0,80,160,16,'#161b1c');r(0,84,160,2,'#3a4447');[96,110,124,138].forEach(x=>{r(x,56,5,5,'#222');r(x-1,61,7,14,'#222')});man(62,50,'#3a3f4a');man(78,50,'#0b0c0d');r(72,62,6,2,'#c9a98a')}};S6[id]()}
+let S,A,mute=false,gaze=0,gazing=false,sec=0;
+const NAMES=()=>S.name,fx=t=>t.replace(/\{N\}/g,S.name);
+function end_(id){
+ const E={final:["Final Stop","The doors close. The announcement says your name and you finally understand it was never a warning. It was a greeting. The train pulls out, and you are already sitting down."],
+ lost:["Lost Time","The lights stop returning. In the dark you forget the platform, the clue, your own name. You become one more patient shape waiting for 11:47."],
+ loop:["Round Again","You almost remember. A door, a light, someone calling. Then the tube flickers, and you are asleep on a train, and the doors are open, and you step on."],
+ empty:["Empty House","The token opens a door. Your door. The rooms are tidy and cold, and the people who loved you have gone to bed grieving. You stand there until morning learns you are not there."],
+ home:["Last Train Home","You hold the brass token and say goodbye to the passengers, one by one. The doors open on a lit doorway. Someone is waiting behind the glass. You are not afraid. You walk in, and the train, finally, stops."],
+ accept:["The Passenger","You say your name. The figure raises its face: it is yours, at 11:47, in the moment before. You take its hand. “I’m sorry it took so long,” you say. Dawn comes through the tunnel. The passengers rise and walk toward it with you."]};
+ Object.assign(E,{final:['Final Stop','The doors close and the announcement says Walter Ames, gently, like a name read at a funeral. He sits down. By 11:47 he will remember nothing. Marian’s porch light burns on for a man the night has not yet returned.'],lost:['Lost Time','The lights stop returning. Walter forgets the platform, the clues, the sound of Marian’s voice. He becomes one more patient shape in a carriage that is always on time and never arrives.'],loop:['Round Again','He almost remembers: a door, a lit window, a woman’s hands. Then the tube flickers and Walter is asleep on a train, the doors open, and he steps on. Tomorrow night he will try again.'],empty:['Empty House','The brass token opens his own front door. The rooms are tidy and cold, and Marian sleeps with his coat over a chair. He speaks; she does not turn. Some journeys end exactly where they began, and the traveller is the last to know.'],home:['Last Train Home','Walter says goodbye to the passengers one by one, and the token grows warm in his hand. The doors open onto a porch light and a woman behind the glass, already crying, already smiling. He walks in. Behind him a train comes to rest, and it will not run tomorrow.'],accept:['The Passenger','Walter says his name. The figure lifts its face, and it is his own, at 11:47, in the moment before. He takes its hand. “I’m sorry it took so long.” The tunnel brightens to dawn and the passengers rise to follow, as travellers do when someone finally leads.']});let f={};try{f=JSON.parse(localStorage.getItem("lth")||"{}")}catch(e){}
+ f[id]=1;try{localStorage.setItem("lth",JSON.stringify(f))}catch(e){}
+ S.over=1;clearInterval(S.iv);$("#et").textContent=E[id][0];$("#eb").textContent=E[id][1];
+ $("#ef").textContent="Endings found: "+Object.keys(f).length+" of 6. "+(S.clues.size<6?"Some clues were never found.":"All clues found.");
+ $("#end").style.display="flex";$("#ride").style.display="none";drone(0);ecene(id);
+}
+function audio(){if(A)return;try{A=new(window.AudioContext||window.webkitAudioContext)();
+ const g=A.createGain();g.gain.value=.0;g.connect(A.destination);A.m=g;
+ const f=A.createBiquadFilter();f.type="lowpass";f.frequency.value=180;f.connect(g);A.f=f;
+ [55,55.8,82.4].forEach(h=>{const o=A.createOscillator();o.type="sawtooth";o.frequency.value=h;o.connect(f);o.start()});
+ const l=A.createOscillator(),lg=A.createGain();l.frequency.value=.07;lg.gain.value=60;l.connect(lg);lg.connect(f.frequency);l.start();
+ const b=A.createBuffer(1,A.sampleRate,A.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;A.nb=b;}catch(e){A=null}}
+function drone(v){if(A)A.m.gain.setTargetAtTime(mute?0:v*.07,A.currentTime,.6)}
+function noise(freq,dur,vol,type){if(!A||mute)return;const s=A.createBufferSource();s.buffer=A.nb;s.loop=true;const f=A.createBiquadFilter();f.type=type||"lowpass";f.frequency.value=freq;const g=A.createGain();g.gain.setValueAtTime(vol,A.currentTime);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+dur);s.connect(f);f.connect(g);g.connect(A.destination);s.start();s.stop(A.currentTime+dur)}
+function chime(){if(!A||mute)return;[392,311].forEach((h,i)=>{const o=A.createOscillator(),g=A.createGain();o.frequency.value=h;g.gain.setValueAtTime(.0001,A.currentTime+i*.5);g.gain.exponentialRampToValueAtTime(.05,A.currentTime+i*.5+.05);g.gain.exponentialRampToValueAtTime(.0001,A.currentTime+i*.5+1.4);o.connect(g);g.connect(A.destination);o.start(A.currentTime+i*.5);o.stop(A.currentTime+i*.5+1.5)})}
+function say(t){chime();let a=$('#ann');if(!a){a=document.createElement('div');a.id='ann';a.className='sign';a.style.cssText='position:absolute;z-index:8;top:34px;left:50%;transform:translateX(-50%);background:#04100c;border:3px solid #d6b046;color:#a9e0cc;padding:8px 14px;font-size:11px;max-width:94%;transition:opacity .6s;pointer-events:none';$('#scene').appendChild(a)}a.textContent=t;a.style.opacity=1;clearTimeout(a.t);a.t=setTimeout(()=>a.style.opacity=0,3200)}
+function steps(){if(S&&!S.over){if(S.dist<=4)noise(260,.18,.5);}setTimeout(steps,S?1400+S.dist*450:2000)}
+function log(t,ch){$("#log").textContent=fx(t);$("#ch").innerHTML="";(ch||[]).forEach(c=>{const b=document.createElement("button");b.className="ch";b.textContent=fx(c[0]);b.onclick=c[1];$("#ch").appendChild(b)})}
+function hud(){goal();$("#san i").style.width=Math.max(0,S.san)+"%";$("#dist i").style.width=(100-S.dist/6*100)+"%";$("#cc").innerHTML=Object.keys(CL).map(k=>'<span title="'+(S.clues.has(k)?CL[k]:'Unfound clue')+'" style="display:inline-block;width:22px;height:22px;margin-right:2px;opacity:'+(S.clues.has(k)?1:.2)+'">'+SP[CM[k]]+'</span>').join('');
+ $("#scene").style.setProperty("--r",(10+22*(.35+S.san/150))+"vmin");
+ const f=$("#fig"),p=6-Math.max(S.dist,0);f.style.left=(88-p*7)+"%";f.style.transform="scale("+(.5+p*.17)+")";f.style.opacity=.3+p*.12}
+function arrive(id){
+ const st=ST[id];S.st=id;S.visited=S.visited||{};
+ $("#sname").textContent=fx(st.n);$("#scene").style.background="radial-gradient(ellipse at 50% 20%,"+st.c+" 0,#050708 80%)";
+ const sc=$("#scene");sc.querySelectorAll(".obj").forEach(e=>e.remove());
+ bg(id,st.c);$("#cap").textContent="";
+ st.o.forEach(o=>{const b=document.createElement("button");b.className="obj";b.style.left=o.x+"%";b.style.top=o.y+"%";b.innerHTML=SP[GM[o.k]||"sign"];b.setAttribute("aria-label",fx(o.k));b.onmouseenter=()=>$("#cap").textContent=fx(o.k);b.onmouseleave=()=>$("#cap").textContent="";b.onclick=()=>read(o,b);sc.appendChild(b)});
+ S.tr=st.tr.map(t=>({...t,t:rnd(16,50)}));
+ if(id==="junction"&&S.clues.has("token"))S.tr.push({to:"HOME",l:"Line 0 to Home (one fare)",t:rnd(24,40)});
+ S.idle=0;buildTT();light();hud();drone(id==="terminus"?.4:1);
+ say(id==="hollow"&&!S.started?"Final stop. "+S.name+".":"Now arriving. "+fx(st.n)+".");S.started=1;
+ if(id==="terminus"){log(st.t+" The figure turns its head and waits.",[["Say your name aloud",()=>fin("say")],["Run back to the platform",()=>fin("run")]]);$("#tt").innerHTML="";S.tr=[]}
+ else log(st.t);
+ if(S.dist<=0)end_("final")}
+function fin(c){const n=S.clues.size;
+ if(c==="say")end_(n>=6?"accept":n>=4?"loop":"final");
+ else{S.dist-=1;S.san-=8;if(S.dist<=0)return end_("final");arrive("junction");log("You run. Behind you, unhurried footsteps keep your pace. Ashfall Junction again.")}}
+function read(o,b){b.classList.add("seen");$("#cap").textContent=fx(o.k);let t=o.t;
+ if(o.c&&!S.clues.has(o.c)){S.clues.add(o.c);S.san-=3;t+="  —  Clue found: "+CL[o.c]}
+ log(t);hud();noise(900,.25,.12,"bandpass")}
+function buildTT(){const tt=$("#tt");tt.innerHTML="<div class='sign' style='font-size:12px;color:var(--dim);margin-bottom:2px'>Timetable. Doors open when a train is within 15 seconds.</div>";
+ S.tr.forEach((t,i)=>{const d=document.createElement("div");d.className="tr";d.innerHTML="<span class='l'>"+fx(t.l)+(t.risk?" <span style='color:var(--blood)'>(shortcut: it gains ground)</span>":"")+"</span><span class='c' id='c"+i+"'></span>";
+ const b=document.createElement("button");b.id="b"+i;b.textContent="Board";b.onclick=()=>board(i);d.appendChild(b);tt.appendChild(d)});tick(0)}
+function board(i){const t=S.tr[i];if(!t||t.t>15||S.busy)return;S.busy=1;
+ S.dist-=1+(t.risk||0);S.san-=4+(t.risk?10:0);hud();noise(120,3,.5);drone(1.6);
+ const r=$("#ride");$("#rt").textContent=fx(pick(RIDE))+(S.dist<=2?" It is sitting two seats behind you now.":"");r.style.display="flex";
+ setTimeout(()=>{r.style.display="none";S.busy=0;drone(1);
+  if(S.san<=0)return end_("lost");
+  if(t.to==="HOME")return end_(S.clues.size>=6&&S.san>=40?"home":"empty");
+  if(S.dist<=0)return end_("final");arrive(t.to)},3200)}
+function tick(d){if(!S||S.over)return;
+ S.tr.forEach((t,i)=>{t.t-=d;if(t.t<=0){t.t=rnd(35,60);if(d)log("A train leaves without you. The silence behind you gets closer.")}
+  const c=$("#c"+i),b=$("#b"+i);if(c){c.textContent=t.t<=15?"Doors open":Math.ceil(t.t)+"s";b.disabled=t.t>15||S.busy}});
+ S.idle+=d;if(S.idle>55&&S.dist>2){S.idle=0;S.dist-=1;log("You lingered too long. The footsteps are not far now.");hud()}
+ if(gazing){gaze+=d*55;$("#fig").classList.add("g")}else{gaze=Math.max(0,gaze-d*30);$("#fig").classList.remove("g")}
+ $("#gz").classList.toggle("on",gaze>0);$("#gz i").style.width=Math.min(100,gaze)+"%";
+ if(gaze>=100){gaze=0;gazing=false;const e=pick(FOL);log(e[0]);S.dist-=e[1];S.san-=e[2];hud();
+  if(e[1]){const s=$("#scene");s.classList.add("out");setTimeout(()=>s.classList.remove("out"),2200);noise(80,1.5,.6)}
+  if(S.san<=0)end_("lost");else if(S.dist<=0)end_("final")}}
+function flick(){const s=$("#scene");if(!S||S.over)return;if(Math.random()<.14){s.classList.add("fl");noise(2000,.08,.08,"bandpass");setTimeout(()=>s.classList.remove("fl"),60+Math.random()*120)}}
+function light(){const o=$("#scene").getBoundingClientRect();const r=parseFloat(getComputedStyle($("#scene")).getPropertyValue("--r"))*Math.min(innerWidth,innerHeight)/100;
+ const mx=parseFloat($("#scene").style.getPropertyValue("--mx"))/100*o.width,my=parseFloat($("#scene").style.getPropertyValue("--my"))/100*o.height;
+ document.querySelectorAll(".obj").forEach(e=>{const x=e.offsetLeft,y=e.offsetTop,d=Math.hypot(x-mx,y-my);e.style.opacity=Math.max(.2,Math.min(1,1.4-d/r))})}
+function move(e){const s=$("#scene").getBoundingClientRect();$("#scene").style.setProperty("--mx",((e.clientX-s.left)/s.width*100)+"%");$("#scene").style.setProperty("--my",((e.clientY-s.top)/s.height*100)+"%");light()}
+$("#scene").addEventListener("pointermove",move);$("#scene").addEventListener("pointerdown",move);
+const fg=$("#fig");fg.addEventListener("pointerdown",e=>{gazing=true;e.preventDefault()});addEventListener("pointerup",()=>gazing=false);addEventListener("pointercancel",()=>gazing=false);
+$("#mute").onclick=()=>{mute=!mute;$("#mute").textContent=mute?"Sound off":"Sound on";if(mute&&window.speechSynthesis)speechSynthesis.cancel();drone(mute?0:1)};
+function start(){const n='Walter Ames';audio();
+ S={name:n,san:100,dist:6,clues:new Set(),tr:[],over:0,busy:0};
+ $("#intro").style.display="none";$("#end").style.display="none";hud();drone(1);
+ $("#scene").style.setProperty("--mx","50%");$("#scene").style.setProperty("--my","55%");
+ const r=$("#ride");$("#rt").textContent='Walter wakes. The carriage rocks. Marian’s light is somewhere ahead. The window shows only his own tired face, and tunnels.';r.style.display="flex";
+ setTimeout(()=>{r.style.display="none";arrive("hollow")},3000);
+ clearInterval(S.iv);S.iv=setInterval(()=>{tick(.25);flick()},250)}
+$("#start").onclick=start;$("#again").onclick=start;
+try{const f=JSON.parse(localStorage.getItem("lth")||"{}");const k=Object.keys(f).length;if(k)$("#found").textContent="Endings found: "+k+" of 6"}catch(e){}
+(function(){const c=document.createElement('canvas');c.width=16;c.height=32;const g=c.getContext('2d'),r=(x,y,w,h,k)=>{g.fillStyle=k;g.fillRect(x,y,w,h)};r(5,0,6,3,'#08090a');r(3,3,10,1,'#08090a');r(5,4,6,5,'#050505');r(6,5,4,3,'#1a1d1e');r(3,9,10,20,'#0b0c0d');r(3,9,1,20,'#2a2e30');r(7,10,1,18,'#1b1c1f');r(2,10,2,14,'#0b0c0d');r(12,10,2,14,'#0b0c0d');r(5,29,2,3,'#050505');r(9,29,2,3,'#050505');const f=$('#fig');f.style.backgroundImage='url('+c.toDataURL()+')';f.style.width='68px';f.style.height='136px'})();
+steps();
+</script></body></html>

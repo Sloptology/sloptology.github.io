@@ -1,0 +1,163 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>The Wrong Door</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--ink:#d9c9a0;--red:#8a2a22;--bg:#0d0907;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:"Courier New",Courier,monospace;overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;filter:drop-shadow(1px 0 rgba(160,30,30,.5)) drop-shadow(-1px 0 rgba(30,150,140,.4)) sepia(.25) saturate(.8)}
+#c.g{transform:translateX(7px) skewX(4deg) scaleY(1.02);filter:hue-rotate(60deg) contrast(1.6) drop-shadow(5px 0 rgba(255,0,0,.6))}
+#gr{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;mix-blend-mode:overlay;opacity:.35;pointer-events:none}
+#sc{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.8) 100%)}
+.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+#title{background:#0d0907;z-index:5;cursor:pointer}
+#title h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:clamp(40px,9vw,92px);letter-spacing:.08em;margin:0;color:#c9b27a;text-shadow:3px 0 var(--red),-2px 0 #2a5a55}
+#title p{max-width:520px;line-height:1.6;color:#a89874;font-size:14px}
+#title b{color:var(--ink)}
+#pr{position:fixed;left:0;right:0;bottom:22%;text-align:center;font-size:14px;color:#e8d9a8;text-shadow:0 0 6px #000;pointer-events:none;min-height:20px}
+#hud{position:fixed;left:0;right:0;bottom:7%;text-align:center;font-size:16px;font-style:italic;color:#cbbd94;text-shadow:0 0 8px #000,0 0 3px #000;padding:0 20px;transition:opacity 1s;pointer-events:none}
+#xh{position:fixed;left:50%;top:50%;width:3px;height:3px;margin:-1px;background:rgba(230,210,150,.6);pointer-events:none}
+#pn{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(480px,86vw);background:#16100bf0;border:1px solid #6a5530;padding:20px 24px;display:none;z-index:4;line-height:1.55}
+#pn h3{margin:0 0 10px;font-family:Georgia,serif;font-weight:400;font-size:20px;color:#c9b27a}
+#pn p{margin:0 0 12px;font-size:15px}
+#pn small{color:#8a7a58}
+#pn input{background:#0d0907;color:var(--ink);border:1px solid #6a5530;font:24px "Courier New",monospace;width:90px;text-align:center;letter-spacing:.3em;padding:6px}
+button{background:#2a1a10;color:var(--ink);border:1px solid #7a6030;font:15px "Courier New",monospace;padding:9px 16px;margin:4px;cursor:pointer}
+button:hover,button:focus-visible{background:#4a2a1a;outline:1px solid #c9b27a}
+#end{background:#000;z-index:6;display:none;transition:background 2s}
+#et p{max-width:560px;font-family:Georgia,serif;font-size:19px;line-height:1.6;animation:fi 3s both;margin:14px auto}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+#fl{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .45s;z-index:3}
+@media(prefers-reduced-motion:reduce){#c.g{transform:none}#et p{animation:none}}
+</style></head><body>
+<canvas id="c"></canvas><canvas id="gr" width="160" height="90"></canvas><div id="sc"></div><div id="xh"></div>
+<div id="fl"></div><div id="pr"></div><div id="hud"></div>
+<div id="pn"><h3 id="pt"></h3><p id="px"></p><div id="pi"></div><small id="ps">E to close</small></div>
+<div id="end" class="ov"><div id="et"></div><div id="er" style="display:none"><button onclick="location.reload()">Wake up again</button></div></div>
+<div id="title" class="ov"><h1>THE WRONG DOOR</h1><p style="margin-top:28px">Hotel Meridian. Room 9. Night clerk off duty.<br>You wake alone with no memory of arriving. All you want is the exit.</p>
+<p><b>WASD</b> move &nbsp; <b>Mouse</b> look &nbsp; <b>E / Click</b> use &nbsp; <b>Tab</b> journal<br>Count carefully. Remember. Notice what changes.</p><p style="color:#c9b27a">Click to wake up. Headphones recommended.</p></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const rnd=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const R=new THREE.WebGLRenderer({canvas:$('c'),antialias:false});
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x100b07);scene.fog=new THREE.Fog(0x100b07,1.5,19);
+const cam=new THREE.PerspectiveCamera(70,1,.1,60);cam.rotation.order='YXZ';scene.add(cam);
+function rs(){const a=innerWidth/innerHeight,h=216;R.setSize(Math.round(h*a),h,false);cam.aspect=a;cam.updateProjectionMatrix()}
+addEventListener('resize',rs);rs();
+// textures
+function tex(w,f){const c=document.createElement('canvas');c.width=c.height=w;const x=c.getContext('2d');f(x,w);const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;t.wrapS=t.wrapT=THREE.RepeatWrapping;return t}
+const T={
+carpet:tex(64,(x,w)=>{x.fillStyle='#4a1512';x.fillRect(0,0,w,w);x.strokeStyle='#8a6a2a';x.lineWidth=2;for(let i=0;i<2;i++)for(let j=0;j<2;j++){const cx=16+i*32,cy=16+j*32;x.beginPath();x.moveTo(cx,cy-12);x.lineTo(cx+12,cy);x.lineTo(cx,cy+12);x.lineTo(cx-12,cy);x.closePath();x.stroke();x.fillStyle='#2a0b0a';x.fillRect(cx-2,cy-2,4,4)}}),
+wall:tex(64,(x,w)=>{x.fillStyle='#8a7a3c';x.fillRect(0,0,w,w);x.fillStyle='#6d6430';for(let i=0;i<w;i+=8)x.fillRect(i,0,3,w);x.fillStyle='#4f5a30';for(let i=4;i<w;i+=16)for(let j=4;j<w;j+=16)x.fillRect(i,j,2,2)}),
+wood:tex(32,(x,w)=>{x.fillStyle='#5a3a22';x.fillRect(0,0,w,w);x.fillStyle='#43291a';for(let i=0;i<w;i+=4)x.fillRect(0,i+(i%8?1:0),w,1)})};
+const M=(t,rx,ry,c)=>{const m=t.clone();m.needsUpdate=true;m.repeat.set(rx,ry);return new THREE.MeshLambertMaterial({map:m,color:c||0xffffff})};
+const BM=c=>new THREE.MeshBasicMaterial({color:c});
+const bx=(g,w,h,d,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);g.add(o);return o};
+function label(s,bg,fg){return tex(64,(x,w)=>{x.fillStyle=bg||'#b58a2a';x.fillRect(0,0,w,w);x.fillStyle=fg||'#2a1a08';x.font='bold 20px monospace';x.textAlign='center';x.fillText(s,32,38)})}
+function paint(r){return tex(48,(x,w)=>{x.fillStyle=['#2d3b2a','#4a2a22','#3a3524'][r()*3|0];x.fillRect(0,0,w,w);x.fillStyle='#8a7a3c';x.fillRect(0,30,w,18);x.fillStyle='#c9b678';x.beginPath();x.arc(10+r()*28,12,5,0,7);x.fill();x.fillStyle='#000';const f=6+r()*36;x.fillRect(f,26,3,8);x.fillRect(f-1,24,5,3)})}
+function face(a){return tex(32,(x,w)=>{x.fillStyle='#3a3020';x.fillRect(0,0,w,w);x.fillStyle=`rgb(${150-a*6},${130-a*6},${100-a*5})`;x.beginPath();x.ellipse(16,16,8,11,0,0,7);x.fill();x.fillStyle='#111';x.fillRect(12,13,2,2);x.fillRect(18,13,2,2);x.fillRect(13,20,6,1)})}
+function clockTex(r){return tex(32,(x,w)=>{x.fillStyle='#c9b678';x.fillRect(0,0,w,w);x.strokeStyle='#111';x.lineWidth=2;const a=r()*6.28,b=r()*6.28;x.beginPath();x.moveTo(16,16);x.lineTo(16+Math.cos(a)*8,16+Math.sin(a)*8);x.moveTo(16,16);x.lineTo(16+Math.cos(b)*12,16+Math.sin(b)*12);x.stroke()})}
+// world
+const hall=new THREE.Group(),room=new THREE.Group();scene.add(hall,room);
+scene.add(new THREE.AmbientLight(0x5a4a38,.9));
+const PL=[0,1,2].map(i=>{const l=new THREE.PointLight(0xffe2a0,1.1,13);scene.add(l);return l});
+let IA=[],tubes=[],fig=null,S={ch:0,notes:[],loc:'hall',seen:{}};
+const clear=g=>{while(g.children.length){const o=g.children.pop();o.geometry&&o.geometry.dispose()}};
+function door(g,x,z,ry,txt,act,lab,col){const gr=new THREE.Group();const d=bx(gr,1.1,2.2,.12,M(T.wood,1,1,col||0x9a6a46),0,1.1,0);bx(gr,.08,.08,.22,BM(0xb58a2a),.4,1.1,0);const p=new THREE.Mesh(new THREE.PlaneGeometry(.4,.2),new THREE.MeshBasicMaterial({map:label(txt)}));p.position.set(0,1.85,.07);gr.add(p);gr.position.set(x,0,z);gr.rotation.y=ry;g.add(gr);d.userData={act,lab};IA.push(d)}
+function ia(o,lab,act){o.userData={act,lab};IA.push(o);return o}
+function buildHall(){
+ clear(hall);IA=[];tubes=[];fig=null;const r=rnd(S.ch*977+13);
+ const tint=[0xffffff,0xd8a898,0xa8c098,0xe8d080,0x9a8a8a][r()*5|0];
+ const wm=M(T.wall,10,1.5,tint);
+ bx(hall,3.2,.1,32,M(T.carpet,2,16,r()<.3?0xaa8888:0xffffff),0,0,-16);bx(hall,3.2,.1,32,M(T.wood,1,1,0x777777),0,3,-16);
+ bx(hall,.1,3,32,wm,-1.6,1.5,-16);bx(hall,.1,3,32,wm,1.6,1.5,-16);bx(hall,3.2,3,.1,wm,0,1.5,.05);bx(hall,3.2,3,.1,wm,0,1.5,-32);
+ door(hall,0,-31.9,0,'EXIT',()=>read('EXIT','The door opens onto bare plaster. Someone painted the word EXIT here a long time ago, and then stopped.',0,()=>reroll('The exit was never the way out.')),'Open EXIT',0x5a7a5a);
+ [-6,-16,-26].forEach((z,i)=>{const t=bx(hall,.5,.05,1.4,BM(0xeaf0c8),0,2.95,z);tubes.push(t);PL[i].position.set(0,2.5,z);PL[i].intensity=1.1});
+ const wr=['301','118','622','---',...['204','515','740','333','912'].sort(()=>r()-.5).slice(0,2)].sort(()=>r()-.5);
+ [-1,1].forEach((s,si)=>[-5,-12,-19].forEach((z,zi)=>{const n=wr[si*3+zi];
+  const act=n==='---'?()=>codeDoor():['301','118','622'].includes(n)?()=>enter(n):()=>enter('w'+(r()*3|0));
+  door(hall,s*1.54,z,-s*Math.PI/2,n,act,'Open door '+n)}));
+ // paintings: moved, tilted, missing
+ const zs=[-2.5,-8.5,-15.5,-22.5,-29];
+ zs.forEach((z,i)=>{const s=r()<.5?-1:1;if(r()<.2){const o=new THREE.Mesh(new THREE.PlaneGeometry(.6,.8),BM(0x6a6038));o.position.set(s*1.55,1.7,z);o.rotation.y=-s*Math.PI/2;hall.add(o);return}
+  const g=new THREE.Group();bx(g,.7,.9,.06,M(T.wood,1,1,0x886644),0,0,0);const p=new THREE.Mesh(new THREE.PlaneGeometry(.55,.75),new THREE.MeshBasicMaterial({map:paint(r),color:0x998877}));p.position.z=.04;g.add(p);g.position.set(s*1.54,1.7,z);g.rotation.y=-s*Math.PI/2;g.rotation.z=r()<.3?(r()-.5)*.5:0;hall.add(g)});
+ // lamps
+ [-9.5,-15,-22].forEach(z=>{if(r()<.75){const s=r()<.5?-1:1;bx(hall,.5,.7,.5,M(T.wood,1,1),s*1.25,.35,z);bx(hall,.28,.3,.28,BM(r()<.7?0xe8c870:0x2a2418),s*1.25,.85,z)}});
+ if(r()<.6){const s=r()<.5?-1:1,z=-7-r()*18;bx(hall,.5,.1,.5,M(T.wood,1,1),s*1.1,.5,z);bx(hall,.5,.9,.08,M(T.wood,1,1),s*1.1,.95,z+(s*0+.2))}
+ if(r()<.5)bx(hall,.4,.8,.4,BM(0x2f4a2a),r()<.5?-1.2:1.2,.4,-10-r()*14);
+ const cl=new THREE.Mesh(new THREE.PlaneGeometry(.4,.4),new THREE.MeshBasicMaterial({map:clockTex(r),color:0xaaaaaa}));cl.position.set(0,2.4,-31.9);hall.add(cl);
+ if(S.ch>=3&&r()<.55){fig=bx(hall,.5,1.8,.2,BM(0x050403),(r()-.5)*1.4,.9,-28);}
+ P.x=0;P.z=-1.2;
+}
+function shell(){clear(room);IA=[];const wm=M(T.wall,6,1.5,0xb09a80);
+ bx(room,6,.1,6,M(T.carpet,4,4),0,0,0);bx(room,6,.1,6,M(T.wood,1,1,0x666666),0,3,0);
+ bx(room,.1,3,6,wm,-3,1.5,0);bx(room,.1,3,6,wm,3,1.5,0);bx(room,6,3,.1,wm,0,1.5,-3);bx(room,6,3,.1,wm,0,1.5,3);
+ door(room,0,2.94,Math.PI,'OUT',()=>reroll(),'Go back to the hall');
+ PL[0].position.set(0,2.5,0);PL[0].intensity=1.2;PL[1].intensity=PL[2].intensity=0;P.x=0;P.z=2.1}
+function lamp(x,lit){bx(room,.1,.3,.1,BM(0x332a1c),x,1.35,-2.8);bx(room,.34,.26,.3,BM(lit?0xffe08a:0x2e2a20),x,1.62,-2.8)}
+const shuffle=(a,r)=>a.sort(()=>r()-.5);
+function buildRoom(k){shell();const r=rnd(S.ch*31+k.length*7+3);
+ if(k==='301'){bx(room,5.2,.1,.5,M(T.wood,1,1),0,1.2,-2.8);const on=shuffle([0,1,2,3,4,5],r).slice(0,4);[-2,-1.2,-.4,.4,1.2,2].forEach((x,i)=>lamp(x,on.includes(i)));
+  bx(room,1.2,.7,.7,M(T.wood,1,1),-2,.35,0);ia(bx(room,.4,.02,.3,BM(0xd8d0b0),-2,.72,0),'Read the ledger',()=>read('The Hale Ledger','November 4, 1957. Edmund Hale, one night, paid in advance. A line in the clerk’s hand: “Count what still burns. That is the first number.”',1))}
+ else if(k==='118'){bx(room,5,1.6,.1,BM(0x2a1c12),0,1.6,-2.9);const kp=r()*9|0;for(let i=0;i<9;i++){const x=-1.8+(i%3)*1.8,y=1.2+((i/3|0)*.5);bx(room,.08,.08,.12,BM(0x998866),x,y,-2.82);if(i===kp)bx(room,.15,.3,.04,BM(0xd4a830),x,y-.2,-2.82)}
+  bx(room,1.2,.7,.7,M(T.wood,1,1),2,.35,0);ia(bx(room,.4,.02,.3,BM(0xd8d0b0),2,.72,0),'Read the card',()=>read('Key Room','Every guest takes a key. In all these years only one was ever returned. “That is the second number,” the card says, “and the only one that can be trusted.”',1))}
+ else if(k==='622'){const L=['A wedding, 1949. The groom is smiling. On the back: “Edmund and Ruth.”','Ruth in a hospital bed, 1953. The date has been scratched out.','A rain-slick road. A sign reads ROUTE 9.','Edmund at this hotel’s front desk. The clock behind him has no hands.','Edmund in the lobby mirror. His reflection is facing away.','An empty bed. The sheets look warm.','A man in a doorway, face scratched out. On the back: “You were here the whole time.”'];
+  [[-2.94,-1.8,1],[-2.94,0,1],[-2.94,1.8,1],[2.94,-1.8,-1],[2.94,0,-1],[2.94,1.8,-1],[0,-2.9,0]].forEach((p,i)=>{const o=new THREE.Mesh(new THREE.PlaneGeometry(.6,.8),new THREE.MeshBasicMaterial({map:face(i),color:0xaaaaaa}));o.position.set(p[0],1.7,p[1]);o.rotation.y=p[2]?p[2]*Math.PI/2:0;room.add(o);ia(o,'Look at the photograph',()=>read('Photograph',L[i],1))});
+  bx(room,1,.6,.6,M(T.wood,1,1),-1.5,.3,-2.2);ia(bx(room,.4,.02,.3,BM(0xd8d0b0),-1.5,.62,-2.2),'Read the note',()=>read('Nightstand','Seven faces. The same man, each time less sure. “Count them. That is the last number.”',1))}
+ else if(k==='417'){scene.fog.color.set(0x1a0c0c);bx(room,2,.5,3,M(T.wood,1,1,0xaa8888),0,.3,-1);bx(room,1.9,.25,2.9,BM(0x8a8070),0,.6,-1);
+  ia(bx(room,.5,.3,1.5,BM(0x070504),0,.85,-1.2),'Look closer',()=>choice());bx(room,.3,.3,.3,BM(0x070504),0,1.05,-2.2);lamp(-1.8,true);PL[0].color.set(0xff9a70)}
+ else if(k==='w0'){bx(room,3,2,.05,BM(0x1c2a28),0,1.5,-2.9);ia(bx(room,3.1,2.1,.04,BM(0x2a3a36),0,1.5,-2.92),'Look in the mirror',()=>read('Mirror','Your reflection blinks a moment after you do.'))}
+ else if(k==='w1'){bx(room,.6,.3,.5,BM(0x111111),0,.8,-2.5);bx(room,1,.7,.8,M(T.wood,1,1),0,.35,-2.5);ia(bx(room,.3,.2,.3,BM(0x222222),0,1.05,-2.5),'Answer the telephone',()=>read('Telephone','It rings once. A voice, muffled, says: “Checkout is at noon, Mr. Hale.” You never gave your name.'))}
+ else{const c=bx(room,.6,.1,.6,M(T.wood,1,1),-2.3,.5,-2.3);bx(room,.6,.8,.1,M(T.wood,1,1),-2.3,.9,-2.6);ia(c,'Touch the chair',()=>read('A chair','It faces the corner. The seat is still warm. Someone was here a moment ago.'))}
+}
+// state
+const P={x:0,z:-1.2};let yaw=0,pitch=0,keys={},mode='title',panel=false;
+function msg(t,ms){const h=$('hud');h.textContent=t;h.style.opacity=1;clearTimeout(msg.t);msg.t=setTimeout(()=>h.style.opacity=0,ms||4200)}
+function flash(f){const e=$('fl');e.style.opacity=1;setTimeout(()=>{f();e.style.opacity=0},460)}
+function show(t,x,html,sm){panel=true;document.exitPointerLock&&document.exitPointerLock();$('pt').textContent=t;$('px').textContent=x;$('pi').innerHTML=html||'';$('ps').textContent=sm||'E to close';$('pn').style.display='block'}
+let pcb=null;
+function hide(){panel=false;$('pn').style.display='none';const c=pcb;pcb=null;c&&c()}
+function read(t,x,note,cb){if(note&&!S.notes.some(n=>n[1]===x))S.notes.push([t,x]);pcb=cb||null;show(t,x);snd('page')}
+function journal(){if(panel)return hide();show('Journal',S.notes.length?S.notes.map(n=>'• '+n[1]).join('\n\n'):'Nothing yet.');$('px').style.whiteSpace='pre-wrap';$('px').style.maxHeight='55vh';$('px').style.overflow='auto'}
+function swapLoc(l){S.loc=l;scene.fog.color.set(0x100b07);PL[0].color.set(0xffe2a0);hall.visible=l==='hall';room.visible=l!=='hall'}
+const LINES=['The hallway is almost the same.','Something is different. You can’t say what.','The carpet looks newer than before.','You are sure the paintings were elsewhere.','The lights hum a different note.','Somewhere, a lift bell rings.'];
+function reroll(m){flash(()=>{S.ch++;swapLoc('hall');buildHall();msg(m||LINES[S.ch%LINES.length]);snd('creak')})}
+function enter(k){snd('creak');flash(()=>{swapLoc(k);buildRoom(k);msg(k==='417'?'Room 417. The door was never locked.':k[0]==='w'?'This is not the room you wanted.':'Room '+k+'.')})}
+function codeDoor(){show('A blank brass plate','The number has been rubbed away. Beneath the lock, three small dials.','<input id="ci" maxlength="3" inputmode="numeric" autocomplete="off"> <button id="cb">Turn</button>','Esc to step back');const go=()=>{const v=$('ci').value;if(v==='417'){hide();enter('417')}else{$('px').textContent='Nothing. The dials spin freely. The wrong number is a kind of answer, too.';snd('creak')}};$('cb').onclick=go;$('ci').onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')go();if(e.key==='Escape')hide()};setTimeout(()=>$('ci').focus(),50)}
+function choice(){show('The figure on the bed','It is you. It was always you. The rain, the road, the headlights that didn’t stop. The room is quiet in the way a held breath is quiet.','<button id="b1">Lie down beside yourself</button><button id="b2">Take the exit</button>','');$('b1').onclick=()=>ending(0);$('b2').onclick=()=>ending(1)}
+function ending(k){hide();mode='end';const e=$('end');e.style.display='flex';const L=k?['You close the door of 417 behind you. At the end of the hall, EXIT glows green. This time, the handle turns.','Sunlight. A lobby you almost recognise. A revolving door turning slowly, patiently.','Outside: rain. Route 9. A bus idles at the kerb, its doors open, no driver.','Behind you the neon blinks VACANCY.','You have left. Haven’t you?','Upstairs, in a corridor you cannot see, a door opens. A man wakes in an unfamiliar bed. He has no memory of how he arrived.']:['You remember now. All of it. The wet road. The light. The long quiet after.','Room 417 was never a room. It was the moment before the moment.','You lie down. The hum of the lamps becomes something like applause, or like rain.','Somewhere a desk bell rings, once.','“Checking out, Mr. Hale?” a kind voice asks.','You open your mouth to answer, and down the hall a door marked EXIT swings open by itself. It was always unlocked. Was it always there?'];let i=0;(function n(){if(i<L.length){$('et').insertAdjacentHTML('beforeend','<p>'+L[i++]+'</p>');setTimeout(n,4200)}else $('er').style.display='block'})();snd('ding')}
+// audio
+let AC,mg;
+function noise(d,f,q,v,ty){if(!AC)return;const b=AC.createBuffer(1,AC.sampleRate*d,AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1;const s=AC.createBufferSource();s.buffer=b;const fl=AC.createBiquadFilter();fl.type=ty||'bandpass';fl.frequency.value=f;fl.Q.value=q;const g=AC.createGain();g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);s.connect(fl);fl.connect(g);g.connect(mg);s.start()}
+function tone(f,d,v,ty,f2){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=ty||'sine';o.frequency.setValueAtTime(f,AC.currentTime);if(f2)o.frequency.linearRampToValueAtTime(f2,AC.currentTime+d);g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);const fl=AC.createBiquadFilter();fl.frequency.value=900;o.connect(fl);fl.connect(g);g.connect(mg);o.start();o.stop(AC.currentTime+d)}
+function snd(k){if(!AC)return;if(k==='creak'){tone(95,.9,.12,'sawtooth',55);noise(.4,300,4,.1)}if(k==='ding'){tone(880,2,.1);tone(1320,1.5,.04)}if(k==='page')noise(.15,3000,1,.08);if(k==='step')noise(.12,180,1,.25,'lowpass');
+ if(k==='steps')for(let i=0;i<6;i++)setTimeout(()=>noise(.1,140,1,.12,'lowpass'),i*520);
+ if(k==='voice'){const o=AC.createOscillator(),g=AC.createGain(),f=AC.createBiquadFilter();o.type='sawtooth';o.frequency.value=100+Math.random()*60;f.type='bandpass';f.Q.value=3;f.frequency.value=500;const l=AC.createOscillator(),lg=AC.createGain();l.frequency.value=4;lg.gain.value=300;l.connect(lg);lg.connect(f.frequency);l.start();g.gain.setValueAtTime(.001,AC.currentTime);g.gain.linearRampToValueAtTime(.06,AC.currentTime+.5);g.gain.linearRampToValueAtTime(.001,AC.currentTime+2);o.connect(f);f.connect(g);g.connect(mg);o.start();o.stop(AC.currentTime+2)}}
+function audio(){AC=new (window.AudioContext||window.webkitAudioContext)();mg=AC.createGain();mg.gain.value=.55;mg.connect(AC.destination);
+ [55,82.4,110.7].forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain(),lp=AC.createBiquadFilter();o.type=i?'sine':'sawtooth';o.frequency.value=f;g.gain.value=i?.05:.025;lp.frequency.value=220;o.connect(lp);lp.connect(g);g.connect(mg);o.start();const l=AC.createOscillator(),lg=AC.createGain();l.frequency.value=.05+i*.03;lg.gain.value=f*.012;l.connect(lg);lg.connect(o.frequency);l.start()});
+ const hum=AC.createOscillator(),hg=AC.createGain();hum.type='square';hum.frequency.value=120;hg.gain.value=.006;hum.connect(hg);hg.connect(mg);hum.start();
+ (function ev(){const r=Math.random();if(mode==='play'){if(r<.35)snd('steps');else if(r<.6)snd('voice');else if(r<.8)snd('ding');else snd('creak')}setTimeout(ev,6000+Math.random()*9000)})()}
+// input
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;keys[e.code]=1;if(mode!=='play')return;if(e.code==='KeyE')act();if(e.code==='Tab'){e.preventDefault();journal()}if(e.code==='Escape'&&panel)hide()});
+addEventListener('keyup',e=>keys[e.code]=0);
+addEventListener('mousemove',e=>{if(document.pointerLockElement&&!panel){yaw-=e.movementX*.0025;pitch=Math.max(-1.2,Math.min(1.2,pitch-e.movementY*.0025))}});
+let tgt=null;
+function act(){if(panel)return hide();if(tgt)tgt.userData.act()}
+addEventListener('mousedown',e=>{if(e.target.closest&&e.target.closest('#pn'))return;if(mode==='title'){$('title').style.display='none';audio();mode='play';swapLoc('hall');buildHall();msg('You wake in a hotel room. Find the exit.',5000);setTimeout(()=>msg('The door of Room 9 is already open behind you.'),5200);$('c').requestPointerLock&&$('c').requestPointerLock();return}
+ if(mode!=='play')return;if(!document.pointerLockElement&&!panel){$('c').requestPointerLock&&$('c').requestPointerLock();return}act()});
+// loop
+const ray=new THREE.Raycaster();let last=0,sc=0,fr=0,sp=0;
+const gx=$('gr').getContext('2d'),gi=gx.createImageData(160,90);
+function tick(t){requestAnimationFrame(tick);const dt=Math.min(.05,(t-last)/1000);last=t;fr++;
+ if(mode==='play'&&!panel){const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0),s=(keys.KeyD?1:0)-(keys.KeyA?1:0);if(keys.ArrowLeft)yaw+=dt*1.8;if(keys.ArrowRight)yaw-=dt*1.8;
+  P.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)*3*dt;P.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)*3*dt;
+  const h=S.loc==='hall';P.x=Math.max(h?-1.15:-2.6,Math.min(h?1.15:2.6,P.x));P.z=Math.max(h?-31.2:-2.6,Math.min(h?-.5:2.5,P.z));
+  if(f||s){sc+=dt*8;sp+=dt;if(sp>.5){sp=0;snd('step')}}}
+ cam.position.set(P.x,1.6+Math.sin(sc)*.03,P.z);cam.rotation.set(pitch,yaw,0);
+ const tm=t/1000;PL.forEach((l,i)=>{if(S.loc!=='hall'&&i)return;const off=Math.sin(tm*(7+i*3.1)+i)>.97||Math.random()<.004;l.intensity=(S.loc==='hall'?1.1:1.2)*(off?.25:1);if(tubes[i])tubes[i].material.color.set(off?0x3a3a2a:0xeaf0c8)});
+ if(fig&&fig.visible){const d=Math.hypot(P.x-fig.position.x,P.z-fig.position.z);if(d<10){fig.visible=false;snd('steps')}}
+ if(mode==='play'&&!panel){ray.setFromCamera({x:0,y:0},cam);const h=ray.intersectObjects(IA,false)[0];tgt=h&&h.distance<2.8?h.object:null;$('pr').textContent=tgt?'[E] '+tgt.userData.lab:''}else $('pr').textContent='';
+ R.render(scene,cam);
+ if(fr%3===0){for(let i=0;i<gi.data.length;i+=4){const v=Math.random()*255;gi.data[i]=gi.data[i+1]=gi.data[i+2]=v;gi.data[i+3]=255}gx.putImageData(gi,0,0)}}
+setInterval(()=>{if(mode!=='play'||Math.random()<.6)return;const c=$('c');c.classList.add('g');setTimeout(()=>c.classList.remove('g'),120+Math.random()*120)},4000);
+requestAnimationFrame(tick);
+</script></body></html>

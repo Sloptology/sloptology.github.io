@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Tier One</title>
+<title>Help Desk</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
@@ -47,6 +47,7 @@ button{font:inherit;color:inherit}
 .clock{font-family:var(--font-mono);font-size:14px;font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums}
 .stats{display:flex;align-items:center;gap:16px;font-size:13px;color:var(--rail-ink);white-space:nowrap}
 .stats b{color:#fff;font-weight:600;font-variant-numeric:tabular-nums}
+.stats b.hot{color:#ff9db0}
 .out{border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;border-radius:7px;padding:4px 10px;font-size:12.5px;cursor:pointer}
 .out:hover{background:rgba(255,255,255,.1)}
 .out.arm{background:var(--bad);border-color:var(--bad)}
@@ -78,6 +79,8 @@ button{font:inherit;color:inherit}
 .pri.p1{color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent)}
 .pri.p2{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
 .pri.p3{color:var(--muted);background:color-mix(in srgb,var(--muted) 14%,transparent)}
+.pri.boss{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.pri.p4{color:var(--muted);background:transparent;border:1px solid var(--line)}
 .prev{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row-side{display:flex;flex-direction:column;align-items:flex-end;gap:5px;font-size:11.5px;color:var(--muted);white-space:nowrap}
 .sla{font-family:var(--font-mono);font-size:11px;font-variant-numeric:tabular-nums}
@@ -162,6 +165,7 @@ button{font:inherit;color:inherit}
   .stats .hide-s{display:none}
   .top{gap:12px}
   .bar{display:none}
+  .bn{display:none}
   .shift{justify-content:flex-end}
   .stats{flex:none}
   .card h1{font-size:36px}
@@ -174,11 +178,12 @@ button{font:inherit;color:inherit}
 
 <div class="app" id="app" data-view="list">
   <header class="top">
-    <div class="brand"><span class="mark" aria-hidden="true"></span><span>Tandem</span></div>
+    <div class="brand"><span class="mark" aria-hidden="true"></span><span class="bn">Tandem</span></div>
     <div class="shift" title="Shift progress, 9:00 AM to 5:00 PM"><div class="bar"><i id="bar"></i></div><span class="clock" id="clock">9:00 AM</span></div>
     <div class="stats">
       <span class="hide-s">CSAT <b id="csat">&ndash;</b></span>
-      <span>Solved <b id="solved">0/8</b></span>
+      <span>Strikes <b id="strikes">0/3</b></span>
+      <span class="hide-s">Solved <b id="solved">0/13</b></span>
       <button class="out" id="out" type="button">Clock out</button>
     </div>
   </header>
@@ -208,145 +213,741 @@ const starTxt=n=>'★'.repeat(n)+'☆'.repeat(5-n);
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const initials=n=>n.split(' ').map(w=>w[0]).slice(0,2).join('');
 
-/* ---------- Ticket content ----------
- m: messages shown on arriving at the node ("~" prefix = system line)
- c: choices {say|do, to, t (minutes), sat (satisfaction change)}
- end: great | good | ok | bad, with note (debrief) and sec (security slip) */
-const DATA=[
-{id:'INC-4021',who:'Karen Whitfield',role:'Accounting',pri:'P3',sla:130,at:H(9,0),hue:330,subject:'Locked out after the long weekend',start:'n0',nodes:{
- n0:{m:["Hi!! I'm locked out of my account after the long weekend. Can you just reset it real quick? I have payroll to run by 10."],c:[
-   {say:"Happy to help. Can you confirm your employee ID and your manager's name first?",to:'n1',t:10},
-   {do:"Reset her password to Welcome2024! and tell her in chat",to:'eBad',t:5},
-   {say:"Try restarting your computer and see if that helps.",to:'n0r',sat:-1,t:10}]},
- n0r:{m:["Restarted. Still says my account is locked. Can you just reset it?"],c:[
-   {say:"Understood. First, can you confirm your employee ID and your manager's name?",to:'n1',t:10},
-   {do:"Reset her password to Welcome2024! and tell her in chat",to:'eBad',t:5}]},
- n1:{m:["Sure. Employee ID 40417, and my manager is Gloria Banks.","~Directory lookup: ID 40417 matches Karen Whitfield, Accounting. Manager: Gloria Banks. Account status: LOCKED (5 failed sign-ins at 8:52 AM)."],c:[
-   {do:"Unlock the account without changing her password",to:'eGreat',t:5},
-   {do:"Send a self-service reset link to her registered mobile number",to:'eGood',t:10},
-   {do:"Reset her password and read the temporary one out in chat",to:'eOk',t:5}]},
- eBad:{m:["Thank you!! Logging in now.","~Security Ops flagged INC-4021: password reset completed with no identity verification."],end:'bad',sec:true,note:"Never reset credentials before you know who is asking. 'Urgent, just do it' is the oldest social-engineering opener there is."},
- eGreat:{m:["Okay, trying again... it worked! Caps lock was on the whole time."],end:'great',note:"You checked the account status before changing anything. The least invasive fix that works is the right one."},
- eGood:{m:["Got the text, set a new password, and I'm in. Thanks!"],end:'good',note:"Secure, but she only needed an unlock. Look at the account status first and you save a step."},
- eOk:{m:["Got it, typing it in... works. I'll change it later I guess."],end:'ok',sec:true,note:"A temporary password pasted into chat stays in the chat history. Use a one-time link or a forced-change flow instead."}
-}},
-{id:'INC-4022',who:'Dave Okafor',role:'Sales',pri:'P2',sla:100,at:H(9,0),hue:210,subject:'Laptop blue screen, restart loop',start:'n0',nodes:{
- n0:{m:["Dave here. My laptop just blue screened and now it's stuck rebooting over and over. I have a customer demo at 1pm."],c:[
-   {say:"Sorry Dave. What does the blue screen say? I need the stop code at the bottom.",to:'n1',t:10},
-   {say:"Keep rebooting it. It usually clears itself after a few tries.",to:'n1x',sat:-1,t:15},
-   {do:"Book an onsite visit for tomorrow morning",to:'eBad',t:5}]},
- n1x:{m:["Did that six times. Same loop. The screen says CRITICAL_PROCESS_DIED, and Windows updated last night."],c:[
-   {say:"That update is the likely cause. Power it off during the restart three times to reach Recovery, then choose Startup Settings > Safe Mode.",to:'n2',t:15},
-   {do:"Tell him to reinstall Windows from scratch",to:'eWipe',t:20}]},
- n1:{m:["It says CRITICAL_PROCESS_DIED and shows a QR code. Windows updated last night, if that matters."],c:[
-   {say:"It matters a lot. Power it off during the restart three times to reach Recovery, then choose Startup Settings > Safe Mode.",to:'n2',t:15},
-   {do:"Tell him to reinstall Windows from scratch",to:'eWipe',t:20},
-   {say:"Unplug every USB device and try booting again.",to:'n1x',sat:-1,t:10}]},
- n2:{m:["Okay, I'm in Safe Mode. Now what?"],c:[
-   {do:"Copy his Documents to OneDrive, then uninstall the latest Windows update",to:'n3',t:20},
-   {do:"Uninstall the latest Windows update",to:'n3',t:10},
-   {do:"Run sfc /scannow, then restart",to:'n2b',sat:-1,t:20}]},
- n2b:{m:["Scan finished. No integrity violations. Still looping, I assume?"],c:[
-   {do:"Uninstall the latest Windows update",to:'n3',t:10}]},
- n3:{m:["Update removed. Restarting now..."],c:[
-   {say:"Confirm it reaches the desktop. I'll pause updates for 7 days and flag the bad update to the patch team.",to:'eGreat',t:10},
-   {say:"Let me know if it boots. I'll close this out.",to:'eGood',t:5}]},
- eBad:{m:["Tomorrow?? The demo is TODAY at 1. I'll borrow someone's laptop. Great."],end:'bad',note:"Triage by impact. A hard deadline and a blocked user means you stay on the problem until there is a workaround."},
- eWipe:{m:["Reinstall?! That wipes my files. No. I'll find someone else."],end:'bad',note:"A reinstall destroys user data. Try rollback and repair steps first."},
- eGreat:{m:["I'm at my desktop and the demo deck is open. You're a lifesaver.","~Note sent to Patch Management: update causes CRITICAL_PROCESS_DIED on 2 devices. Rollout paused."],end:'great',note:"Fixing one laptop is support. Stopping the same update from breaking everyone else's is engineering."},
- eGood:{m:["It's booting... yes! Desktop is back. Thanks!"],end:'good',note:"Fixed, but nobody told patch management. Expect more tickets like this one."}
-}},
-{id:'INC-4023',who:'Priya Raman',role:'Marketing',pri:'P3',sla:140,at:H(9,30),hue:160,subject:'3rd floor printer says Offline',start:'n0',nodes:{
- n0:{m:["Hi, the 3rd floor printer won't print my poster proofs. It says Offline. I've restarted the printer twice."],c:[
-   {say:"What does the printer's own screen say, and which printer name did you pick in the print dialog?",to:'n1',t:10},
-   {do:"Clear her print queue and restart the print spooler remotely",to:'n0b',t:10},
-   {say:"Printers get moody. Try again in an hour?",to:'eBad',t:5}]},
- n0b:{m:["Queue cleared, tried again. Still Offline."],c:[
-   {say:"What does the printer's own screen say, and which printer name did you pick in the print dialog?",to:'n1',t:10},
-   {do:"Order a new printer",to:'eNew',t:5}]},
- n1:{m:["The printer screen says Ready. In the print dialog I picked 'HP-3F-Color (copy 1)'."],c:[
-   {do:"Make 'HP-3F-Color' her default printer and remove the duplicate 'copy 1' entry",to:'eGreat',t:10},
-   {do:"Reinstall the printer driver on her laptop",to:'eOk',t:20},
-   {do:"Order a new printer",to:'eNew',t:5}]},
- eBad:{m:["An hour? The proofs are due at the agency by noon."],end:'bad',note:"A user with a deadline who gets told to wait will not wait. Ask a question before you stall."},
- eNew:{m:["A new printer? Okay, wow. It'll be here in three weeks. I'll print at home."],end:'bad',note:"Check the cheap and boring causes before spending money."},
- eGreat:{m:["Printing! Proofs are coming out now. Why did I have two printers??"],end:'great',note:"'(copy 1)' in a printer name is the clue. Duplicates often appear when a printer is re-added after a driver update."},
- eOk:{m:["Okay, that took a while, but it printed. Thanks."],end:'ok',note:"It works, but reinstalling is a big hammer for a duplicate entry."}
-}},
-{id:'INC-4024',who:'Marcus Bell',role:'Engineering (remote)',pri:'P2',sla:100,at:H(10,0),hue:25,subject:'VPN stuck on Connecting',start:'n0',nodes:{
- n0:{m:["Marcus, Engineering. The VPN has been stuck on 'Connecting...' for 20 minutes. I'm at my cabin. Deploy freeze is in an hour and I need repo access."],c:[
-   {say:"Does regular internet work? What kind of connection is it, and does the VPN client show an error code?",to:'n1',t:10},
-   {say:"Restart your laptop and try again.",to:'n1r',sat:-1,t:15},
-   {do:"Add his current IP address to the VPN allow list",to:'eIp',t:10}]},
- n1r:{m:["Restarted. No change. YouTube works fine, it's satellite internet, and the client says error 809."],c:"VPN_FIX"},
- n1:{m:["YouTube works fine. It's satellite internet. The client says error 809."],c:"VPN_FIX"},
- eIp:{m:["Added it... still nothing. Satellite IPs change constantly, you know."],end:'bad',note:"Guessing at fixes burns time. A dynamic address makes allow-listing useless here."},
- eGreat:{m:["Connected! Repo's up. Why didn't it do that by itself?","~Error 809 usually means UDP 500/4500 are blocked by the ISP or NAT. TCP 443 gets through almost everything."],end:'great',note:"Error 809 plus a working internet connection points at blocked IPsec ports. The TCP 443 fallback avoids them."},
- eOk:{m:["I can't touch the upstream router on satellite. I'll tether my phone. Slow, but it works."],end:'ok',note:"Reasonable advice for a home network. A cabin on satellite has no router to change."},
- eEsc:{m:["Tier 2 says 45 minutes. I'll tether my phone and muddle through."],end:'ok',note:"Escalating is fine when you're stuck, not before you have tried the known fix."}
-}},
-{id:'INC-4025',who:'Linda Cho',role:'Human Resources',pri:'P1',sla:45,at:H(10,30),hue:275,subject:'Clicked a link and typed her password',start:'n0',nodes:{
- n0:{m:["Hi, um. I think I did something bad. I got an email from 'payroll-update', clicked the link, and typed my password. Then the page just flashed."],c:[
-   {say:"Thanks for telling me right away. Disconnect from Wi-Fi or unplug the cable, but leave the laptop on. What exactly did you type in?",to:'n1',t:5},
-   {say:"Shut the laptop down right now and don't touch it.",to:'n1',sat:-0.5,t:5},
-   {say:"That's probably nothing. Just don't click it again.",to:'eBad',t:5}]},
- n1:{m:["I typed my network password. I'm off Wi-Fi now. I feel awful."],c:[
-   {do:"Reset her password, sign her out of every session, and revoke her MFA tokens",to:'n2',t:10},
-   {do:"Reset her password only",to:'n2',sat:-1,t:5},
-   {say:"Sit tight. Security will email you when they get to it.",to:'eBad',t:5}]},
- n2:{m:["Done, I'm signed back in with the new password. Is that it?"],c:[
-   {do:"File a phishing report with Security and purge the email from every mailbox",to:'eGreat',t:10},
-   {say:"Yes, you're all set. Closing the ticket.",to:'eOk',t:5}]},
- eBad:{m:["Okay... if you say so.","~Later: three HR mailboxes begin sending the same email to the whole company."],end:'bad',sec:true,note:"A password typed into a phishing page means a compromised account until proven otherwise. Treat it as an incident."},
- eGreat:{m:["Thank you for not making me feel stupid. I'll be more careful.","~Security: sign-in log shows an attempt from an unknown IP at 10:52 AM. Blocked. Email purged from 41 mailboxes."],end:'great',note:"Contain, reset, report, purge. The report is what protects everyone who got the same email."},
- eOk:{m:["Okay, thanks!","~Later: six other employees click the same link."],end:'ok',sec:true,note:"You fixed Linda but not the company. Always report phishing and pull the message from other inboxes."}
-}},
-{id:'INC-4026',who:'Gary Pruitt',role:'Facilities',pri:'P3',sla:120,at:H(11,0),hue:55,subject:'"My computer is broken"',start:'n0',nodes:{
- n0:{m:["My computer is broken. The screen says No Signal."],c:[
-   {say:"Is the computer itself on? Can you see lights or hear the fan? Please check that the cable on the back of the monitor is snug.",to:'n1',t:10},
-   {do:"Push a graphics driver update to his PC",to:'n0b',t:15},
-   {do:"Send a technician to his desk",to:'eOk',t:25}]},
- n0b:{m:["~Driver update queued. 12 minutes remaining.","Still says No Signal."],c:[
-   {say:"Is the computer itself on? Can you see lights or hear the fan? Please check that the cable on the back of the monitor is snug.",to:'n1',t:10}]},
- n1:{m:["The computer is on, the fan's going. The cable at the back of the monitor is hanging loose. Do I... push it in?"],c:[
-   {say:"Yes! Push the cable in firmly, then check the monitor is set to the HDMI input.",to:'eGreat',t:10},
-   {say:"Hold off. I'll schedule a swap for the monitor.",to:'eBad',t:5}]},
- eGreat:{m:["Oh my gosh. It's back. I think I kicked it. Thank you!!"],end:'great',note:"Ask the user to look before you start fixing. 'Is it plugged in' is a legitimate first question."},
- eBad:{m:["A whole new monitor for a loose cable? Okay..."],end:'bad',note:"Swapping hardware before checking the connection wastes everyone's time."},
- eOk:{m:["A tech showed up 25 minutes later, pushed the cable in, and left. Huh."],end:'ok',note:"It got fixed, but a thirty-second question would have saved a trip."}
-}},
-{id:'INC-4027',who:'Sofia Alvarez',role:'Legal',pri:'P3',sla:140,at:H(11,45),hue:350,subject:'Mailbox full, cannot send or receive',start:'n0',nodes:{
- n0:{m:["Hello. I can't send or receive email. Outlook says my mailbox is full. I'm waiting on signed PDFs from opposing counsel."],c:[
-   {do:"Check her mailbox size and find the largest folders",to:'n1',t:10},
-   {say:"Delete everything older than two years to free up space.",to:'eBad',t:5},
-   {do:"Raise her mailbox quota to 100 GB",to:'eOk',t:5}]},
- n1:{m:["~Mailbox: 49.8 GB of 50 GB. Largest folder: Sent Items (18 GB, mostly attachments).","~Flag: Litigation Hold active on this mailbox (General Counsel, Case 22-0417)."],c:[
-   {do:"Enable Online Archive, which keeps everything and respects the hold",to:'eGreat',t:15},
-   {do:"Purge Sent Items older than a year",to:'eBad',t:5},
-   {do:"Raise her mailbox quota to 100 GB",to:'eOk',t:5}]},
- eBad:{m:["Please STOP. Those items are under legal hold. That is a serious problem.","~Compliance has opened an incident: deletion of held records."],end:'bad',sec:true,note:"Always look at the mailbox before you delete anything. Legal teams often have retention holds, and destroying held data is a legal problem, not an IT one."},
- eOk:{m:["It works. For now. Thanks."],end:'ok',note:"A bigger quota treats the symptom. The mailbox will fill again, and huge mailboxes make Outlook slow."},
- eGreat:{m:["Archive is on and mail is flowing. The PDFs just arrived. Thank you!"],end:'great',note:"Online Archive frees space without deleting anything, so the legal hold stays intact."}
-}},
-{id:'INC-4028',who:'Victoria Strand',role:'CEO',pri:'P1',sla:30,at:H(12,30),hue:240,subject:'Camera black before the board call',start:'n0',nodes:{
- n0:{m:["Board call in 10 minutes. My camera is black in Tandem. FIX IT."],c:[
-   {say:"On it. Is the privacy shutter above the screen open, and is any other app using the camera?",to:'n1',t:5},
-   {do:"Start a full remote reimage of her laptop",to:'eBad',t:5},
-   {do:"Escalate to Tier 2",to:'eEsc',t:5}]},
- n1:{m:["Shutter is open. Nothing else is running. The Camera app is black too. Device Manager shows a yellow triangle next to 'Integrated Camera'."],c:[
-   {do:"Enable the Integrated Camera in Device Manager and restart the camera service",to:'eGreat',t:5},
-   {do:"Uninstall the camera driver and reboot",to:'eOk',t:15}]},
- eBad:{m:["A reimage. Ten minutes before the board. You cannot be serious."],end:'bad',note:"Never reach for the biggest tool when the clock is short. Start with the simplest question."},
- eEsc:{m:["Tier 2 will call in 20 minutes. I'm dialing in by phone, for the record."],end:'ok',note:"You are Tier 1. Try the cheap, fast checks before you hand a P1 to someone else."},
- eGreat:{m:["Camera's on! I can see myself. Joining now.","~Note: the device was disabled after last night's driver update."],end:'great',note:"A yellow triangle in Device Manager is usually a disabled or failed device. Enabling it is a thirty-second fix."},
- eOk:{m:["It works, but I joined five minutes late. Thanks, I suppose."],end:'ok',note:"It worked, but a reboot you didn't need cost her five minutes."}
-}}
+/* ---------- People and tickets ----------
+ Every shift draws 8 issue types at random, gives each a random root cause, and assigns people from a roster of 120.
+ A fix is F(text, quality, user reply, debrief note, extras). Quality: g great, d good, k ok, b bad.
+ Text starting with "say:" is sent as a chat message, anything else is an action you run. */
+const FIRST=["Aaliyah","Abel","Adriana","Akira","Amara","Andre","Anika","Arjun","Beatriz","Bram","Camille","Carlos","Chidi","Chloe","Dalia","Dmitri","Elena","Emeka","Farah","Felix","Fatima","Gabriel","Greta","Hana","Hector","Imani","Ingrid","Isaac","Jada","Jonas","Kai","Keiko","Lars","Leila","Linus","Lucia","Mateo","Maya","Nadia","Nikhil","Noor","Olga","Omar","Paloma","Quentin","Rafael","Renata","Sana","Soren","Talia","Tomas","Uma","Viktor","Wen","Xavier","Yara","Yusuf","Zainab","Zoe","Ezra","Aiden","Bianca","Callum","Dara","Eitan","Freya","Gideon","Hiro","Ilse","Jasper","Kira","Lior","Mina","Niko","Orla","Pavel","Rhea","Sven","Tessa","Ugo","Vera","Wyatt","Xiomara","Yael","Zane","Alma","Basil","Cora","Dev","Elif","Finn","Gia","Hugo","Ivy","Joaquin","Kofi","Lena","Milo","Nina","Oskar"];
+const LAST=["Abbott","Adeyemi","Alvarez","Andersson","Bakshi","Barros","Bianchi","Bose","Castillo","Chen","Cohen","Dube","Duarte","Eze","Fischer","Flores","Garcia","Gill","Haddad","Hayashi","Hoang","Ibrahim","Ivanov","Jansen","Kapoor","Kim","Kowalski","Lindqvist","Lopez","Mahlangu","Marsh","Mendes","Mishra","Morales","Nakamura","Novak","Obi","Okonkwo","Park","Patel","Petrov","Quinn","Ramos","Reyes","Rossi","Saito","Santos","Schmidt","Sharma","Silva","Singh","Tanaka","Torres","Usman","Varga","Walsh","Yilmaz","Zielinski","Moreau","Nasser","Aguilar","Baptiste","Blum","Brandt","Cardoso","Dimitrov","Ekstrom","Fernandez","Gallo","Hassan","Ito","Jovanovic","Karlsson","Lemaire","Maldonado","Nguyen","Oyelaran","Pereira","Rahman","Sandhu","Takahashi","Underwood","Vasquez","Weber","Xu","Yamada","Zhou","Amadi","Berg","Costa","Dlamini","Esposito","Fontaine","Grover","Hughes","Iyer","Jung","Kasprzak","Lindgren","Okoye"];
+const ROLES=["Accounting","Sales","Marketing","Engineering","Human Resources","Facilities","Legal","Operations","Customer Support","Finance","Warehouse","Procurement","Design","Product","IT Security","Executive Office","Quality Assurance","Training","Logistics","Data Analytics"];
+const MOODNAMES=["polite","panicked","grumpy","chill","chatty"];
+const ROSTER=Array.from({length:300},(_,i)=>({
+  id:i,
+  name:FIRST[i%FIRST.length]+' '+LAST[(i*7+3+Math.floor(i/FIRST.length)*11)%LAST.length],
+  role:ROLES[(i*5+Math.floor(i/ROLES.length))%ROLES.length],
+  mood:MOODNAMES[(i*3+1)%5],
+  hue:(i*47)%360}));
+const MOOD={
+  polite:{pre:["Hi! ","Hello. "],post:["",""," Thank you!"],fin:[" Thank you so much!"," Really appreciate it."]},
+  panicked:{pre:["HELP. ","Quick!! ","Okay, don't panic. "],post:[" PLEASE HURRY."," This is urgent!!"],fin:[" Phew."," I was about to cry."],sla:0.8},
+  grumpy:{pre:["Ugh. ","Seriously? ","Again. "],post:[" Fix it."," I don't have all day."],fin:[" Finally."," About time."],sla:0.9},
+  chill:{pre:["Hey. ","No rush. "],post:[" Whenever you can."," No worries if it takes a while."],fin:[" Cheers."," Easy."],sla:1.3},
+  chatty:{pre:["Hey hey! ","Morning! "],post:[" Anyway, how's your day going?"," Also, did you hear about the office move?"],fin:[" Got a minute to hear about my weekend?"," Anyway, you should see my cat's new trick."],sla:1.1}
+};
+
+const F=(d,q,r,n,x)=>Object.assign({d,q,r,n},x||{});
+const C=(clue,f,w)=>({clue:[].concat(clue),f,w});
+const W=(m,g,l)=>({m,g,l});
+const SC=(id,title,pri,sla,open,ask,causes,o)=>Object.assign({id,title,pri,sla,open,ask,causes},o||{});
+
+const GEN_FIX=[
+ F("Reimage the computer",'b',"A reimage?! For this? I'll lose all my settings.","The biggest tool is rarely the right first one. Look for the cheap cause first."),
+ F("Escalate to Tier 2",'k',"Tier 2 says they'll look at it this afternoon. Okay...","Escalate when you're stuck, not before you've tried the known fixes."),
+ F("say:Try again tomorrow, it may fix itself",'b',"Tomorrow?? I need this working today.","A blocked user with a deadline will not wait. Ask a question before you stall."),
+ F("Order replacement hardware",'b',"Replacement hardware? That's weeks away. Wow.","Check the boring causes before you spend money."),
+ F("Send a technician to their desk",'k',"A tech showed up eventually and sorted it. Took a while.","It worked, but a good question could have fixed it remotely.",{t:25})
 ];
-const VPN_FIX=[
- {do:"Switch his client to the TCP 443 (SSTP) fallback profile",to:'eGreat',t:10},
- {say:"Open UDP ports 500 and 4500 on your router.",to:'eOk',t:10},
- {do:"Escalate to the Tier 2 network team",to:'eEsc',t:5}];
-DATA.forEach(t=>Object.values(t.nodes).forEach(n=>{if(n.c==='VPN_FIX')n.c=VPN_FIX;}));
+
+const SCENARIOS=[
+SC('print',"Printer says Offline",'P3',140,
+ ["The printer on our floor won't print. It says Offline.","I can't print my report. The printer shows as Offline on my screen."],
+ "What does the printer's own screen say, and which printer did you pick in the print dialog?",
+ [C("The printer screen says Ready. In the dialog I picked 'HP-Color (copy 1)'.",[
+    F("Make the main printer their default and remove the duplicate 'copy 1' entry",'g',"Printing! Why did I have two printers??","A '(copy 1)' suffix is the clue. Duplicates appear when a printer gets re-added after a driver update."),
+    F("Reinstall the print driver on their laptop",'k',"Okay, that took a while, but it printed.","It works, but reinstalling is a big hammer for a duplicate entry.",{t:20})]),
+  C("The printer screen says 'Close rear door'. I don't see any paper stuck.",[
+    F("say:Open the rear door and check for a crumpled sheet",'g',"Found a crumpled page back there! Printing now.","Read the printer's own message before touching any software."),
+    F("Clear the print queue and restart the spooler remotely",'k',"Still nothing. Then I found the jam myself.","Software fixes can't clear a physical paper jam.")])]),
+SC('wifi',"Wi-Fi keeps dropping",'P3',130,
+ ["My Wi-Fi keeps dropping every few minutes. Calls cut out.","Internet is flaky on my laptop. It disconnects and reconnects constantly."],
+ "Does it happen in every room, and do people near you have the same problem?",
+ [C("Only in the east conference room. Other floors are fine. My laptop shows full bars.",[
+    F("Move them to the 5 GHz network and remove the old 2.4 GHz profile",'g',"Stable now. No more drops.","Full bars with drops often means a congested band, not weak signal."),
+    F("Reset the network settings on their laptop",'k',"Reset done. Still drops in that room.","A reset doesn't help when the problem is the band.")]),
+  C("Only my laptop drops. The person next to me is fine. It started after last week's update.",[
+    F("Update the Wi-Fi driver and turn off adapter power saving",'g',"Rock solid for ten minutes now. Thanks!","One laptop failing beside a healthy one points at the device, not the network."),
+    F("Replace the access point on that floor",'b',"The whole access point? It's only my laptop...","Compare against a neighbor first. Don't change shared gear for a one-device problem.")])]),
+SC('lock',"Locked out of account",'P3',120,
+ ["I'm locked out of my account and I need to get in before my 10 o'clock.","It says my account is locked. Can you just reset it for me?"],
+ "Happy to help. First, can you confirm your employee ID and your manager's name?",
+ [C(["Sure. Employee ID and manager's name coming right up.","~Directory lookup: details match the caller. Account status: LOCKED (5 failed sign-ins this morning)."],[
+    F("Unlock the account without changing the password",'g',"It worked! Caps lock was on the whole time.","Check the account status before changing anything. Use the least invasive fix."),
+    F("Send a self-service reset link to the registered mobile number",'d',"Got the text, set a new password, and I'm in.","Secure, but only an unlock was needed."),
+    F("Reset the password and read the temporary one out in chat",'k',"Typing it in... works. I'll change it later.","A temporary password in chat stays in the history. Use a one-time link instead.",{sec:1})]),
+  C(["Sure, verified.","~Directory lookup: details match the caller. Account is NOT locked. Password expired 3 days ago."],[
+    F("say:Walk them through changing the expired password at the sign-in screen",'g',"Oh, it asked me to change it! I'm in. Thank you.","Look at why the sign-in is failing. An expired password is a different fix from a lockout."),
+    F("Reset the password for them",'d',"Got the link and set a new one. Works.","Works, but she could have changed it herself in seconds."),
+    F("Unlock the account",'k',"Unlocked. It still says the password has expired.","Check the status first, or you'll fix the wrong thing.")])],
+ {prem:F("Reset the password to Welcome2024! without checking who is asking",'b',"Thanks!! Logging in now.","Never reset credentials before you know who is asking. 'Urgent, just do it' is the oldest social-engineering opener there is.",{sec:1,t:5})}),
+SC('bsod',"Laptop blue screen, restart loop",'P2',100,
+ ["My laptop just blue screened and keeps restarting. I have a client call this afternoon.","Blue screen, restart, blue screen again. I can't get to my desktop."],
+ "Sorry about that. What does the blue screen say? I need the stop code at the bottom.",
+ [C("It says CRITICAL_PROCESS_DIED and shows a QR code. Windows updated last night.",[
+    F("Boot to Safe Mode (power off three times during startup) and uninstall the latest update",'g',"I'm at my desktop! Thank you!","The timing of an update is the biggest clue. Roll it back first.",{t:20}),
+    F("say:Keep rebooting it until it works",'b',"Six reboots later, same loop...","Rebooting a crash loop rarely fixes it.")],
+    W("Update removed and it boots. Anything else?",
+      ["say:Let me pause updates for 7 days and flag the bad update to the patch team","Thanks for telling them. I hope nobody else gets hit.","Fixing one laptop is support. Stopping it from hitting everyone is engineering."],
+      ["say:No, that's it. I'll close this out.","Okay, thanks.","Fixed, but nobody told patch management. Expect more tickets like this."])),
+  C("It says MEMORY_MANAGEMENT. It started after I added a second RAM stick yesterday.",[
+    F("Remove the new RAM stick and run the Windows Memory Diagnostic",'g',"Back to normal without it. The new stick must be bad.","A crash right after a hardware change points at the new hardware.",{t:20}),
+    F("Reinstall Windows",'b',"A reinstall?! I'd lose my files!","A reinstall destroys data and won't fix bad hardware."),
+    F("Update the BIOS",'k',"BIOS updated. Still crashing.","Don't change firmware while you still have a simpler suspect.")])]),
+SC('slow',"Computer painfully slow",'P3',140,
+ ["My computer has been painfully slow all week. Everything lags.","Opening a spreadsheet takes five minutes. Something's wrong with my PC."],
+ "Can you open Task Manager and tell me what's using the most CPU, memory and disk?",
+ [C(["Disk is at 98% full and I have fourteen apps starting up.","~Remote view: C: drive 98% full. 14 startup items. Downloads folder: 41 GB."],[
+    F("Move large files to OneDrive, clear temp files and trim startup apps",'g',"Wow, it's fast again. Thanks!","A full disk and a crowded startup list explain most 'slow PC' tickets."),
+    F("say:Tell them to buy a bigger SSD",'k',"I can't buy my own SSD... I'll wait for IT.","Hardware is the last resort when you can reclaim space.")]),
+  C("The fans are loud all the time. One process called 'svch0st.exe' is using 90% of my CPU.",[
+    F("Isolate the PC from the network, run a full scan and report it to Security",'g',"Security found a crypto miner. Thanks for catching it!","The misspelled 'svch0st' is the giveaway. Treat it as an incident, not a slow PC.",{t:15}),
+    F("End the process and close the ticket",'k',"It's gone. Hopefully that's it?","Killing a process doesn't remove malware, and Security needs to know.",{sec:1}),
+    F("Defragment the hard drive",'b',"That took an hour and nothing changed.","Always identify the cause before running maintenance.")])]),
+SC('vpn',"VPN will not connect",'P2',100,
+ ["The VPN won't connect and I need repo access in an hour.","VPN has been stuck on 'Connecting...' for 20 minutes. I'm working from home."],
+ "Does regular internet work? Does the VPN client show an error code?",
+ [C("Regular internet is fine. It's satellite internet and the VPN client says error 809.",[
+    F("Switch the client to the TCP 443 (SSTP) fallback profile",'g',"Connected! Why didn't it do that by itself?","Error 809 usually means UDP 500/4500 are blocked. TCP 443 gets through almost anything."),
+    F("say:Open UDP ports 500 and 4500 on your router",'k',"I can't change satellite's upstream NAT. I'll tether my phone.","Good advice for a home router, not for satellite.")]),
+  C(["The VPN says 'Certificate is not valid'. It worked fine yesterday.","~VPN profile: machine certificate expired yesterday at 11:59 PM."],[
+    F("Push a renewed certificate to their laptop",'g',"Connected! Thanks.","An error that appears overnight often means something expired."),
+    F("Reinstall the VPN client",'k',"Reinstalled. Same error.","Reinstalling can't renew an expired certificate."),
+    F("Add them IP to the allow list",'b',"Nothing changed. My IP is dynamic anyway.","Guessing at fixes burns time. Read the error message.")])]),
+SC('phish',"Clicked a phishing link",'P1',45,
+ ["I think I did something bad. I clicked a link in an email and typed my password.","Um. I got a weird email and clicked the link. Then the page just flashed."],
+ "Thanks for telling me right away. Disconnect from Wi-Fi but leave the laptop on. What exactly did you enter or open?",
+ [C("I typed my network password on a page that looked like the payroll portal. I'm off Wi-Fi now. I feel awful.",[
+    F("Reset their password, sign them out everywhere, revoke MFA tokens, then report to Security and purge the email",'g',"Thank you for not making me feel stupid. I'll be more careful.","Contain, reset, report, purge. The report protects everyone who got the same email.",{t:20}),
+    F("Reset their password only",'k',"Okay, done. Is that it?","A password reset leaves active sessions open and doesn't warn anyone else.",{sec:1,t:5}),
+    F("say:Sit tight and Security will email you",'b',"Okay... if you say so.","A password typed into a phishing page means a compromised account until proven otherwise.",{sec:1,t:5})]),
+  C("I opened an invoice attachment and clicked Enable Content. Nothing visibly happened. I've unplugged the network.",[
+    F("Isolate the device, start a malware scan and report it to Security",'g',"Security says the macro was real. Glad I called you.","A macro that asks for 'Enable Content' is classic malware delivery.",{t:20}),
+    F("say:Delete the file and carry on",'b',"Okay... deleting it now.","Deleting the file doesn't undo what already ran.",{sec:1,t:5}),
+    F("Run antivirus and close the ticket",'k',"Antivirus found nothing. I guess I'm fine?","A clean scan doesn't mean it's clean, and Security needs to know.",{sec:1})])],
+ {prem:F("say:That's probably nothing, just don't click it again",'b',"Okay... if you say so.","Treat any credential or macro event as an incident until Security says otherwise.",{sec:1,t:5})}),
+SC('monitor',"Monitor shows No Signal",'P3',110,
+ ["My computer is broken. The monitor says No Signal.","Screen's black. I think my PC died."],
+ "Is the computer on, can you see lights or hear fans, and is the monitor cable snug at the back?",
+ [C("The computer is on and the fan's going. The cable at the back of the monitor is hanging loose.",[
+    F("say:Push the cable in firmly and check the monitor is set to the right input",'g',"It's back! I think I kicked it. Thanks!!","Ask the user to look before you start fixing. 'Is it plugged in' is a real first question."),
+    F("Replace the monitor",'b',"A whole new monitor for a loose cable? Okay...","Swapping hardware before checking the connection wastes everyone's time.")]),
+  C("My laptop is on a dock. The laptop screen works but both monitors are black.",[
+    F("Reseat the dock's USB-C cable and update the dock firmware",'g',"Both monitors are back! Thanks.","When a dock misbehaves, reseat the link and check firmware before blaming monitors."),
+    F("Unplug the dock's power for 30 seconds and reconnect",'d',"That worked, but it took two tries.","A power reset often works, but it doesn't fix a stale firmware.",{t:12}),
+    F("Send them a new monitor",'b',"New monitor? Both screens are black, so that can't be it.","If two monitors fail at once, look upstream.")])]),
+SC('mailbox',"Mailbox full, cannot send or receive",'P3',140,
+ ["I can't send or receive email. Outlook says my mailbox is full.","Email says my mailbox is full and I'm waiting on documents from a client."],
+ "Let me check your mailbox. Which folders do you think are the biggest?",
+ [C(["~Mailbox: 49.8 GB of 50 GB. Largest folder: Sent Items (18 GB, mostly attachments).","~Flag: Litigation Hold active on this mailbox (General Counsel, Case 22-0417)."],[
+    F("Enable Online Archive, which keeps everything and respects the hold",'g',"Archive is on and mail is flowing. Thank you!","Online Archive frees space without deleting anything, so the legal hold stays intact."),
+    F("Purge Sent Items older than a year",'b',"STOP. Those items are under legal hold!","Always look at a mailbox before deleting. Destroying held data is a legal problem.",{sec:1,t:5}),
+    F("Raise the mailbox quota to 100 GB",'k',"It works. For now.","A bigger quota treats the symptom, and the mailbox will fill again.")]),
+  C("~Mailbox: 49.9 GB of 50 GB. Largest folder: Inbox (31 GB of attachments). No legal holds.",[
+    F("Enable Online Archive and set an auto-archive rule",'g',"Archive is working. Email is flowing again!","Auto-archive fixes the root cause, not just the symptom."),
+    F("Raise the mailbox quota to 100 GB",'k',"That worked, for now.","A bigger quota just delays the problem."),
+    F("Delete their old emails for them",'b',"You deleted my emails?! I needed some of those.","Never delete a user's data without asking.",{sec:1,t:5})])]),
+SC('camera',"Camera black before a big meeting",'P1',35,
+ ["My camera is black and a big meeting starts in ten minutes. Please fix this NOW.","Video call in 10 minutes and my camera shows nothing."],
+ "On it. Is the privacy shutter open, and does the Camera app work?",
+ [C("Shutter's open. The Camera app is black too. Device Manager has a yellow triangle next to 'Integrated Camera'.",[
+    F("Enable the Integrated Camera in Device Manager and restart the camera service",'g',"Camera's on! I can see myself. Joining now.","A yellow triangle in Device Manager usually means a disabled or failed device.",{t:5}),
+    F("Uninstall the camera driver and reboot",'k',"It works, but I joined five minutes late.","A reboot you don't need costs a rushed user minutes.",{t:15})]),
+  C("The Camera app works fine. Only Tandem shows black. Maybe a permission?",[
+    F("Turn on camera access for desktop apps in Windows privacy settings",'g',"There it is. I'm in the meeting. Thank you!!","If one app fails and another works, check app permissions before drivers.",{t:5}),
+    F("Reinstall Tandem",'k',"Reinstalled. I'm five minutes late.","A reinstall is slow when a permission toggle is the fix.",{t:15})])],
+ {roles:["Executive Office","Sales","Finance"]}),
+SC('audio',"Nobody can hear me in calls",'P3',130,
+ ["Everyone says they can't hear me in meetings.","My microphone isn't working in calls."],
+ "In your sound settings, which input and output devices are selected?",
+ [C("My headset is plugged in, but the input says 'Laptop microphone array' and sound plays through the monitor speakers.",[
+    F("Set the headset as the default input and output in Tandem settings",'g',"They can hear me now! Thanks.","Wrong default devices are the most common cause of 'no audio' tickets."),
+    F("say:Tell them to buy a new headset",'b',"I just bought this one!","Check the settings before blaming hardware.")]),
+  C("My Bluetooth headset says connected, but it's connected to my phone, not the laptop.",[
+    F("say:Turn off Bluetooth on your phone and reconnect the headset to the laptop",'g',"That's it. It's connected to my laptop now.","Bluetooth headsets often grab the nearest paired device."),
+    F("Reinstall the Bluetooth driver",'k',"Reinstalled. Same problem.","A driver reinstall can't fix a pairing issue.")])]),
+SC('install',"Needs software installed",'P3',150,
+ ["Can you install a PDF editor on my laptop? I need it today.","I need some software installed for a project. Can you do it?"],
+ "Is this on the approved software list, and what's the business need?",
+ [C(["It's on the approved list. I just can't install it myself.","~Software Center: package 'PDF Editor Pro' approved, license available."],[
+    F("Push it through Software Center to their laptop",'g',"Installed. Perfect, thanks.","Approved software goes through the managed channel so it stays patched and licensed."),
+    F("Install from a downloaded installer",'k',"Installed. Is it patched like the rest?","Manual installs skip licensing and update tracking.")]),
+  C(["It's not on the list, but I really need it. Everyone in design uses it.","~No license on file. Cost: $240 per seat per year."],[
+    F("say:Explain the approval process and open a license request with their manager",'g',"Okay, my manager approved it. That was quick.","Unapproved software needs a license and a business owner. Don't install first and ask later."),
+    F("Install a free cracked version",'b',"Wait, is that legal?","Pirated software is a legal and security risk.",{sec:1,t:5}),
+    F("Install a trial version",'k',"The trial expires in 14 days. I'll need a real one soon.","A trial just delays the license conversation.")])]),
+SC('share',"Cannot open shared folder",'P3',130,
+ ["I can't open the Finance shared folder. It says access denied.","The team drive shows a red X and won't open."],
+ "Which folder is it, and did it work for you before?",
+ [C(["It's the Finance folder. I just joined the team. Access denied.","~Directory: user is not a member of the 'Finance-Share' group."],[
+    F("Confirm with their manager, then add their to the group",'g',"I'm in! Thanks for checking with my manager.","Access requests need an owner's approval. Add the minimum permission."),
+    F("Add them to Domain Admins so it can't fail",'b',"I have admin rights?? Cool, but that's weird.","Never grant broad rights to fix a narrow problem.",{sec:1,t:5}),
+    F("Copy the files to their desktop",'k',"I can see the files, but they're copies now.","Copying sensitive files bypasses the access controls.",{sec:1})]),
+  C("It worked yesterday. The mapped drive just shows a red X.",[
+    F("Reconnect the mapped drive and clear cached credentials",'g',"Drive is back. Thank you!","A red X on a mapped drive is often stale credentials or a dropped session."),
+    F("Reimage their computer",'b',"A reimage? For a drive?","Don't reach for the biggest tool.")])]),
+SC('mfa',"New phone, cannot sign in",'P2',90,
+ ["I got a new phone and now I can't sign in to anything.","My authenticator isn't giving me valid codes."],
+ "I can help. Can you tell me your employee ID and your manager's name, and what happens when you sign in?",
+ [C("I got a new phone and the authenticator app is empty. I can't sign in.",[
+    F("Verify their identity with employee ID and a manager callback, then reset their MFA registration",'g',"I'm back in and the new phone is registered. Thanks!","MFA resets are high risk. Verify the person through a second channel first.",{t:15}),
+    F("Turn off MFA on their account",'b',"MFA is off? Okay, I guess.","Disabling MFA to fix a lockout leaves the account exposed.",{sec:1,t:5}),
+    F("say:I'll text you the code, one sec",'b',"Okay... thanks.","Never read codes aloud. That's what attackers ask for.",{sec:1,t:5})]),
+  C("The codes say invalid. I noticed my phone's clock is set manually and it's a few minutes off.",[
+    F("say:Turn on automatic date and time on your phone",'g',"That fixed it! The code works now.","One-time codes depend on correct time. A drifting clock breaks them.",{t:5}),
+    F("Reset their MFA registration",'d',"Done, I re-registered. That took a while.","Works, but an easy clock fix was available.",{t:15})])]),
+SC('crash',"Tandem keeps crashing",'P3',130,
+ ["Tandem crashes every time I join a meeting.","My chat app closes by itself every few minutes."],
+ "When did it start, and did anything change recently, like an update?",
+ [C("It started after a long weekend. Messages load slowly before it crashes.",[
+    F("Clear the Tandem cache and sign back in",'g',"Fast and stable now. Thanks.","A bloated cache causes slow loading and crashes. Clearing it is a low-risk first fix."),
+    F("Reinstall Windows",'b',"For a chat app?!","Match the fix to the size of the problem.")]),
+  C("It started after IT pushed a new Tandem version to everyone else but not me. Mine is old.",[
+    F("Update Tandem to the current version",'g',"Fixed. It's stable again.","Outdated clients can break when the service updates."),
+    F("Escalate to Tier 2",'k',"Tier 2 says it's just an update. Oh.","Check the version before you escalate.")])]),
+SC('charge',"Laptop will not charge",'P3',130,
+ ["My laptop won't charge. The battery says plugged in, not charging.","The battery's at 4% and won't charge."],
+ "What does the charger's light do, and is this the charger that came with the laptop?",
+ [C("I'm using my phone charger because I forgot mine at home.",[
+    F("say:Use a correct 65W charger from the loaner drawer",'g',"Charging! That was easy. Thanks.","Underpowered chargers can't charge laptops. Check wattage first."),
+    F("Replace the battery",'b',"New battery? I just wanted a charger.","Don't replace parts until you check the charger.")]),
+  C("The charger light is off and the cable looks frayed near the plug.",[
+    F("Swap in a loaner charger and recycle the damaged one",'g',"It's charging. Thanks for taking the broken one.","A frayed cable is a safety hazard. Remove it from service."),
+    F("Send a technician to their desk",'k',"A tech brought a loaner. It took 30 minutes.","Fine, but she needed a charger, not a visit.",{t:25})])]),
+SC('excel',"Excel freezes on a big file",'P3',140,
+ ["Excel freezes every time I open our forecast workbook.","My spreadsheet takes forever to open and then locks up."],
+ "Does it happen with every workbook or only this one, and how big is the file?",
+ [C("Only this workbook. It uses an old add-in the previous owner installed.",[
+    F("Open Excel in safe mode and disable the add-in",'g',"It opens! That add-in was the culprit.","If one file fails, look at what's unique to that file."),
+    F("Reinstall Office",'k',"Reinstalled. Same freeze.","A reinstall can't fix a bad add-in.",{t:20})]),
+  C("The file is 400 MB with years of formulas and unused rows.",[
+    F("Convert it to a binary workbook and remove unused ranges",'g',"It opens in seconds. Thank you!","Huge files need cleaning, not more hardware."),
+    F("Order more RAM for them laptop",'k',"New RAM next week? Okay, I guess.","More RAM won't fix a bloated file.")])]),
+SC('lost',"Laptop left on a train",'P1',45,
+ ["I left my work laptop on the train. I'm so sorry. What do I do?","My laptop bag was stolen from a cafe, laptop included!"],
+ "Don't worry, we'll handle it. When did you last see it, and is it encrypted and signed in?",
+ [C(["Around 7:10 this morning. It was locked, but I was signed in to email.","~Device: BitLocker enabled. Last seen 7:42 AM, Central Station."],[
+    F("Remote lock the device, revoke their sessions and file a loss report with Security",'g',"Thank you. I feel so much better.","Lock, revoke, report. Speed matters, and so does the paper trail."),
+    F("say:Wait a few hours to see if someone returns it",'b',"Okay. I'll wait.","Every hour a lost device sits unlocked is a risk.",{sec:1,t:5}),
+    F("Reset their password and close the ticket",'k',"Password reset. Anything else?","Resetting a password doesn't stop an already-signed-in session or lock the device.",{sec:1})]),
+  C("It had client files on it, and I don't think I saved anything to OneDrive.",[
+    F("Remote wipe the device, revoke sessions and report the theft to Security and the police",'g',"It's wiped. Thank you for handling this so fast.","A stolen device with client data needs a wipe, session revocation and a report.",{t:20}),
+    F("Wipe it right away without telling anyone",'d',"Done. Does anyone need to know?","The wipe is right, but Security and legal need to know about the data.")])]),
+SC('usb',"Found a USB stick",'P2',90,
+ ["I found a USB stick in the parking lot. It has our logo on it.","Someone left a USB drive on my desk with a sticky note."],
+ "Don't plug it in yet. Where exactly did you find it, and has anyone touched it?",
+ [C("It was by the front door. I've picked it up but haven't plugged it in.",[
+    F("say:Bring it to the Security desk and don't plug it in anywhere",'g',"Handed it in. Security says thanks.","Unknown USB drives are a classic attack. Never plug them into a work PC."),
+    F("Plug it into a spare test PC to see what's on it",'k',"Nothing happened. Weird.","Even a spare PC can spread malware. Use an isolated kiosk.",{sec:1})]),
+  C("A vendor gave me a USB with their presentation. Is it safe to open?",[
+    F("Scan it on the isolated kiosk before opening anything",'g',"Scan came back clean. Thanks!","Even trusted vendors can pass along infected media. Scan first."),
+    F("say:Just open it, vendors are fine",'b',"Okay... opening it now.","Never trust media by default.",{sec:1,t:5})])],
+ {prem:F("say:Plug it in and find out who it belongs to",'b',"Okay, plugging it in now...","Plugging in unknown media is how infections start.",{sec:1,t:5})}),
+SC('vish',"Phone caller asked for password",'P2',90,
+ ["Someone called saying they were from IT and asked for my password.","I got a phone call from 'IT support' asking for my login."],
+ "Thanks for flagging it. Did you give them anything, and what number did they call from?",
+ [C("I gave them my password. I realized afterwards they might not be real.",[
+    F("Reset their password, revoke sessions and report to Security",'g',"Thank you. I'm sorry I fell for it.","Resetting plus reporting limits damage and helps others.",{t:15}),
+    F("say:Don't worry about it",'b',"Okay... thanks.","A password given to a stranger means a compromised account.",{sec:1,t:5})]),
+  C("I hung up before telling them anything. Was that the right thing to do?",[
+    F("say:Yes, exactly right. Report the number to Security so others are warned",'g',"Great. I'll forward it. That felt weird.","Praise the right behavior and report the attempt.",{t:8}),
+    F("say:That was probably a real IT person",'b',"Oh. Should I call back?","Real IT never asks for your password.",{sec:1,t:5}),
+    F("say:Thanks for telling me. Closing the ticket",'d',"Okay, thanks.","Right outcome, but missed the chance to warn others.")])]),
+SC('room',"Conference room screen blank",'P2',80,
+ ["The conference room TV is blank and a client arrives in 10 minutes.","I can't get my laptop to show on the room display."],
+ "Which room, and what does the display say? Is it set to the right input?",
+ [C("The TV says No Signal. The HDMI adapter is loose on my laptop.",[
+    F("say:Re-seat the adapter and switch the TV input to HDMI 2",'g',"We're up. Phew. Thanks!","Check the physical connection and the input before you touch software.",{t:6}),
+    F("Send a technician to the room",'k',"The tech arrived after the client did.","Remote guidance was quicker.",{t:25})]),
+  C("Wireless casting says 'Can't connect to display'.",[
+    F("Restart the room's casting box and re-pair the laptop",'g',"It's showing now. Thank you!","Casting boxes need a restart now and then.",{t:8}),
+    F("Reinstall their display driver",'k',"Reinstalled. Nothing changed.","The display driver wasn't the problem.",{t:15})])]),
+SC('badge',"Badge will not open the door",'P3',120,
+ ["My badge won't open the door. The reader flashes red.","I can't get into the office. The badge reader rejects me."],
+ "Does the badge work on any other door, and does the reader beep or just flash?",
+ [C("It's the only door that fails. My badge is bent from my back pocket.",[
+    F("Issue a replacement badge after verifying ID in person",'g',"New badge works. Thank you!","A replacement badge needs in-person verification.",{t:15}),
+    F("Give them the master badge to use today",'b',"Cool, I can go anywhere.","A master badge is a huge security risk.",{sec:1,t:5})]),
+  C("It fails at every door except that one, and it just started this morning.",[
+    F("say:Try the next door while I report the faulty reader to Facilities",'g',"That door works. Thanks for reporting the reader.","If everyone fails at one door, the reader is the suspect.",{t:8}),
+    F("Disable and re-issue their badge",'k',"New badge issued. The old one worked anyway.","The badge wasn't the problem.")])]),
+SC('rdp',"Cannot connect to office PC",'P3',140,
+ ["I can't remote into my office computer from home.","Remote desktop says it can't connect to my PC."],
+ "What error do you see, and did it work last time?",
+ [C("It times out. I haven't been at the office all week.",[
+    F("Send a wake-up signal and change their PC's power plan to never sleep",'g',"Connected! Thank you.","A sleeping PC is the usual cause of timeouts.",{t:10}),
+    F("Order a new computer",'b',"A whole new computer?","Check power settings before replacing anything.")]),
+  C("It says 'The connection was denied because the user account is not authorized for remote login.'",[
+    F("Add them to the Remote Desktop Users group after manager approval",'g',"It works now. Thanks!","Remote access needs approval and the right group.",{t:12}),
+    F("Make them a local administrator",'b',"I'm an admin now? Cool.","Admin rights are too broad for a remote-login fix.",{sec:1,t:5})])]),
+SC('block',"Website blocked",'P3',130,
+ ["Our supplier's portal is blocked and I need to place an order.","A website I need is blocked by the company filter."],
+ "Which site is it, and what does the block page say?",
+ [C("It says 'Uncategorized'. It's our usual freight supplier's portal.",[
+    F("Submit a category review and allow the supplier site after checking it",'g',"I'm in! Thanks.","Check the site, then fix the category. Don't turn the filter off.",{t:12}),
+    F("Turn off the web filter for them",'b',"The filter is off? Okay.","Disabling security controls for one site is a bad trade.",{sec:1,t:5})]),
+  C("It says 'Phishing'. I got the link in an email from a vendor.",[
+    F("say:The filter is right. Don't visit it, and report the email to Security",'g',"Okay, I forwarded it. Glad it blocked.","Believe the block page when it names a threat.",{t:10}),
+    F("Unblock it so she can finish their task",'b',"Thanks, I'll open it.","Unblocking a flagged phishing site gets accounts compromised.",{sec:1,t:5})])]),
+SC('popup',"Browser full of pop-ups",'P3',140,
+ ["My browser is full of pop-ups and ads.","Weird ads keep popping up on my screen."],
+ "When did it start, and did you install any new extensions or visit anything new?",
+ [C("It started after I added a coupon extension last week.",[
+    F("Remove the unknown extension and reset the browser settings",'g',"Pop-ups are gone. Thanks!","Rogue extensions are a common source of ad injection."),
+    F("Reimage the computer",'b',"A reimage for pop-ups?","Match the fix to the problem size.")]),
+  C("Pop-ups appear even with the browser closed, but only a notification box.",[
+    F("Block notification permissions for the site and clear site data",'g',"Quiet at last. Thank you.","Notification abuse is a permission problem, not malware.",{t:8}),
+    F("Run a full antivirus scan",'k',"Scan finished: nothing found. Still got notifications.","Scans won't change a permission the user granted.",{t:20})])]),
+SC('guest',"Guest Wi-Fi for visitors",'P3',150,
+ ["We have a client visiting at 2 PM. Can you get them on Wi-Fi?","Visitors need internet in the boardroom this afternoon."],
+ "How many visitors, and how long do they need access?",
+ [C("Three visitors, just this afternoon.",[
+    F("Create a time-limited guest account that expires tonight",'g',"Perfect. Thanks!","Guest access should expire by itself and stay off the corporate network."),
+    F("Give them the corporate Wi-Fi password",'b',"Here's the password, everyone!","Never put visitors on the internal network.",{sec:1,t:5})]),
+  C("A vendor needs to connect a device that can't do guest login.",[
+    F("Register the device on the isolated vendor network with a manager's approval",'g',"Registered. Thank you!","Devices that can't do a login need a separate, restricted network.",{t:15}),
+    F("Put the device on the corporate network",'b',"It's on the corporate network now.","Never connect unmanaged devices to the internal network.",{sec:1,t:5})])]),
+SC('spill',"Coffee spilled on laptop",'P2',80,
+ ["I spilled coffee on my keyboard. It's still on but acting weird.","Someone knocked a water bottle onto my laptop."],
+ "First, press and hold the power button until it shuts off and unplug it. Is it off now?",
+ [C("It's off. There's coffee under the keys. What now?",[
+    F("say:Leave it unplugged, flip it upside down and bring it to IT. Don't use a hairdryer",'g',"Done. Thanks for the quick advice.","Power off, unplug, keep liquid out of circuits, and get it to IT quickly.",{t:8}),
+    F("say:Turn it back on to see if it still works",'b',"Smells like burning now...","Powering on a wet laptop can short the board.",{t:5})]),
+  C("It's off. It's my tablet, and the screen looks foggy inside.",[
+    F("say:Remove the case, don't charge it, and bring it in so we can dry it properly",'g',"Okay, bringing it over. Thanks.","Don't charge a wet device. Remove the case and get it dried.",{t:8}),
+    F("Remote wipe the tablet",'k',"It's wiped. I lost my notes.","A wipe isn't needed if the device can be recovered.")])]),
+SC('ransom',"Files renamed, ransom note on screen",'P1',30,
+ ["All my files have weird extensions and there's a note demanding Bitcoin!","A red screen popped up saying my files are encrypted. Help!!"],
+ "Unplug the network cable or turn off Wi-Fi right now. Don't power it off or click anything. What does the note say?",
+ [C("The note says I have 48 hours to pay. My desktop and the shared drive files are renamed .locked.",[
+    F("Isolate the device, disable their account and call Security to start the incident process",'g',"Security is on it. Thank you for moving fast.","Contain first, then escalate. Ransomware spreads through shared drives.",{t:8}),
+    F("Restore from backup first, then tell Security",'d',"Backups are restoring...","Backups matter, but containment and Security come first.",{sec:1}),
+    F("Reboot the computer",'b',"It rebooted. The note's still there.","Rebooting can destroy evidence and doesn't stop the spread.")]),
+  C("Only my desktop files are affected, I think.",[
+    F("Isolate it, check the shared drive for spread and report to Security",'g',"Security says three more folders were affected. Good thing you checked.","Never assume it's contained. Always check shared storage.",{t:12}),
+    F("say:Pay it, it's only $300",'b',"Okay... paying it.","Paying doesn't guarantee recovery and funds attackers.",{sec:1,t:5})])],
+ {roles:["Accounting","Finance","Operations","Human Resources","Legal","Sales"]}),
+SC('cal',"Meetings missing from calendar",'P3',130,
+ ["Half my meetings have vanished from my calendar.","My calendar is showing someone else's meetings."],
+ "Is it only on your laptop, or on your phone too? And did anything change recently?",
+ [C("It's only on my laptop. My phone looks right.",[
+    F("Clear the Outlook cache and re-add the calendar",'g',"Meetings are back! Thanks.","If devices disagree, the problem is a local cache."),
+    F("Delete their mailbox profile",'b',"Why did you delete my profile?","Don't destroy a profile when a cache refresh will do.",{sec:1})]),
+  C("My manager's meetings are showing as mine. I think I clicked something last week.",[
+    F("Remove the extra delegate permission and the shared calendar",'g',"Fixed. I only see mine now.","Delegate permissions can overlay someone else's calendar."),
+    F("Reset their password",'k',"Reset done. Same calendar problem.","A password reset doesn't touch calendar permissions.")])]),
+SC('phone',"Work phone email not syncing",'P3',140,
+ ["My work email isn't updating on my phone.","The email app on my phone stopped syncing yesterday."],
+ "Did you change your password recently, and does the phone say anything in the app?",
+ [C("I changed my password two days ago. The app shows a red warning.",[
+    F("say:Re-enter the new password in the mail app",'g',"It's syncing again. Thanks!","A password change breaks sync until the app is updated."),
+    F("Reset the phone to factory settings",'b',"A factory reset for email?","Don't wipe a phone to fix a stale password.")]),
+  C("The phone says storage is full and the app won't download new mail.",[
+    F("say:Clear the app cache and move photos off the device",'g',"I freed up space and it's syncing. Thanks.","Full storage stops sync. Free space first.",{t:12}),
+    F("Replace the phone",'b',"A new phone?","Check storage before replacing hardware.")])]),
+SC('newhire',"New hire cannot sign in",'P2',90,
+ ["It's my first day and I can't sign in to anything.","New employee here. My login isn't working."],
+ "Welcome! Can I get your employee ID and your manager's name?",
+ [C(["Sure. Employee ID and manager's name.","~HR record: start date is TOMORROW. Account not yet enabled."],[
+    F("say:Ask their manager to confirm and enable the account for them start date",'g',"Manager confirmed. I'm in! Thank you.","Don't enable accounts early without approval.",{t:15}),
+    F("Enable the account without confirmation",'k',"I'm in. Is that okay?","Skipping approval breaks the onboarding process.",{sec:1})]),
+  C(["Sure, details match.","~Account is enabled. The temporary password was never delivered."],[
+    F("Send the one-time setup link to their personal phone on file",'g',"Got it! I'm in.","One-time links beat reading passwords aloud.",{t:10}),
+    F("Read their the password over chat",'k',"Typing it in... works.","Passwords in chat linger in the history.",{sec:1})])]),
+SC('keys',"Keyboard types the wrong characters",'P3',130,
+ ["My keyboard is typing the wrong characters. The @ and \" keys are swapped.","Half my keys type something else. It's driving me crazy."],
+ "Did anything change recently, like a new keyboard or a shortcut you pressed?",
+ [C("I think I pressed some shortcut. The language bar says something different now.",[
+    F("say:Press Win+Space to switch the keyboard layout back to English (US)",'g',"That fixed it! Thank you.","Layout shortcuts are a common accidental trigger.",{t:5}),
+    F("Replace the keyboard",'b',"A new keyboard? The old one is fine.","Check settings before replacing hardware.")]),
+  C("I plugged in an external keyboard from home, and now it types differently from the laptop.",[
+    F("Set the external keyboard's layout to match in Windows settings",'g',"Matched. Typing normally now.","Different keyboards can need different layouts.",{t:10}),
+    F("Reinstall the keyboard driver",'k',"Reinstalled. Same issue.","A driver reinstall can't fix a layout mismatch.")])]),
+SC('serverheat',"Server room temperature alarm",'P1',35,
+ ["The server room temperature alarm is going off. It says 38 degrees.","Alarm in the server closet. It's really warm in here and the fans are screaming."],
+ "Don't touch anything yet. What does the display say, and is the door closed with the AC running?",
+ [C("The AC unit is dead. The display reads 38°C and rising.",[
+    F("Shut down non-critical servers, prop the door and call Facilities for emergency HVAC",'g',"Temperature is dropping. Facilities is on the way. Thank you!","Protect the critical systems first, then fix the cooling. Shutting down non-critical load buys time.",{t:8}),
+    F("say:Leave it, servers are built to handle heat",'b',"It's 40 degrees now. This isn't good.","Heat kills hardware quickly. Act on alarms immediately.",{t:5}),
+    F("Open every window and bring in a fan",'k',"A little cooler, but the AC is still dead.","A fan helps, but it doesn't replace real cooling or shutting down load.")]),
+  C("The AC is running but a sensor shows 35°C near the top rack. Airflow looks blocked.",[
+    F("say:Clear the boxes blocking the vents and rebalance the load across racks",'g',"Temperatures are normalizing. Whoever stacked boxes there...","Blocked airflow causes hot spots even when cooling works.",{t:10}),
+    F("Replace the temperature sensor",'k',"The new sensor says the same thing. The old one was right.","Don't blame the sensor before checking the room.",{t:20})])],
+ {roles:["Operations","Engineering","Facilities","IT Security","Logistics"]}),
+SC('payroll',"Payroll system down before the run",'P1',40,
+ ["The payroll system is down and the run is due in an hour!","Payroll won't open. We have a hard deadline to pay everyone today."],
+ "I'm on it. What error do you see, and when did it last work?",
+ [C(["It says 'Service unavailable'. It worked yesterday.","~Monitoring: PayrollSvc stopped at 2:14 AM after an overnight patch."],[
+    F("Restart the payroll service and verify a test login",'g',"It's up! Running payroll now. You saved us.","Check the service status first. Many outages are a service that didn't restart after a patch.",{t:8}),
+    F("Reinstall the payroll application",'b',"A reinstall? We don't have time for that!","Don't reinstall a production system when a restart may do.",{t:15}),
+    F("say:Wait for the vendor to call back",'k',"The vendor says four hours. That won't work.","Check your own side before waiting on a vendor.")]),
+  C(["It says 'Certificate expired'. It worked yesterday.","~Payroll portal: TLS certificate expired at midnight."],[
+    F("Renew and install the certificate, then restart the web service",'g',"Portal is back! Thank you!!","Expired certificates cause sudden outages. Track expiry dates.",{t:15}),
+    F("say:Tell everyone to click through the browser warning",'b',"We're clicking through the warning...","Training users to ignore warnings is dangerous.",{sec:1,t:5})])],
+ {roles:["Accounting","Finance","Human Resources"]}),
+SC('misdeliver',"Email sent to the wrong person",'P1',45,
+ ["I just emailed a spreadsheet with customer data to the wrong person. Help!","I think I sent confidential salary details to the entire sales list!"],
+ "Don't reply to the email. Who received it, and is it inside the company or outside?",
+ [C("It went to one external address that looks like a customer's old domain.",[
+    F("Recall the message, notify Security and the privacy team, and document the incident",'g',"Thank you for helping me handle this properly.","Data misdelivery needs fast containment and a paper trail for compliance.",{t:12}),
+    F("say:Email them politely and ask them to delete it",'k',"I asked nicely. They haven't replied.","Asking isn't enough. Escalate to Security.",{sec:1,t:8}),
+    F("say:Don't worry about it",'b',"Okay... thanks.","A data leak must be reported. Silence is the worst option.",{sec:1,t:5})]),
+  C("It went to an internal distribution list with about 400 people.",[
+    F("Purge the message from all mailboxes and ask Security to confirm",'g',"Gone from everyone's inbox. Thank you!","Purging internal copies limits exposure when you act fast.",{t:12}),
+    F("say:Email the whole list and ask them to delete it",'k',"Now everyone has seen two emails about it.","A request to delete can amplify the leak.",{sec:1,t:8})])]),
+SC('out-email',"Email won't connect",'P2',70,
+ ["Outlook says 'Disconnected' and won't send or receive.","I can't get my email. It's stuck on 'Trying to connect'."],
+ "Is anyone near you affected too, and does the service status page show anything?",
+ [C(["Three of us have the same problem. Webmail is down too.","~Status board: Mail gateway degraded since 9:12 AM. Engineering is working on it."],[
+    F("say:Confirm it's a known outage, give them the ETA and post an update in the team channel",'g',"Okay, that makes sense. Thanks for the update.","When several people report the same issue, check for an outage before troubleshooting one machine.",{t:6}),
+    F("Rebuild their Outlook profile",'b',"That took forever and it's still down.","Don't fix a client when the server is the problem.",{t:15}),
+    F("Reinstall Office",'k',"Reinstalled. Same problem.","Check the status board before touching the client.",{t:20})]),
+  C(["Everyone on my team is disconnected, but the phones work fine.","~Status board: DNS resolver failing for internal mail servers. Network team notified."],[
+    F("say:Confirm it's a DNS issue, give them the workaround and the ETA",'g',"The workaround got me back in. Thanks.","A widespread failure points at shared infrastructure. Use the workaround while the fix is rolled out.",{t:8}),
+    F("Reset their network adapter",'k',"Reset. Still disconnected.","The fault is upstream, not on their laptop.",{t:15})])],
+ {cluster:true}),
+SC('out-wifi',"Wi-Fi is down on the floor",'P2',70,
+ ["The Wi-Fi is totally down on our floor.","No internet at all. Nobody on the third floor can connect."],
+ "Is it the whole floor, and can you see the network name at all?",
+ [C(["The whole floor. The network name shows but nothing connects.","~Network: Switch 3F-A offline since 9:40 AM (power)."],[
+    F("Power-cycle the switch, verify the uplink and tell the floor it's being fixed",'g',"Wi-Fi's back! Thank you!","A whole floor going down together points at a switch or uplink.",{t:12}),
+    F("Reset each laptop's network settings",'b',"We've reset all our laptops. Nothing changed.","Don't treat a shared outage as many individual problems.",{t:15}),
+    F("say:Try again in an hour",'k',"We'll check again later.","Outages don't fix themselves. Investigate.")]),
+  C(["Everyone sees the network but gets 'No internet'.","~Network: DHCP scope on VLAN 30 is exhausted (0 leases available)."],[
+    F("Expand the DHCP scope and shorten lease times",'g',"We're all connected again. Thank you!","'Connected, no internet' for many users often means DHCP exhaustion.",{t:12}),
+    F("Restart the access points",'k',"Restarted. A few devices got in, but not all.","A restart hides the problem for a moment but doesn't free up addresses.",{t:12})])],
+ {cluster:true}),
+SC('out-sso',"Cannot sign in to company portal",'P2',70,
+ ["I can't sign in to the HR portal. It keeps saying something went wrong.","The company portal rejects my login even though my password is right."],
+ "Does your regular email login work, and is anyone else having this issue?",
+ [C(["Email works, but the portal doesn't. Others are reporting the same thing.","~Identity: SSO signing certificate for the portal expired at 8:00 AM."],[
+    F("Renew the SSO certificate and tell affected users it's fixed",'g',"Portal works now. Thanks!","When many users can't sign in but passwords work, think shared authentication.",{t:12}),
+    F("Reset their password",'b',"I reset my password. It still doesn't work.","A password reset won't fix a broken authentication service.",{t:8}),
+    F("Create a local account for them on the portal",'k',"That works, but now I have two logins.","Bypassing SSO creates security and audit problems.",{sec:1,t:15})]),
+  C(["Everyone in my department can't sign in since the maintenance window.","~Change log: portal upgrade last night changed the redirect URL."],[
+    F("Correct the redirect URL in the SSO app settings",'g',"We're in. Thank you!","A recent change is the first suspect when everything breaks at once.",{t:12}),
+    F("Roll back the portal upgrade without checking",'k',"Rolled back. It works but we lost the new features.","Rollback works, but fixing the setting is less disruptive.",{t:20})])],
+ {cluster:true}),
+SC('out-print',"Print server is down",'P2',70,
+ ["Nobody can print. All the printers say 'Unable to connect'.","Printing is dead across the whole office."],
+ "Is it every printer, and did it stop at a specific time?",
+ [C(["Every printer, since about 9:30.","~Server: PRINT01 spooler stopped. Disk C: 100% full."],[
+    F("Clear the spool folder, free disk space and restart the print service",'g',"Printing again! Thanks!","A full disk can stop a service silently. Check basic resources.",{t:12}),
+    F("Reinstall every printer on every laptop",'b',"We tried that for an hour already!","Don't touch clients when the server is the problem.",{t:20}),
+    F("Order a new print server",'b',"A new print server? It was a full disk!","Check the cheap causes first.")]),
+  C(["Every printer, after last night's patch.","~Server: PRINT01 driver store corrupted after patch KB5039."],[
+    F("Roll back the patch and restore the driver store",'g',"Printing again. Thank you.","A recent patch is the main suspect when everything breaks together.",{t:15}),
+    F("Reboot the print server and hope",'k',"It rebooted. Still broken.","A reboot doesn't fix corruption.",{t:10})])],
+ {cluster:true}),
+SC('noboot',"Laptop will not power on",'P2',90,
+ ["My laptop won't turn on at all and I have a presentation this afternoon.","The laptop's dead. Black screen, no lights."],
+ "Does the charger light come on, and have you tried holding the power button for 30 seconds?",
+ [C("The charger light is on, but the laptop does nothing. I haven't held the button.",[
+    F("say:Hold the power button for 30 seconds to drain residual power, then try again",'g',"It booted! Thank you!","A power drain resets stuck hardware states with no tools.",{t:5}),
+    F("Replace the motherboard",'b',"A motherboard?! I just need it on.","Never jump to the most expensive part.")]),
+  C("The charger light is off and the cable is warm. I tried another outlet.",[
+    F("Swap the charger and cable for loaners and test the port",'g',"The loaner works. Thank you!","If the charger is dead, the laptop may be fine.",{t:12}),
+    F("Reimage the laptop",'b',"It won't even turn on! How would that help?","Don't reimage a machine that doesn't power on.")])]),
+SC('compromise',"Unrecognized sign-in alerts",'P2',80,
+ ["I got an alert about a sign-in from another country. That wasn't me!","The system says someone logged in to my account from Brazil."],
+ "Thanks for reporting. Have you been traveling, and did you approve any MFA prompts today?",
+ [C("I haven't traveled. And I did approve a push prompt I didn't expect.",[
+    F("Revoke their sessions, reset the password, remove unknown MFA devices and report to Security",'g',"Thank you. I should have been more careful.","MFA fatigue attacks spam prompts until someone approves. Reset, remove devices and report.",{t:15}),
+    F("Reset their password only",'k',"Done. Is that enough?","A password alone doesn't remove an attacker's MFA device or open sessions.",{sec:1,t:8}),
+    F("say:It's probably just a VPN glitch",'b',"Okay... if you say so.","Impossible travel is a classic breach indicator.",{sec:1,t:5})]),
+  C("I'm traveling this week, so that might be me. I'm in Lisbon.",[
+    F("Check the sign-in logs, confirm the location and device, and note it as expected",'g',"Good to know it's logged. Thanks for checking.","Verify before assuming it's an attack or a false alarm.",{t:10}),
+    F("Lock their account to be safe",'k',"I'm locked out in Lisbon now.","An overreaction can strand a legitimate user.",{t:10})])]),
+SC('restore',"Deleted an important folder",'P2',90,
+ ["I deleted a whole project folder by accident. I need it back today!","My entire proposal folder is gone. Please tell me you can restore it."],
+ "Don't create or save anything in that location. Where was the folder, and when did you last see it?",
+ [C("It was on my desktop, synced to OneDrive. I deleted it about ten minutes ago.",[
+    F("Restore it from the OneDrive recycle bin",'g',"It's back! You're a lifesaver.","Cloud sync usually keeps deleted files in a recycle bin for weeks.",{t:8}),
+    F("Restore the laptop from a full backup",'b',"A full restore would wipe my other work!","Use the narrowest restore possible.",{t:20})]),
+  C("It was on the shared drive. I deleted it yesterday.",[
+    F("Restore the folder from yesterday's shadow copy or backup",'g',"Everything's back. Thank you!","Shared drives usually have snapshots. Use the most recent one.",{t:15}),
+    F("say:We can't recover shared files",'b',"What?! That can't be right.","Never say something is unrecoverable before you check backups.",{t:5})])]),
+SC('crm',"CRM will not load",'P2',90,
+ ["The CRM won't load and I have a customer on the phone.","I'm trying to open the customer system. It just spins."],
+ "Does it fail in every browser, and did anything change for your account recently?",
+ [C("It works in another browser but not my usual one.",[
+    F("Clear the browser cache and cookies for the CRM and sign in again",'g',"It loads! Thanks.","If another browser works, the problem is local browser state.",{t:6}),
+    F("Reinstall the CRM",'b',"It's a website...","Match the fix to the system.")]),
+  C(["It says 'No access'. My manager changed my role last week.","~CRM: user role 'Sales Rep' was removed during a permission cleanup."],[
+    F("Restore the 'Sales Rep' role after checking with their manager",'g',"I'm in. Thanks for confirming with my manager.","Permission cleanups can remove needed access. Confirm before restoring.",{t:12}),
+    F("Give them admin rights so it can't happen again",'b',"Admin rights? Cool, but is that okay?","Never give blanket admin to fix a role mismatch.",{sec:1,t:5})])]),
+SC('onedrive',"OneDrive stuck syncing",'P3',130,
+ ["OneDrive has been stuck on 'Syncing' for days.","My files aren't syncing. The cloud icon just spins."],
+ "Does the icon show any errors, and are there files with very long names or special characters?",
+ [C("There's a red X on a few files. They have very long names.",[
+    F("Shorten the file paths and restart OneDrive sync",'g',"Synced! Thanks.","Long paths and special characters often block syncing.",{t:8}),
+    F("Reinstall OneDrive",'k',"Reinstalled. Same files fail.","The files, not the client, were the problem.",{t:15})]),
+  C("It says 'Your OneDrive is full'. I have lots of old videos.",[
+    F("Move videos to a shared team drive and clear the recycle bin",'g',"Space freed. Syncing again.","A full quota stops sync. Clear space or move large media.",{t:10}),
+    F("Raise their storage quota to 5 TB",'k',"That's a lot of space. Works, though.","Raising quotas without a reason doesn't scale.",{t:8})])]),
+SC('secondmon',"Second monitor looks wrong",'P3',130,
+ ["My second monitor is blurry and the text is tiny.","The extra screen has the wrong size and everything looks stretched."],
+ "What resolution is the monitor set to in display settings, and what cable connects it?",
+ [C("It's set to 1024x768 and looks fuzzy. It's a 4K monitor.",[
+    F("Set the resolution to the monitor's native 4K and adjust scaling",'g',"Crisp! Thank you.","Non-native resolution blurs the image. Match it.",{t:6}),
+    F("Replace the monitor",'b',"A new one? Mine is fine!","Check settings before hardware.")]),
+  C("It's stuck at 30 Hz and looks laggy. I'm using an old HDMI cable.",[
+    F("Swap in a DisplayPort or HDMI 2.0 cable for 60 Hz",'g',"Smooth now. Thanks.","Old cables limit refresh rate. Upgrade the cable.",{t:10}),
+    F("Update the graphics driver",'k',"Updated. Still 30 Hz.","Drivers can't overcome a cable's limit.",{t:12})])]),
+SC('mouse',"Mouse cursor is jumpy",'P3',130,
+ ["My mouse cursor jumps around and sometimes freezes.","The cursor stutters. It's driving me crazy."],
+ "Is it wired or wireless, and what surface is it on?",
+ [C("It's wireless, and the battery light is red.",[
+    F("say:Replace the batteries and move the receiver to a front USB port",'g',"Smooth again! Thanks.","Low batteries cause jumps. Check the simple causes.",{t:5}),
+    F("Reinstall the mouse driver",'k',"Reinstalled. No change.","Check the batteries first.",{t:12})]),
+  C("It's wired, but I use it on a glass desk.",[
+    F("say:Use a mouse pad. Optical sensors struggle on glass",'g',"It works perfectly on a mouse pad.","Optical sensors need a textured surface.",{t:5}),
+    F("Replace the mouse",'k',"A new mouse didn't fix it. The glass did.","The surface was the issue.",{t:15})])]),
+SC('restartnag',"Update keeps asking to restart",'P3',140,
+ ["My laptop keeps nagging me to restart for updates. I never have time.","There's a pop-up asking me to restart every hour."],
+ "When did you last restart, and does it show an update stuck at a percentage?",
+ [C("Not in about a month. I just sleep the laptop.",[
+    F("say:Restart now. Updates install only on a restart. I'll schedule one outside work hours next time",'g',"Restarted and updated. No more nags.","Updates install on restart. Long uptime means missed patches.",{t:10}),
+    F("Disable Windows Update for them",'b',"No more nags, but is that safe?","Disabling updates is a security risk.",{sec:1,t:5})]),
+  C("I restarted, but it says 'Working on updates' and goes back to the same prompt.",[
+    F("Clear the Windows Update cache and rerun the update",'g',"Update completed. Thanks!","A corrupted update cache causes loops. Clear it.",{t:15}),
+    F("Reimage the laptop",'b',"A reimage for an update?","Don't reach for the biggest tool.")])]),
+SC('presence',"Tandem status stuck on Away",'P3',130,
+ ["My status in Tandem says Away even when I'm working.","People think I'm offline because my status won't update."],
+ "Is your calendar synced, and does the status change if you set it manually?",
+ [C("My calendar has a recurring entry marked 'Out of office'.",[
+    F("Fix the recurring entry's availability and clear the status override",'g',"Status shows Available. Thanks.","Status can follow the calendar. Check recurring entries.",{t:8}),
+    F("Reinstall Tandem",'k',"Reinstalled. Still Away.","The calendar, not the app, was the cause.",{t:15})]),
+  C("It stays Away even after I set it. It looks stale.",[
+    F("Sign out of Tandem, clear the presence cache and sign back in",'g',"Fixed. Status updates now.","Stale presence data clears with a sign-out and cache clean.",{t:8}),
+    F("Escalate to Tier 2",'k',"Tier 2 says it's a simple cache.","Try a sign-out before you escalate.")])]),
+SC('esign',"Cannot sign a PDF",'P3',140,
+ ["I can't digitally sign this PDF. The sign button is greyed out.","The contract needs my signature and the signing option isn't working."],
+ "What's the error when you try, and is the PDF open in your browser or in the PDF app?",
+ [C("It's open in my browser. The button is grey.",[
+    F("say:Open the PDF in the desktop PDF app and sign from there",'g',"The signing option works here. Thanks.","Browser viewers often block signing features.",{t:6}),
+    F("Reinstall the PDF app",'k',"Reinstalled. I was in the wrong app.","Check which app is in use first.",{t:12})]),
+  C("It says 'Your digital ID is expired'.",[
+    F("Issue a new digital ID after verifying identity",'g',"Signed and sent. Thank you!","Expired credentials can't sign. Renew after verification.",{t:15}),
+    F("Let them use a colleague's digital ID",'b',"Okay, I'll use Karen's.","Never share signing credentials.",{sec:1,t:5})])]),
+SC('bitlocker',"Laptop asks for BitLocker key",'P3',120,
+ ["My laptop is asking for a recovery key I've never seen.","It says 'Enter your BitLocker recovery key' and won't start."],
+ "Did anything change before this, like a BIOS update, a new dock or a hardware repair? I'll also need to verify who you are.",
+ [C("IT pushed a BIOS update last night. Then this appeared.",[
+    F("Verify their identity with employee ID and a manager callback, then provide the recovery key",'g',"I'm in! Thank you.","A recovery key unlocks encrypted data. Verify the person first.",{t:15}),
+    F("Read out the recovery key without verifying",'b',"Got it. Typing now.","Keys give access to everything on the device. Verify identity.",{sec:1,t:5}),
+    F("say:Wait for the BIOS update to finish",'k',"I'll wait. How long?","This needs the key, not patience.",{t:5})]),
+  C("I added a new docking station, and now the laptop asks for the key at every boot.",[
+    F("Verify their identity, provide the key and re-seal BitLocker with the new hardware profile",'g',"Boots normally now. Thanks.","Hardware changes can change the BitLocker profile. Re-seal it after use.",{t:18}),
+    F("Disable BitLocker permanently",'b',"BitLocker is off? Is that okay?","Never remove encryption to fix a prompt.",{sec:1,t:8})])]),
+SC('sharedmb',"Shared mailbox is missing",'P3',130,
+ ["The team's shared mailbox disappeared from my Outlook.","I can't see the Support shared mailbox anymore."],
+ "Did you ever see it before, and when was the last time it worked?",
+ [C("I got access yesterday. It never showed up.",[
+    F("say:Give the new permission time to replicate, then restart Outlook to show it",'g',"It's there! Thanks.","New permissions can take up to an hour to apply.",{t:8}),
+    F("Rebuild their Outlook profile",'k',"Rebuilt. It showed up on its own later.","The profile wasn't the issue.",{t:15})]),
+  C("It worked last week. Someone cleaned up our groups.",[
+    F("Re-add them to the shared mailbox group after confirming with the owner",'g',"Back! Thank you.","Cleanups can remove access. Confirm with the owner.",{t:10}),
+    F("Give them full access to every shared mailbox",'b',"Wow, I see everything now.","Never grant blanket access.",{sec:1,t:5})])]),
+SC('pwmanager',"Password manager will not autofill",'P3',130,
+ ["My password manager stopped filling in my passwords.","The password autofill doesn't work in my browser anymore."],
+ "Is the extension still enabled, and does it say your vault is locked?",
+ [C("The extension icon is greyed out in my browser.",[
+    F("Re-enable the extension and sign in again",'g',"It's filling again. Thanks.","A browser update can disable extensions.",{t:5}),
+    F("Reset every password they have",'b',"Why would you reset them all?!","Don't reset credentials to fix a tool.",{sec:1,t:10})]),
+  C("It says 'Vault locked' and my master password isn't working.",[
+    F("Verify their identity and reset vault access through the admin console",'g',"I'm back in. Thank you.","Vault resets need identity verification.",{t:15}),
+    F("Tell them the master password from the admin console",'b',"Wait, you can see it?","Admins should never know master passwords.",{sec:1,t:5})])]),
+SC('vpnslow',"VPN is painfully slow",'P3',130,
+ ["The VPN is so slow that I can't do anything.","Everything crawls when I'm on the VPN."],
+ "Is it slow only on VPN, and is it slow at certain times of day?",
+ [C("It's slow only on VPN. Regular internet is fast.",[
+    F("Enable split tunneling for general web traffic",'g',"Much faster. Thanks.","Routing all traffic through the VPN can bottleneck it.",{t:10}),
+    F("Replace their laptop",'b',"A new laptop?! It's only the VPN.","Don't blame the laptop first.")]),
+  C("It's slow at 9 AM and 1 PM, then fine.",[
+    F("Check the gateway load and move them to a less busy gateway",'g',"Fast now. Thanks.","Peak-hour slowness points at a congested gateway.",{t:12}),
+    F("Reinstall the VPN client",'k',"Reinstalled. Still slow at 9.","Congestion isn't a client issue.",{t:12})])]),
+SC('timezone',"Meetings show the wrong time",'P3',130,
+ ["All my meetings show the wrong time. I missed one this morning.","The calendar times are off by a few hours."],
+ "Which time zone is your laptop set to, and is it the same on your phone?",
+ [C("My laptop says Pacific Time. I'm in Eastern.",[
+    F("say:Turn on automatic time zone and set it to Eastern",'g',"Right times now. Thanks.","A wrong time zone shifts every meeting.",{t:5}),
+    F("Reinstall Outlook",'k',"Reinstalled. Still wrong.","Settings, not software.",{t:12})]),
+  C("The laptop is right, but my calendar settings say another zone.",[
+    F("Change the calendar time zone and re-sync",'g',"Fixed. Thanks!","Mailbox and device zones can differ. Check both.",{t:8}),
+    F("Replace the laptop's clock battery",'b',"Replace what?","Don't replace hardware for a setting.")])]),
+SC('streaks',"Printouts have streaks",'P3',140,
+ ["My printouts have black streaks down the page.","Everything I print comes out streaky."],
+ "Is it every page, and is it every printer or just this one?",
+ [C("Every page on this one printer. The toner is low.",[
+    F("Replace the toner cartridge and print a test page",'g',"Clean pages now. Thanks.","Low toner causes streaks. Replace it.",{t:10}),
+    F("Reinstall the print driver",'k',"Reinstalled. Still streaky.","The problem is physical.",{t:12})]),
+  C("Streaks in the same spot on every page. Toner is full.",[
+    F("Clean the drum and rollers, then call the vendor if it persists",'g',"Cleaner. Thanks.","Repeating marks usually mean a dirty or damaged drum.",{t:15}),
+    F("Replace the printer",'b',"A new printer for streaks?","Clean first.")])]),
+SC('scanmail',"Scan to email is failing",'P3',140,
+ ["The copier scans but never emails the file to me.","Scan-to-email says 'Send failed'."],
+ "Does it fail for everyone or just you, and how large are the scans?",
+ [C("It fails for everyone. The error mentions authentication.",[
+    F("Update the scanner's SMTP credentials with the service account's new password",'g',"Scans arrive again. Thanks.","A rotated service password breaks scan-to-email.",{t:12}),
+    F("Replace the copier",'b',"A new copier?!","Check credentials first.")]),
+  C("Only large scans fail. They're around 40 MB.",[
+    F("Lower the scan resolution or use scan-to-folder for big files",'g',"Worked! Thanks.","Attachment limits block large scans.",{t:10}),
+    F("Raise the mail size limit for everyone",'k',"Now everyone can send huge files.","Don't relax global limits for one use.",{t:10})])]),
+SC('lagcall',"Video calls are choppy",'P3',130,
+ ["Video calls are choppy and people say I freeze.","My video and audio stutter in every meeting."],
+ "Is the laptop's CPU high during calls, and are you on Wi-Fi or a cable?",
+ [C("CPU is maxed out. A background sync and an old browser tab are eating it.",[
+    F("say:Close heavy background apps and pause sync during calls",'g',"Smooth! Thanks.","High CPU stutters video. Reduce the load.",{t:6}),
+    F("Order a new laptop",'b',"A new laptop? I only need to close things.","Check the load first.")]),
+  C("I'm on Wi-Fi at the back of the office. The signal bounces.",[
+    F("say:Plug in an Ethernet cable or move closer to an access point",'g',"Clear video now. Thanks.","Wired connections beat weak Wi-Fi.",{t:6}),
+    F("Reinstall Tandem",'k',"Reinstalled. Still choppy.","The signal was the problem.",{t:12})])]),
+SC('macro',"Excel macro is blocked",'P3',140,
+ ["My Excel macro won't run anymore. It says it's blocked.","A report spreadsheet says macros are disabled and I can't enable them."],
+ "Where did the file come from, and what does the security banner say?",
+ [C("It came as an email attachment. The banner says 'Blocked: from the internet'.",[
+    F("say:Verify it with the sender, scan it and move it to a trusted location before unblocking",'g',"Verified and unblocked. Thank you.","Files from the internet get blocked on purpose. Verify before you allow.",{t:12}),
+    F("Disable macro security for everyone",'b',"All macros are allowed now?","Never weaken security for one file.",{sec:1,t:5})]),
+  C("It's our own team's file on the shared drive. It worked last month.",[
+    F("Add the shared drive path to Trusted Locations",'g',"Macros run again. Thanks.","Trusted Locations allow macros safely.",{t:8}),
+    F("Reinstall Office",'k',"Reinstalled. Still blocked.","The policy, not the install, blocks it.",{t:15})])]),
+SC('reqmon',"Requests a second monitor",'P4',240,
+ ["Could I get a second monitor for my desk? No rush.","I'd like an extra monitor when you have a moment."],
+ "Happy to help. Has your manager approved it, and do you have space on your desk?",
+ [C("My manager said yes. It's in the budget.",[
+    F("Submit the order from the approved equipment list and schedule the install",'g',"Great, thanks. I'll wait for the email.","Approved requests go through the standard ordering process.",{t:10}),
+    F("Take one from the spare closet without a record",'k',"Nice, but did you log it?","Untracked equipment breaks inventory.",{t:10})]),
+  C("I haven't asked my manager yet.",[
+    F("say:Please get manager approval, then I'll process it",'g',"Okay, I'll ask and come back.","Approval comes first.",{t:6}),
+    F("Order one without approval",'b',"Wow, that was quick.","Purchases need an approver.",{sec:1,t:5})])]),
+SC('reqkeyboard',"Requests an ergonomic keyboard",'P4',240,
+ ["My wrists hurt. Can I get an ergonomic keyboard?","I'd like an ergonomic keyboard if that's possible."],
+ "Sorry to hear that. Have you spoken to Facilities or HR about an ergonomic assessment?",
+ [C("Not yet. I didn't know that was a thing.",[
+    F("say:Direct them to Facilities for an assessment, then order the recommended equipment",'g',"Thank you. I'll schedule it.","Ergonomic needs often go through an assessment.",{t:8}),
+    F("Give them a random keyboard from the closet",'k',"That doesn't help my wrists.","A proper assessment finds the right fit.",{t:6})]),
+  C("Yes, Facilities approved it. They asked me to contact IT.",[
+    F("Order the model Facilities recommended and deliver it",'g',"Perfect, thanks!","Follow the assessment.",{t:10}),
+    F("Order the cheapest keyboard",'b',"That isn't what Facilities recommended.","Don't override a recommendation to save money.",{t:8})])]),
+SC('reqrename',"Name change on account",'P4',240,
+ ["I changed my last name. Can you update my email and account?","My name is different now. Can IT update my login?"],
+ "Congratulations! Has HR updated your record, and can I verify your ID and manager?",
+ [C(["Yes, HR updated it this morning.","~HR record: legal name updated today. Employee ID verified."],[
+    F("Update the display name and email, and keep the old address as an alias for a month",'g',"Everything looks right. Thank you!","Keep the old address as an alias so mail isn't lost.",{t:15}),
+    F("Delete the old address immediately",'b',"Wait, I'm missing emails.","Don't drop the old address too quickly.",{t:8})]),
+  C("HR hasn't updated it yet, but I'd like IT to do it now.",[
+    F("say:Please ask HR to update the record first, then I'll make the change",'g',"Okay, I'll go to HR.","HR owns the source of truth.",{t:6}),
+    F("Change it right now without checking",'b',"Thanks. Changed.","Never change identity data without verification.",{sec:1,t:5})])]),
+SC('reqhowto',"How do I do this in Excel?",'P4',240,
+ ["Quick question: how do I make a pivot table in Excel?","Do you know how to combine two sheets by a shared column?"],
+ "Sure! What are you trying to end up with?",
+ [C("I want totals by month from my sales list.",[
+    F("say:Walk them through a pivot table, then send a short guide",'g',"Wow, that was easy. Thanks!","Teaching a skill is worth the minutes.",{t:12}),
+    F("say:Tell them to search online",'k',"Okay... I'll look it up.","It's allowed, but a few minutes of help builds goodwill.",{t:5})]),
+  C("I need to join two lists on customer ID.",[
+    F("say:Show them XLOOKUP and Power Query with a sample file",'g',"That's exactly what I needed. Thanks.","Show the right tool, not just a formula.",{t:12}),
+    F("Do the whole spreadsheet for them",'k',"Thanks! But I still don't know how.","Teach, don't take over.",{t:20})])]),
+SC('reqforward',"Set up call forwarding",'P4',240,
+ ["Can you forward my desk phone to my cell next week?","I'm out of the office next week and need my calls forwarded."],
+ "Sure. Which dates, and do you want calls to go to voicemail or a number?",
+ [C("Monday to Friday, to my cell phone.",[
+    F("Set a scheduled forward for those dates and send a confirmation",'g',"Perfect. Thanks!","Scheduled forwarding avoids a forgotten setting.",{t:8}),
+    F("Forward indefinitely",'k',"It's forwarding, but I'll forget to turn it off.","Time-limited is safer.",{t:6})]),
+  C("To a colleague. She said yes.",[
+    F("Set the forward to the colleague's extension for the dates requested",'g',"Great, thank you!","Confirm the recipient agreed.",{t:8}),
+    F("Forward to the main line",'b',"Now everyone calls the main line.","Wrong target.",{t:6})])]),
+SC('reqbackup',"How do I back up my files?",'P4',240,
+ ["I want to back up my files. What's the best way?","How can I make sure I don't lose my documents?"],
+ "Good thinking. Where do you keep your files now?",
+ [C("Mostly on my desktop and in Documents.",[
+    F("Turn on OneDrive Known Folder Move for Desktop, Documents and Pictures",'g',"That's easy. Thanks!","Known Folder Move backs up common folders automatically.",{t:10}),
+    F("say:Copy everything to a USB drive weekly",'k',"Okay. I'll try to remember.","Manual backups get forgotten, and USB drives get lost.",{t:6})]),
+  C("On an external drive I carry around.",[
+    F("say:Move files to OneDrive and keep the external drive only as a copy",'g',"Good plan. Thank you.","Central storage beats a drive that can be lost.",{t:10}),
+    F("Encrypt the drive and leave it",'k',"Encrypted! But it's still a single copy.","Encryption doesn't make a backup.",{t:8})])])
+];
+
+function buildTicket(sc,cause,person,at,id,opt){
+  opt=opt||{};
+  const mood=MOOD[person.mood],nodes={};
+  let opener=pick(mood.pre)+pick(sc.open)+pick(mood.post);
+  if(opt.followup)opener="Remember me? You never properly fixed this last time. "+opener;
+  const prem=sc.prem||pick(GEN_FIX.filter(f=>f.q==='b'));
+  const extras=shuffle(GEN_FIX.filter(f=>f.d!==prem.d));
+  let fixes=cause.f.slice();
+  while(fixes.length<3)fixes.push(extras.shift());
+  if(fixes.length<4&&Math.random()<0.6)fixes.push(extras.shift());
+  fixes=shuffle(fixes);
+  const QMAP={g:'great',d:'good',k:'ok',b:'bad'},QTIME={g:10,d:10,k:15,b:6};
+  const ch=(txt,to,t,sat)=>{const say=txt.indexOf('say:')===0;const o={to,t};o[say?'say':'do']=say?txt.slice(4):txt;if(sat)o.sat=sat;return o;};
+  const end=(nid,f)=>{
+    const lines=[].concat(f.r);
+    if(f.q!=='b'&&Math.random()<0.6)lines[0]=lines[0]+pick(mood.fin);
+    nodes[nid]={m:lines,end:QMAP[f.q],note:f.n,sec:!!f.sec};
+  };
+  nodes.n0={m:[opener],c:shuffle([
+    {say:sc.ask,to:'n1',t:10},
+    {say:"Have you tried restarting it?",to:'n1r',sat:-1,t:12},
+    ch(prem.d,'ePrem',prem.t||QTIME[prem.q])])};
+  end('ePrem',prem);
+  const cs=[];
+  fixes.forEach((f,i)=>{
+    if(f.q==='g'&&cause.w){
+      nodes['w'+i]={m:[cause.w.m],c:shuffle([ch(cause.w.g[0],'wg'+i,8),ch(cause.w.l[0],'wl'+i,5)])};
+      nodes['wg'+i]={m:[cause.w.g[1]],end:'great',note:cause.w.g[2],sec:false};
+      nodes['wl'+i]={m:[cause.w.l[1]],end:'good',note:cause.w.l[2],sec:false};
+      cs.push(ch(f.d,'w'+i,f.t||QTIME.g));
+    }else{
+      end('e'+i,f);
+      cs.push(ch(f.d,'e'+i,f.t||QTIME[f.q]));
+    }
+  });
+  nodes.n1={m:cause.clue.slice(),c:cs};
+  nodes.n1r={m:["I already tried that first. Still happening."].concat(cause.clue),c:cs};
+  const sla=Math.max(20,Math.round(sc.sla*(mood.sla||1)/5)*5);
+  return {id:'INC-'+id,pid:person.id,scId:sc.id,who:person.name,role:person.role,pri:sc.pri,sla,at,hue:person.hue,subject:sc.title,start:'n0',nodes,sat0:opt.followup?-1:0};
+}
+
+function buildShift(){
+  const used=new Set();
+  let follow=null;
+  if(MEM.grudges.length){
+    const g=MEM.grudges.shift();saveMem();
+    const sc=SCENARIOS.find(s=>s.id===g.sc);
+    if(sc&&ROSTER[g.pid]){follow={sc,pid:g.pid};used.add(g.pid);}
+  }
+  const solo=SCENARIOS.filter(s=>!s.cluster&&!(follow&&s.id===follow.sc.id));
+  const pool=p=>shuffle(solo.filter(s=>s.pri===p));
+  const hasCluster=Math.random()<0.7;
+  const need=hasCluster?{P1:2,P2:1,P3:4,P4:3}:{P1:2,P2:3,P3:5,P4:3};
+  if(follow&&need[follow.sc.pri]>0)need[follow.sc.pri]--;
+  const items=[];
+  ['P1','P2','P3','P4'].forEach(p=>pool(p).slice(0,need[p]).forEach(sc=>items.push({sc})));
+  if(follow)items.push(follow);
+  shuffle(items);
+  /* arrival waves: three tickets open the shift together, the rest land in bursts at five shared times */
+  const waves=[];
+  while(waves.length<5){const w=20+5*Math.floor(Math.random()*69);if(waves.indexOf(w)<0)waves.push(w);}
+  waves.sort((a,b)=>a-b);
+  items.forEach((it,i)=>{it.at=i<3?0:pick(waves);});
+  if(hasCluster){
+    const sc=pick(SCENARIOS.filter(s=>s.cluster)),cause=pick(sc.causes),at=pick(waves),grp='g-'+sc.id;
+    for(let k=0;k<3;k++)items.push({sc,cause,at,grp});
+  }
+  items.sort((a,b)=>a.at-b.at);
+  const base=5000+Math.floor(Math.random()*400);
+  return items.map((it,i)=>{
+    let person;
+    if(it.pid!=null)person=ROSTER[it.pid];
+    else{
+      let p=ROSTER.filter(x=>!used.has(x.id)&&(!it.sc.roles||it.sc.roles.indexOf(x.role)>=0));
+      if(!p.length)p=ROSTER.filter(x=>!used.has(x.id));
+      person=pick(p);used.add(person.id);
+    }
+    const t=buildTicket(it.sc,it.cause||pick(it.sc.causes),person,START+it.at,base+i,{followup:it.pid!=null});
+    if(it.grp)t.grp=it.grp;
+    return t;
+  });
+}
 
 const NUDGE={
  P1:["I really need an update on this. It's urgent.","Hello?? Are you still there?"],
@@ -354,14 +955,254 @@ const NUDGE={
  P3:["Hi, any news on this? No rush, but it's been a while.","Following up on my ticket whenever you get a chance."]
 };
 
+/* ---------- Jose, your manager ----------
+ Nags when a ticket sits untouched. Sends off-topic distractions. Telling him you're working is safe.
+ Chatting back (or snapping at him) is a strike. Ignoring him too long is a strike. Three strikes ends the game. */
+let MAX_STRIKES=3,NAG_MULT=1,FREE_PASS=false;
+const NAG_AFTER={P1:10,P2:25,P3:40,P4:60};
+const SAFE_REPLY=["Fine. Back to the queue.","Good. Keep it moving.","Right. Carry on.","Okay. I'll check on you later."];
+const DISTRACTIONS=[
+ {k:'game',topic:"the game last night",open:["Did you see the game last night?? That fourth quarter was unreal."],
+  engage:"YES! That last drive was wild. Did you see the fumble?",
+  reply:["Right?! I can't believe the ref missed that call. I've been telling people all morning.","Anyway. Why is the queue so long?"],
+  safe:["Not now, Jose. I'm working through tickets.","I'm heads down on tickets. Can we talk after my shift?"]},
+ {k:'lunch',topic:"the team lunch poll",open:["Quick poll for the team lunch. Tacos or sandwiches? Need an answer in five minutes."],
+  engage:"Tacos, obviously. Are we getting the good salsa?",
+  reply:["Always the good salsa. I'm putting you down for three tacos.","Okay, back to work. Shouldn't you be answering tickets?"],
+  safe:["I'm working on tickets, Jose. Pick whatever you like.","Working through the queue. Surprise me."]},
+ {k:'fantasy',topic:"your fantasy football login",open:["Can you look at my fantasy football login real quick? It's not urgent. Takes two minutes."],
+  engage:"Sure, what's your username?",
+  reply:["It's josefan88 and the password is Password1. Don't tell anyone.","~Security: a manager shared a password in chat.","Okay, now you can get back to the tickets."],
+  safe:["I'm working on tickets right now. Submit a ticket and I'll get to it in order.","Busy with the queue, Jose. A ticket will get you in line."]},
+ {k:'allhands',topic:"the all-hands pizza",open:["Can you drop in on the 10:30 all-hands? You don't have to speak. Pizza is involved."],
+  engage:"Pizza? I'm in. Where is it?",
+  reply:["Conference room B. Bring napkins. Last time they ran out.","Anyway, I'm sure your tickets are fine without you."],
+  safe:["I'm working tickets, Jose. I can't join the all-hands.","Working on the queue. Save me a slice."]},
+ {k:'video',topic:"that funny video",open:["Check out this funny video I got in an email. You'll love it. Sending the link now."],
+  engage:"Ha, send it over!",
+  reply:["~Jose sent a link: totally-legit-cats.example","Watch it with the sound on!"],
+  safe:["Heads down on tickets, Jose. Please don't send me links while I'm working.","I'm working, so I'm not clicking anything. Thanks though."]},
+ {k:'laptop',topic:"my laptop decision",open:["Should I get the new laptop now or wait for next year's model? Just curious what you think."],
+  engage:"Honestly, wait. The battery on the new one is not great.",
+  reply:["Interesting. I'll hold off then. Do you think I should get the big screen?","Wait, what are you doing? Tickets!"],
+  safe:["I'm working on tickets right now. Ask me at lunch.","Busy working the queue, Jose. Let's talk later."]},
+ {k:'camping',topic:"my camping trip",open:["What are you doing this weekend? I'm thinking about camping if it doesn't rain."],
+  engage:"Camping sounds great! I was thinking about the lake.",
+  reply:["The lake is perfect. We should all go. Bring snacks.","Okay, enough chatting. Get back to the queue."],
+  safe:["I'm working on tickets, Jose. Ask me after my shift.","Working. I'll tell you about my weekend later."]},
+ {k:'logo',topic:"the logo options",open:["Marketing sent me three new logo options. Which one do you like? Need an answer today."],
+  engage:"Number two. The blue one looks sharp.",
+  reply:["I like number two too! You have good taste.","Now why are you chatting instead of working?"],
+  safe:["I'm working on tickets right now. I can look after my shift.","Busy with the queue, Jose. I'll weigh in later."]},
+ {k:'coffee',topic:"the coffee machine",open:["The break room coffee machine is making that weird noise again. Can you take a look? You're handy."],
+  engage:"Sure, I'll come look at it.",
+  reply:["It's the one by the window. Bring a screwdriver.","You're a hero. Now, why are tickets stacking up?"],
+  safe:["I'm working on tickets, Jose. Facilities can look at the coffee machine.","Busy with the queue. Please send that to Facilities."]},
+ {k:'birthday',topic:"Denise's birthday card",open:["We're signing a birthday card for Denise. Can you add a joke? It needs to be funny."],
+  engage:"How about: you're not old, you're vintage?",
+  reply:["Ha! Perfect. I'll sign it from both of us.","Back to your tickets."],
+  safe:["I'm working on tickets, Jose. Can I sign it later?","Busy with the queue. Sorry, I'll pass on the joke."]},
+ {k:'office',topic:"the open-office redesign",open:["What's your opinion on the open-office redesign? Be honest. Off the record."],
+  engage:"Honestly? It's too loud. I can't hear my own calls.",
+  reply:["That's what I've been saying! I'll mention it in the next meeting.","Why are we still talking? Tickets!"],
+  safe:["I'm working on tickets, Jose. Ask me after my shift.","Working through the queue. I'll give feedback later."]},
+ {k:'podcast',topic:"that cybersecurity podcast",open:["Have you listened to that new cybersecurity podcast? Episode 4 is wild. Spoilers incoming."],
+  engage:"No spoilers! Which episode is it?",
+  reply:["Episode 4. A guy gets hacked through a smart fridge. Wild.","You should listen. Anyway, why aren't you working?"],
+  safe:["I'm working on tickets, Jose. Skip the spoilers.","Busy with the queue. Tell me about it after my shift."]},
+ {k:'meme',topic:"the CEO meme",open:["Look at this meme I made of the CEO. Don't tell anyone. Sending now."],
+  engage:"Haha, send it. I won't tell.",
+  reply:["~Jose sent an image: ceo_meme_FINAL_v3.png","Isn't it great? Delete it after."],
+  safe:["I'm working on tickets, Jose. I'd rather not see it right now.","Working. Please keep that between you and your drafts folder."]},
+ {k:'beach',topic:"my beach trip",open:["I'm taking next week off. Any beach recommendations? Somewhere without Wi-Fi."],
+  engage:"Try the coast down south. It's quiet and cheap.",
+  reply:["That sounds perfect. I'll book it tonight.","Meanwhile, who's covering your tickets?"],
+  safe:["I'm working on tickets right now, Jose. Enjoy your trip.","Working through the queue. Ask me at lunch."]},
+ {k:'friday',topic:"Friday's team lunch",open:["The pizza place on 5th closed. Where should we order Friday's team lunch now?"],
+  engage:"There's a good Thai place near the station.",
+  reply:["Thai! Great idea. You're in charge of ordering.","Wait, that's not your job. Tickets!"],
+  safe:["I'm working on tickets, Jose. Ask the team channel.","Busy with the queue. I'll vote later."]},
+ {k:'chair',topic:"the ergonomic chairs",open:["Which ergonomic chair do you like? I'm putting together an order for the whole floor."],
+  engage:"The mesh one with the lumbar support. Definitely.",
+  reply:["Mesh with lumbar support. I'm writing that down.","Anyway, enough about chairs. Queue!"],
+  safe:["I'm working on tickets, Jose. Ask Facilities.","Busy with the queue. I'll pass on chairs."]},
+ {k:'rumor',topic:"the reorg rumor",open:["Did you hear about the reorg rumor? Don't tell anyone I told you. What have you heard?"],
+  engage:"I heard they're merging Sales and Support.",
+  reply:["Interesting!! I knew it. You didn't hear it from me.","Why are you gossiping on the clock?"],
+  safe:["I'm working on tickets, Jose. I haven't heard anything.","Busy with the queue. I'll leave the rumors to others."]},
+ {k:'show',topic:"that new TV show",open:["Have you started watching that new show everyone's talking about? No spoilers, just tell me if it's good."],
+  engage:"It's great. The second episode is the best one.",
+  reply:["Good to know. I'm starting it tonight.","And you're back to work now, right?"],
+  safe:["I'm working on tickets, Jose. Ask me after my shift.","Busy with the queue. I'll tell you later."]},
+ {k:'steps',topic:"the step count challenge",open:["I got 12,000 steps before 9 AM. What's your step count? Compete with me."],
+  engage:"Beat that. I'm at 14,000 and counting.",
+  reply:["14,000?! I want to see the receipts.","Meanwhile, tickets aren't going to answer themselves."],
+  safe:["I'm working on tickets, Jose. Congrats on the steps.","Working through the queue. I'll compete later."]},
+ {k:'guestpw',topic:"the guest Wi-Fi password",open:["The guest Wi-Fi password again? I always forget. Can you just message it to me real quick?"],
+  engage:"Sure, it's welcome-guest-2024.",
+  reply:["Great, thanks. I'll post it on the whiteboard.","~Security: the guest Wi-Fi password was shared in chat.","Okay, now you can get back to work."],
+  safe:["I'm working on tickets, Jose. Check the guest portal page.","Busy with the queue. It's on the internal wiki."]},
+ {k:'slides',topic:"the board slideshow",open:["Can you make me a quick slideshow of ticket stats for the board? It's easy. Just 40 slides."],
+  engage:"Sure! What colors do you want?",
+  reply:["Blue and gold. And make it look serious.","That's a lot of work, though. Why are you saying yes? Tickets!"],
+  safe:["I'm working on tickets, Jose. Submit a request and I'll schedule it.","Busy with the queue. I can't do slides now."]}
+];
+
+/* ---------- What Jose remembers (kept for as long as this browser session lasts) ---------- */
+const MEM_KEY='tier-one-jose-memory';
+const freshMem=()=>({shifts:0,fired:0,strikesTotal:0,snarks:0,ignored:0,best:null,last:null,chats:[],met:[],grudges:[]});
+let MEM=(()=>{try{const s=sessionStorage.getItem(MEM_KEY);if(s)return Object.assign(freshMem(),JSON.parse(s));}catch(e){}return freshMem();})();
+const saveMem=()=>{try{sessionStorage.setItem(MEM_KEY,JSON.stringify(MEM));}catch(e){}};
+
+function makeDistList(){
+  let list=shuffle(DISTRACTIONS);
+  if(MEM.chats.length){
+    const k=pick(MEM.chats),d=DISTRACTIONS.find(x=>x.k===k);
+    if(d){
+      list=list.filter(x=>x.k!==k);
+      list.unshift({k:'cb:'+k,topic:d.topic,
+        open:["Hey, remember "+d.topic+"? I've been thinking about it all week.","Got a minute?"],
+        engage:"Of course I remember! Tell me more.",
+        reply:["Great, so as I was saying...","~Jose talks for what feels like twenty minutes."],
+        safe:["I'm working on tickets right now, Jose. Not now.","Working. We can talk about "+d.topic+" after my shift."]});
+    }
+  }
+  return list;
+}
+function introLines(){
+  const L=MEM.last,n=MEM.shifts+1;
+  if(!MEM.shifts)return["Morning. The queue is yours today.","Answer every ticket fast. If I message you about anything else, tell me you're working. Do not chat with me."];
+  const out=[];
+  if(L.fired)out.push("Shift "+n+". I haven't forgotten how last shift ended.","This time it's two strikes and you're out. Tickets only. I'm watching.");
+  else if(L.strikes>0)out.push("Shift "+n+". Last shift I put "+L.strikes+" strike"+(L.strikes>1?"s":"")+" on your record. Don't give me a reason for more.","I'm checking the queue more often now.");
+  else out.push("Shift "+n+". Last shift was clean, so I'll give you some slack.","Your first slip this shift is on the house. After that, tickets only.");
+  if(MEM.snarks>0&&Math.random()<0.5)out.push("And I haven't forgotten the attitude, either.");
+  else if(MEM.shifts>=3)out.push("Total strikes on your file: "+MEM.strikesTotal+". I keep a list.");
+  if(MEM.grudges.length)out.push("Also, someone called asking for the person who 'never fixed their problem.' Expect a callback.");
+  return out;
+}
+function remember(score){
+  MEM.shifts++;MEM.strikesTotal+=S.strikes;if(S.fired)MEM.fired++;
+  const newBest=MEM.best===null||score>MEM.best;
+  if(newBest)MEM.best=score;
+  MEM.last={strikes:S.strikes,fired:S.fired,score};
+  S.tickets.forEach(t=>{
+    if(!t.arrived)return;
+    if(MEM.met.indexOf(t.pid)<0)MEM.met.push(t.pid);
+    if((t.status!=='done'||t.stars<=2)&&!MEM.grudges.some(g=>g.pid===t.pid))MEM.grudges.push({pid:t.pid,sc:t.scId});
+  });
+  MEM.grudges=MEM.grudges.slice(-4);
+  saveMem();
+  const done=S.tickets.filter(t=>t.status==='done').length;
+  let verdict;
+  if(S.fired)verdict="Jose: \"I told you what would happen. I'll remember this next shift.\"";
+  else if(S.strikes===0&&done>=Math.round(S.tickets.length*0.6))verdict="Jose: \"Clean shift. I noticed. I won't forget it.\"";
+  else if(S.strikes===0)verdict="Jose: \"No strikes, but I've seen better queues. Do more next time.\"";
+  else verdict="Jose: \""+S.strikes+" strike"+(S.strikes>1?"s":"")+" on my sheet. I keep a list.\"";
+  if(MEM.shifts>1&&newBest&&!S.fired)verdict+=" New personal best.";
+  return{n:MEM.shifts,met:MEM.met.length,verdict};
+}
+
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
 /* ---------- State ---------- */
 let S=null,GEN=0,armTimer=null,toastTimer=null;
 function newGame(){
   GEN++;
-  S={clock:START,gen:GEN,active:null,over:false,
-    tickets:DATA.map(d=>({...d,arrived:false,status:'new',node:d.start,log:[],unread:0,busy:false,sat:0,breached:false,stars:null,sec:false,outcome:null,closedAt:null,note:''}))};
+  const L=MEM.last;
+  MAX_STRIKES=(L&&L.fired)?2:3;
+  NAG_MULT=L?(L.fired?0.6:L.strikes>0?0.8:MEM.fired?0.9:1.2):1;
+  FREE_PASS=!!(L&&!L.fired&&L.strikes===0);
+  S={clock:START,gen:GEN,active:null,over:false,fired:false,strikes:0,bossQ:[],
+    nextDist:START+35+Math.floor(Math.random()*20),distLeft:makeDistList(),
+    boss:{id:'JOSE',isBoss:true,who:'Jose Martinez',role:'Your manager',hue:5,log:[],unread:0,busy:false,prompt:null},
+    tickets:buildShift().map(d=>({...d,arrived:false,status:'new',node:d.start,log:[],unread:0,busy:false,sat:d.sat0||0,breached:false,stars:null,sec:false,outcome:null,closedAt:null,note:'',touched:false,nagged:false}))};
 }
-const act=()=>S&&S.tickets.find(t=>t.id===S.active);
+const act=()=>S&&(S.active==='JOSE'?S.boss:S.tickets.find(t=>t.id===S.active));
+
+function strike(why){
+  if(FREE_PASS){FREE_PASS=false;S.freed=true;toast('Jose lets it slide: '+why+'. The next one counts.');return false;}
+  S.freed=false;S.strikes++;renderHud();
+  toast('Strike '+S.strikes+' of '+MAX_STRIKES+': '+why);
+  return true;
+}
+const strikeLine=()=>S.freed?"~Jose lets this one slide because of your last shift. The next one counts.":"~Strike "+S.strikes+" of "+MAX_STRIKES;
+function bossSay(lines,done){
+  const B=S.boss,gen=S.gen;B.busy=true;render();
+  lines.forEach((s,i)=>setTimeout(()=>{
+    if(S.gen!==gen)return;
+    const sys=s[0]==='~';
+    push(B,{k:sys?'sys':'them',text:sys?s.slice(1):s});
+    if(i===0&&!sys&&S.active!==B.id)toast('Jose Martinez sent you a message');
+  },(i+1)*900));
+  setTimeout(()=>{
+    if(S.gen!==gen)return;
+    B.busy=false;if(done)done();render();bossNext();
+  },lines.length*900+500);
+}
+function bossNext(){
+  const B=S.boss;
+  if(S.over||B.busy||B.prompt||!S.bossQ.length)return;
+  const q=S.bossQ.shift();
+  if(q.type==='info')return bossSay(q.lines);
+  if(q.type==='nag'){
+    const t=q.t;
+    if(t.touched||t.status!=='open')return bossNext();
+    const mins=S.clock-t.at;
+    const lines=t.pri==='P1'
+      ?[t.who+"'s ticket is flagged P1 and it's been "+mins+" minutes. Why haven't you answered??","Move. Now."]
+      :["Why is "+t.who+"'s ticket still sitting there? It's been "+mins+" minutes.","People notice when tickets go unanswered."];
+    return bossSay(lines,()=>{B.prompt={k:'nag',since:S.clock,warned:false,choices:shuffle([
+      {say:"On it. I'm working through the queue now."},
+      {say:"I'm working on tickets right now. I'll get to it."},
+      {say:"If we had a second person, the queue wouldn't be backed up.",engage:true,reply:["Excuse me?? Don't talk back to me."]}
+    ])};});
+  }
+  if(q.type==='dist'){
+    const d=q.d;
+    return bossSay(d.open,()=>{B.prompt={k:d.k,since:S.clock,warned:false,choices:shuffle([
+      {say:d.engage,engage:true,reply:d.reply},{say:d.safe[0]},{say:d.safe[1]}])};});
+  }
+}
+function bossEvents(){
+  if(S.over)return;
+  if(S.clock>=S.nextDist&&S.distLeft.length){
+    S.bossQ.push({type:'dist',d:S.distLeft.shift()});
+    S.nextDist=S.clock+50+Math.floor(Math.random()*40);
+  }
+  if(!S.bossQ.some(q=>q.type==='nag')&&S.clock-(S.lastNag===undefined?-999:S.lastNag)>=25){
+    const late=S.tickets.filter(t=>t.arrived&&t.status==='open'&&!t.touched&&!t.nagged&&S.clock-t.at>=Math.round(NAG_AFTER[t.pri]*NAG_MULT))
+      .sort((x,y)=>(x.at+x.sla)-(y.at+y.sla));
+    if(late.length){late[0].nagged=true;S.lastNag=S.clock;S.bossQ.push({type:'nag',t:late[0]});}
+  }
+  bossNext();
+}
+function bossTimers(){
+  const B=S.boss,p=B.prompt;
+  if(!p||B.busy||S.over)return;
+  const w=S.clock-p.since;
+  if(!p.warned&&w>=45){p.warned=true;p.since=S.clock;bossSay(["Hello? Did you see my message? I'm waiting."]);}
+  else if(p.warned&&w>=30){
+    B.prompt=null;MEM.ignored++;saveMem();strike('you ignored Jose');
+    bossSay(["Ignoring your manager doesn't look good.",strikeLine()],()=>{if(S.strikes>=MAX_STRIKES)endShift('fired');});
+  }
+}
+function bossChoose(i){
+  const B=S.boss,p=B.prompt;
+  if(S.over||B.busy||!p)return;
+  const c=p.choices[i];if(!c)return;
+  push(B,{k:'me',text:c.say});B.prompt=null;
+  if(c.engage){
+    if(p.k&&p.k!=='nag')MEM.chats.push(p.k.replace(/^cb:/,''));else MEM.snarks++;
+    saveMem();
+    strike('you chatted with Jose');
+    bossSay([...c.reply,strikeLine()+" That chat cost you 25 minutes."],()=>{if(S.strikes>=MAX_STRIKES)endShift('fired');});
+    tick(25);
+  }else{
+    bossSay([pick(SAFE_REPLY)]);
+    tick(2);
+  }
+}
 
 function toast(txt){
   const el=$('#toast');el.textContent=txt;el.hidden=false;
@@ -379,31 +1220,42 @@ function arrive(t){
     t.log.push({time:t.at,k:sys?'sys':'them',text:sys?s.slice(1):s});
     if(!sys)t.unread++;
   });
-  if(S.clock>START||t.at>START)toast('New ticket from '+t.who+' ('+t.pri+')');
 }
-function arrivals(){S.tickets.forEach(t=>{if(!t.arrived&&t.at<=S.clock)arrive(t)});}
+function arrivals(){
+  const fresh=[];
+  S.tickets.forEach(t=>{if(!t.arrived&&t.at<=S.clock){arrive(t);fresh.push(t);}});
+  if(fresh.length&&S.clock>START){
+    const order=['P1','P2','P3','P4'],top=fresh.map(t=>t.pri).sort((x,y)=>order.indexOf(x)-order.indexOf(y))[0];
+    const grp=fresh.filter(t=>t.grp).length>1;
+    toast(fresh.length===1?'New ticket from '+fresh[0].who+' ('+top+')'
+      :fresh.length+' new tickets, highest priority '+top+(grp?'. Several people report the same problem.':'.'));
+  }
+  bossEvents();
+}
 function breaches(){
   S.tickets.forEach(t=>{
     if(t.arrived&&t.status==='open'&&!t.breached&&S.clock>t.at+t.sla){
       t.breached=true;t.sat-=1;
       push(t,{k:'them',text:pick(NUDGE[t.pri])});
       toast(t.who+"'s ticket is past its deadline");
+      S.bossQ.push({type:'info',lines:[t.who+"'s ticket just missed its deadline. That goes in your review."]});
     }
   });
 }
 function tick(mins){
   S.clock+=mins;
-  arrivals();breaches();
+  arrivals();breaches();bossTimers();bossNext();
   if(S.clock>=END)endShift();
 }
 
 /* ---------- Gameplay ---------- */
 function choose(i){
   const t=act();
+  if(t&&t.isBoss)return bossChoose(i);
   if(!t||S.over||t.busy||t.status!=='open')return;
   const c=t.nodes[t.node].c[i];if(!c)return;
   push(t,c.say?{k:'me',text:c.say}:{k:'do',text:c.do});
-  t.sat+=c.sat||0;t.busy=true;
+  t.sat+=c.sat||0;t.busy=true;t.touched=true;
   tick(c.t||12);
   if(S.over)return;
   go(t,c.to);
@@ -440,9 +1292,9 @@ function idleCheck(){
     const gen=S.gen;setTimeout(()=>{if(S.gen===gen)endShift();},1800);
   }
 }
-function endShift(){
+function endShift(reason){
   if(S.over)return;
-  S.over=true;S.gen=++GEN;
+  S.over=true;S.fired=reason==='fired';S.gen=++GEN;
   S.tickets.forEach(t=>{if(t.status==='open')t.status='abandoned';});
   render();showReport();
 }
@@ -455,14 +1307,21 @@ function renderHud(){
   const done=S.tickets.filter(t=>t.status==='done');
   $('#csat').textContent=done.length?(done.reduce((a,t)=>a+t.stars,0)/done.length).toFixed(1):'–';
   $('#solved').textContent=done.length+'/'+S.tickets.length;
+  const sk=$('#strikes');sk.textContent=S.strikes+'/'+MAX_STRIKES;sk.classList.toggle('hot',S.strikes>0);
 }
 function renderList(){
   const vis=S.tickets.filter(t=>t.arrived);
   const open=vis.filter(t=>t.status==='open'||t.status==='abandoned').sort((a,b)=>(a.at+a.sla)-(b.at+b.sla));
   const done=vis.filter(t=>t.status==='done').sort((a,b)=>b.closedAt-a.closedAt);
   $('#openCount').textContent=open.filter(t=>t.status==='open').length+' open';
-  if(!vis.length){$('#rows').innerHTML='<div class="empty-list">No conversations yet. Tickets arrive here.</div>';return;}
-  $('#rows').innerHTML=[...open,...done].map(t=>{
+  const B=S.boss,lastB=B.log[B.log.length-1];
+  const bossRow=(B.log.length||B.busy)?'<button class="row'+(S.active===B.id?' sel':'')+'" data-id="JOSE" type="button">'
+    +'<span class="av" style="background:hsl('+B.hue+' 42% 40%)" aria-hidden="true">JM</span>'
+    +'<span class="row-main"><span class="row-top"><span class="nm">Jose Martinez</span><span class="pri boss">BOSS</span></span>'
+    +'<span class="prev" style="display:block">'+esc(lastB?lastB.text:'...')+'</span></span>'
+    +'<span class="row-side">'+(B.prompt&&!B.busy?'<span class="sla urgent">Reply needed</span>':'')+(B.unread?'<span class="badge">'+B.unread+'</span>':'')+'</span></button>':'';
+  if(!vis.length){$('#rows').innerHTML=bossRow+'<div class="empty-list">No tickets yet. They arrive here.</div>';return;}
+  $('#rows').innerHTML=bossRow+[...open,...done].map(t=>{
     const last=[...t.log].reverse().find(m=>m.k!=='close');
     const l=deadline(t);
     const side=t.status==='done'?'<span class="stars" aria-label="'+t.stars+' of 5 stars">'+starTxt(t.stars)+'</span>'
@@ -491,6 +1350,7 @@ function renderChat(){
     el.innerHTML='<div class="chat-empty"><h3>Pick a conversation</h3><p>Open a ticket from the list. Every action costs shift time, and everyone else keeps waiting while you work.</p></div>';
     return;
   }
+  if(t.isBoss){renderBoss(t,el);return;}
   const l=deadline(t);
   const sla=t.status==='done'?'Closed '+fmt(t.closedAt):t.status==='abandoned'?'Unresolved':leftTxt(l);
   let foot='';
@@ -508,6 +1368,21 @@ function renderChat(){
     +'<div class="msgs" id="msgs">'+t.log.map(m=>msgHtml(t,m)).join('')+typing+'</div>'+foot;
   const ms=$('#msgs');ms.scrollTop=ms.scrollHeight;
 }
+function renderBoss(B,el){
+  let foot;
+  if(S.over)foot='<div class="notice">The shift is over.</div>';
+  else if(B.prompt&&!B.busy){
+    foot='<div class="choices"><div class="choices-label">Your move</div>'+B.prompt.choices.map((c,i)=>
+      '<button class="opt" data-i="'+i+'" type="button"><span class="tag">'+(i+1)+' · Say</span><span class="txt">'+esc(c.say)+'</span></button>').join('')+'</div>';
+  }else foot='<div class="notice">Nothing needs your reply right now. Get back to the queue.</div>';
+  const typing=B.busy&&!S.over?'<div class="msg them"><span class="av" style="background:hsl('+B.hue+' 42% 40%)" aria-hidden="true">JM</span><div class="bubble"><span class="typing" aria-label="typing"><i></i><i></i><i></i></span></div></div>':'';
+  el.innerHTML='<div class="chat-head"><button class="back" id="back" type="button" aria-label="Back to conversations">&lsaquo;</button>'
+    +'<span class="av" style="background:hsl('+B.hue+' 42% 40%)" aria-hidden="true">JM</span>'
+    +'<div class="ch-main"><div class="ch-name">Jose Martinez</div><div class="ch-sub">Your manager · Shift '+(MEM.shifts+1)+' · Strikes '+S.strikes+'/'+MAX_STRIKES+'</div></div>'
+    +'<div class="ch-sla'+(B.prompt?' urgent':'')+'">'+(B.prompt&&!S.over?'Reply needed':'')+'</div></div>'
+    +'<div class="msgs" id="msgs">'+B.log.map(m=>msgHtml(B,m)).join('')+typing+'</div>'+foot;
+  const ms=$('#msgs');ms.scrollTop=ms.scrollHeight;
+}
 function render(){renderHud();renderList();renderChat();}
 
 function openTicket(id){
@@ -516,9 +1391,10 @@ function openTicket(id){
 }
 function showBrief(){
   const o=$('#overlay');o.hidden=false;
-  o.innerHTML='<div class="card"><h1 id="ovTitle">Tier One</h1><p class="lede">Thursday, 9:00 AM. You are the entire help desk at Brightwell Logistics.</p>'
+  o.innerHTML='<div class="card"><h1 id="ovTitle">Help Desk</h1><p class="lede">Thursday, 9:00 AM. You are the entire help desk at Brightwell Logistics.</p>'
    +'<p>Employees message you in Tandem. Open a conversation, then choose what to say or which fix to run. Each choice shows how many minutes it costs on the shift clock.</p>'
    +'<p>Every waiting ticket keeps aging while you work on another. The deadline is next to each name, and P1 means someone is blocked right now. Your shift ends at 5:00 PM.</p>'
+   +'<p>Every shift is different: new people, new problems, new causes. Tickets arrive in bursts, and a P1 can land at the same moment as three routine requests. Your manager, Jose, watches the queue. If a ticket sits unanswered, he will let you know. If he messages you about anything else, tell him you are working. Chat back and you get a strike. Three strikes and you are fired. He remembers everything for as long as this browser session lasts, including across shifts.</p>'
    +'<p>You are graded on customer satisfaction, deadlines met, and whether you kept the company safe.</p>'
    +'<button class="go" id="start" type="button">Clock in</button></div>';
   $('#start').focus();
@@ -527,13 +1403,16 @@ function showReport(){
   const T=S.tickets,done=T.filter(t=>t.status==='done');
   const avg=done.length?done.reduce((a,t)=>a+t.stars,0)/done.length:0;
   const breaches=T.filter(t=>t.breached).length,sec=T.filter(t=>t.sec).length,miss=T.length-done.length;
-  const score=done.reduce((a,t)=>a+t.stars*20,0)-sec*50-miss*30;
-  const rank=score>=680?'Help Desk Legend':score>=520?'Senior Technician':score>=360?'Solid Tier 1':score>=200?'Probationary Hire':'Have you tried turning yourself off and on again?';
+  const score=done.reduce((a,t)=>a+t.stars*20,0)-sec*50-miss*30-breaches*10-S.strikes*40;
+  const mx=Math.max(100,T.length*100);
+  const rank=S.fired?'Fired for chatting on the clock':score>=mx*.85?'Help Desk Legend':score>=mx*.65?'Senior Technician':score>=mx*.45?'Solid Tier 1':score>=mx*.25?'Probationary Hire':'Have you tried turning yourself off and on again?';
+  const mem=remember(score);
   const o=$('#overlay');o.hidden=false;
-  o.innerHTML='<div class="card"><h2 id="ovTitle">Shift report</h2><p class="lede">Clocked out at '+fmt(Math.min(S.clock,END))+'</p>'
+  o.innerHTML='<div class="card"><h2 id="ovTitle">'+(S.fired?"You're fired":'Shift report')+'</h2><p class="lede">'+(S.fired?'Jose called you into his office at ':'Clocked out at ')+fmt(Math.min(S.clock,END))+'</p>'
    +'<div class="rank">'+esc(rank)+'</div>'
+   +'<p>'+esc(mem.verdict)+'</p><p style="color:var(--muted);font-size:13.5px;margin-top:-4px">Shift '+mem.n+' this session · '+mem.met+' of '+ROSTER.length+' people met</p>'
    +'<div class="grid"><div class="stat"><span>Score</span><b>'+score+'</b></div><div class="stat"><span>Avg CSAT</span><b>'+(done.length?avg.toFixed(1):'–')+'</b></div>'
-   +'<div class="stat"><span>Solved</span><b>'+done.length+'/'+T.length+'</b></div><div class="stat"><span>Late</span><b>'+breaches+'</b></div><div class="stat"><span>Security</span><b>'+sec+'</b></div></div>'
+   +'<div class="stat"><span>Solved</span><b>'+done.length+'/'+T.length+'</b></div><div class="stat"><span>Late</span><b>'+breaches+'</b></div><div class="stat"><span>Security</span><b>'+sec+'</b></div><div class="stat"><span>Strikes</span><b>'+S.strikes+'</b></div></div>'
    +'<ul class="rep">'+T.map(t=>'<li><span>'+esc(t.who)+' · '+esc(t.subject)+(t.sec?' <span class="sec">(security slip)</span>':'')+'</span><span class="x">'
      +(t.status==='done'?starTxt(t.stars):t.arrived?'Unresolved':'Never picked up')+'</span></li>').join('')+'</ul>'
    +'<button class="go" id="again" type="button">Clock in again</button></div>';
@@ -542,6 +1421,8 @@ function showReport(){
 function startShift(){
   $('#overlay').hidden=true;
   arrivals();$('#app').dataset.view='list';render();
+  S.bossQ.push({type:'info',lines:introLines()});
+  bossNext();
 }
 
 /* ---------- Events ---------- */

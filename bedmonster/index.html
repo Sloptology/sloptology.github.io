@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Monster Under the Bed</title>
+<style>
+:root{--bg:#07040c;--fg:#cfc3e0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#07040c;--fg:#cfc3e0}}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:"Courier New",monospace}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center}
+canvas{width:min(100vw,calc((100vh - 50px)*16/9));background:#000;touch-action:none}
+#t{display:flex;gap:6px;margin-top:6px;justify-content:center}
+#t button{background:#1b1226;color:var(--fg);border:1px solid #4a3560;padding:8px 14px;font:inherit;border-radius:3px}
+</style></head><body>
+<canvas id="c" width="1280" height="720"></canvas>
+<div id="t"></div>
+<script>
+const C=document.getElementById('c'),g=C.getContext('2d'),W=320,H=180,FY=132;
+const L=document.createElement('canvas');let K=4;const l=L.getContext('2d');
+function fit(){const d=window.devicePixelRatio||1,w=Math.max(320,Math.round(C.clientWidth*d));K=w/W;C.width=w;C.height=Math.round(H*K);L.width=C.width;L.height=C.height}
+fit();addEventListener('resize',fit);setTimeout(fit,100);setTimeout(fit,600);
+const R=Math.random,cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+let AC;function tone(f,d,ty='sine',v=.08,s=0){try{AC=AC||new AudioContext();const o=AC.createOscillator(),q=AC.createGain();o.type=ty;o.frequency.setValueAtTime(f,AC.currentTime);if(s)o.frequency.exponentialRampToValueAtTime(Math.max(20,f+s),AC.currentTime+d);q.gain.setValueAtTime(v,AC.currentTime);q.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(q);q.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+// hiding spots: parents search a spot only once visits >= lvl (when alerted)
+const Z=[{n:'bed',z:[116,204],l:0},{n:'wardrobe',z:[14,46],l:3},{n:'hamper',z:[58,82],l:4},{n:'chest',z:[222,248],l:5}];
+const inZ=z=>px>z[0]&&px<z[1],hid=()=>Z.some(o=>inZ(o.z)),inBed=()=>inZ(Z[0].z);
+// clickable scare objects
+const O=[
+{id:'wh',n:'Whisper from the bed',r:[108,76,104,28],cx:160,rg:999,bed:1,u:0,cd:3,f:4,no:10,w:8,s:'...come closer...'},
+{id:'toy',n:'Teddy bear',r:[250,114,26,18],cx:262,rg:48,u:0,cd:5,f:6,no:14,w:10,s:'*giggle*'},
+{id:'book',n:'Books on shelf',r:[250,46,56,18],cx:278,rg:48,u:0,cd:6,f:9,no:30,w:18,s:'*THUD*'},
+{id:'ward',n:'Wardrobe door',r:[10,64,40,68],cx:30,rg:50,u:15,cd:7,f:8,no:24,w:14,s:'*creeeak*'},
+{id:'win',n:'Window glass',r:[60,28,36,40],cx:78,rg:60,u:25,cd:8,f:9,no:18,w:12,s:'*tap tap tap*'},
+{id:'mob',n:'Mobile above the bed',r:[140,32,40,26],cx:160,rg:70,u:35,cd:8,f:10,no:10,w:10,s:'*lullaby...*'},
+{id:'sw',n:'Light switch',r:[282,76,12,14],cx:288,rg:40,u:45,cd:9,f:12,no:22,w:20,s:'*zzt*'},
+{id:'rev',n:'Reveal claws (under bed)',r:[112,104,92,28],cx:160,rg:999,bed:1,u:55,cd:14,f:18,no:28,w:30,s:'I SEE YOU'},
+{id:'chest',n:'Slam toy chest',r:[220,114,30,18],cx:235,rg:44,u:65,cd:10,f:14,no:36,w:24,s:'*SLAM*'}];
+let S='title',t,fear,noise,wake,px,face,cds,child,pk,pkCD,spotT,par,nextPar,visits,toyT,bookT,flickT,revT,wardT,winT,mobT,chestT,msg,msgT,fearFlash,why,floats,mx=-1,my=-1,DAY=170;
+function reset(){t=0;fear=0;noise=0;wake=0;px=160;face=1;cds={};child={st:'sleep',timer:0};pk=0;pkCD=3;spotT=0;par={st:'none',x:310,timer:0,alert:0};nextPar=24;visits=0;toyT=bookT=flickT=revT=wardT=winT=mobT=chestT=0;msg='';msgT=0;fearFlash=0;floats=[]}
+reset();
+const say=(m,d=2.5)=>{msg=m;msgT=d};
+function scream(){noise=100;child.st='awake';child.timer=Math.max(child.timer,7);tone(900,.9,'sawtooth',.12,-300);say('THE CHILD SCREAMS!',3);if(par.st==='none'){par.st='warn';par.timer=1.6;par.alert=1}}
+function use(o){if(S!=='play')return;if(fear<o.u){say(o.n+': locked until fear '+o.u+'%');return}
+ if((cds[o.id]||0)>0)return;if(o.bed&&!inBed()){say('You must be under the bed');return}
+ if(Math.abs(px-o.cx)>o.rg){say('Too far - crawl closer');return}
+ cds[o.id]=o.cd;const m=child.st==='awake'?1.5:1;fear=Math.min(100,fear+o.f*m);noise=Math.min(100,noise+o.no);wake+=o.w;fearFlash=.4;
+ floats.push({x:o.r[0]+o.r[2]/2-20,y:o.r[1]-2,t:1.3,s:o.s});
+ ({wh(){tone(110,1,'sawtooth',.07,-30)},toy(){toyT=1.6;tone(300,.6,'square',.05,150)},book(){bookT=1;setTimeout(()=>tone(90,.3,'square',.15,-40),450)},ward(){wardT=1.2;tone(150,.9,'sawtooth',.08,-60)},win(){winT=1.2;tone(800,.1,'square',.05);setTimeout(()=>tone(800,.1,'square',.05),200);setTimeout(()=>tone(800,.1,'square',.05),400)},mob(){mobT=3;tone(520,.5,'triangle',.05,-100)},sw(){flickT=2.2;tone(60,.8,'sawtooth',.1)},rev(){revT=1.6;tone(70,1.2,'sawtooth',.12,60)},chest(){chestT=.9;tone(70,.4,'square',.2,-30)}})[o.id]()}
+function parentSee(){const set=Z.filter(o=>visits>=o.l);return !hid()||(par.alert&&set.some(o=>inZ(o.z)))}
+function over(w){S='over';why=w;tone(200,1.4,'sawtooth',.15,-150)}
+function update(dt){if(S!=='play')return;t+=dt;
+ let v=0;if(keys.ArrowLeft||keys.a)v=-1;if(keys.ArrowRight||keys.d)v=1;
+ if(v){px=cl(px+v*(inBed()?38:52)*dt,8,300);face=v;if(!hid()&&R()<.02)noise=Math.min(100,noise+1)}
+ for(const k in cds)cds[k]=Math.max(0,cds[k]-dt);
+ noise=Math.max(0,noise-6*dt);
+ if(child.st==='sleep'){wake=Math.max(0,wake-2.5*dt);if(wake>=100){child.st='awake';child.timer=10+fear*.1;pkCD=3;wake=60;say('The child wakes up... flashlight on.',3);tone(500,.4,'triangle',.08)}}
+ else{child.timer-=dt;pkCD-=dt;
+  if(pkCD<=0&&pk<=0){pk=2.2;pkCD=4.5+R()*3-fear*.02;tone(180,.5,'sine',.06)}
+  if(pk>0){pk-=dt;if(pk<=0&&inBed()){say('The child looked under the bed...');scream()}}
+  const bx=160+Math.sin(t*1.1)*135;
+  if(!hid()&&Math.abs(px-bx)<14)spotT+=dt;else spotT=Math.max(0,spotT-dt);
+  if(spotT>.5){spotT=0;scream()}
+  if(child.timer<=0){child.st='sleep';wake=30;pk=0;say('The child lies back down. Paranoid.',2)}}
+ nextPar-=dt*(1+noise/40);
+ if(par.st==='none'&&(nextPar<=0||noise>=95)){par.st='warn';par.timer=2;par.alert=noise>=80?1:(visits>=2?1:0);tone(140,.5,'square',.06)}
+ if(par.st==='warn'){par.timer-=dt;if(par.timer<=0){par.st='enter';par.x=305;tone(100,.6,'sawtooth',.08)}}
+ else if(par.st==='enter'){par.x-=70*dt;if(!hid()&&Math.abs(par.x-px)<45)return over('A parent saw you in the light.');if(par.x<=185){par.st='check';par.timer=2.6;if(parentSee())return over(par.alert?'The parent searched your hiding spot.':'A parent saw you in the light.')}}
+ else if(par.st==='check'){par.timer-=dt;noise=0;if(par.timer<=0){par.st='leave';fear=Math.max(0,fear-8);wake=0;child.st='sleep';pk=0;visits++;say('The parent comforts the child. Fear drops.',3)}}
+ else if(par.st==='leave'){par.x+=70*dt;if(par.x>=312){par.st='none';nextPar=Math.max(14,26-visits*2)+R()*10}}
+ for(const k of['toyT','bookT','flickT','revT','wardT','winT','chestT'])if(k==='toyT')toyT=Math.max(0,toyT-dt);else if(k==='bookT')bookT=Math.max(0,bookT-dt*.8);else if(k==='flickT')flickT=Math.max(0,flickT-dt);else if(k==='revT')revT=Math.max(0,revT-dt);else if(k==='wardT')wardT=Math.max(0,wardT-dt);else if(k==='winT')winT=Math.max(0,winT-dt);else chestT=Math.max(0,chestT-dt);
+ mobT=Math.max(0,mobT-dt);fearFlash=Math.max(0,fearFlash-dt);msgT-=dt;
+ floats.forEach(f=>{f.t-=dt;f.y-=8*dt});floats=floats.filter(f=>f.t>0);
+ if(fear>=100){S='win';tone(60,2,'sawtooth',.15)}else if(t>=DAY)over('Sunrise. The dark is gone.')}
+const rc=(c,x,y,w,h)=>{g.fillStyle=c;g.fillRect(x|0,y|0,w|0,h|0)};
+function hover(){for(const o of O){const r=o.r;if(mx>=r[0]&&mx<=r[0]+r[2]&&my>=r[1]&&my<=r[1]+r[3])return o}return null}
+function draw(){g.setTransform(K,0,0,K,0,0);l.setTransform(K,0,0,K,0,0);
+ rc('#241a33',0,0,W,FY);for(let x=0;x<W;x+=16)rc('#2a1f3a',x,0,8,FY);
+ rc('#3a261f',0,FY,W,H-FY);for(let x=0;x<W;x+=20)rc('#32201a',x,FY,1,H-FY);
+ rc('#10101c',60,28,36,40);rc(winT>0&&(winT*10|0)%2?'#e8ecff':'#a9b6d8',64,32,28,32);rc('#10101c',76,32,3,32);rc('#10101c',64,47,28,3);g.fillStyle='#e8ecff';g.beginPath();g.arc(84,42,5,0,7);g.fill();
+ const wo=wardT>0?Math.sin(wardT*60)*1.5:0;
+ rc('#3b2a22',10+wo,64,40,68);rc('#2a1c17',14+wo,68,32,60);rc('#c9a66b',29+wo,96,3,5);rc('#c9a66b',33+wo,96,3,5);
+ rc('#2e2118',298,62,22,70);rc('#c9a66b',302,98,2,3);rc('#d8d0b0',286,78,6,10);
+ // hamper
+ rc('#5a4a62',58,112,24,20);rc('#6e5c78',56,110,28,4);for(let i=0;i<3;i++)rc('#4a3c52',60+i*7,116,1,14);rc('#7a2b3a',64,106,10,5);
+ rc('#4a3322',220,(chestT>0?106:114)-(chestT>0?0:0),30,chestT>0?10:4);rc('#4a3322',220,118,30,14);rc('#6b4a30',220,114+(chestT>0?-8:0),30,4);rc('#c9a66b',233,121,4,4);
+ rc('#4a3322',250,62,56,3);const bc=['#7a2b3a','#2b5a7a','#6a7a2b','#7a5a2b'];for(let i=0;i<4;i++)if(!(i===2&&bookT>0))rc(bc[i],254+i*8,48,6,14);
+ if(bookT>0){const p=1-bookT;rc('#6a7a2b',270-p*8,48+p*84,6,14)}
+ // mobile
+ rc('#6b5a8b',160,20,1,16);const ms=mobT>0?Math.sin(t*8)*10*Math.min(1,mobT):Math.sin(t*.6)*2;[[-18,'#d0a040'],[0,'#c04060'],[18,'#4080c0']].forEach(([o,c])=>rc(c,160+o+ms*(o?o/18:1)-3,36+Math.abs(o)/6,6,6));rc('#6b5a8b',140,35,40,1);
+ rc('#3a2230',108,98,104,6);rc('#4b3a6b',110,86,100,14);rc('#6b5a9b',110,86,100,3);rc('#e9e2f5',112,80,22,8);
+ rc('#3a2230',106,76,4,56);rc('#3a2230',210,90,4,42);rc('#07050c',112,106,92,26);
+ const aw=child.st==='awake';
+ if(aw){rc('#e9c9a8',118,66,14,14);rc('#2a1a12',118,64,14,5);rc('#fff',121,72,3,3);rc('#fff',127,72,3,3);rc('#000',122,73,1,2);rc('#000',128,73,1,2);rc('#4b3a6b',116,80,18,8)}
+ else{rc('#e9c9a8',114,80,14,7);rc('#2a1a12',114,79,14,3)}
+ if(pk>0){rc('#e9c9a8',150,104,14,10);rc('#2a1a12',150,102,14,3);rc('#fff',154,107,3,3);rc('#fff',159,107,3,3);rc('#000',155,108,1,2);rc('#000',160,108,1,2)}
+ const tx=toyT>0?262-(1.6-toyT)*25:262,ty=FY-8-(toyT>0?Math.abs(Math.sin(toyT*9))*5:0);
+ rc('#8a5a32',tx,ty,8,8);rc('#8a5a32',tx+1,ty-4,6,5);rc('#000',tx+2,ty-2,1,1);rc('#000',tx+5,ty-2,1,1);
+ if(revT>0){const k=Math.sin(Math.min(1,(1.6-revT)*3)*1.57);for(let i=0;i<4;i++){rc('#1a0f22',130+i*8,FY-6-k*10,3,10+k*8);rc('#d9d2e8',130+i*8,FY-8-k*10,3,3)}}
+ const vis=!hid();
+ if(vis){rc('#0d0814',px-7,FY-16,14,16);rc('#0d0814',px-9,FY-10,18,10);rc('#3c2a4e',px-7,FY-16,14,1);rc('#3c2a4e',px-7,FY-16,1,16);rc('#3c2a4e',px+6,FY-16,1,16);rc('#0d0814',px-5,FY-20,2,4);rc('#0d0814',px+3,FY-20,2,4)}
+ const room=['enter','check','leave'].includes(par.st);
+ if(room){const x=par.x;rc('#5a3a4a',x-6,FY-46,12,30);rc('#e0b894',x-4,FY-56,9,10);rc('#2a1a22',x-4,FY-58,9,4);rc('#2a2a4a',x-5,FY-18,4,18);rc('#2a2a4a',x+1,FY-18,4,18)}
+ let amb=room?.08:.8;if(flickT>0)amb=Math.random()<.5?.1:.97;
+ l.globalCompositeOperation='source-over';l.clearRect(0,0,W,H);l.fillStyle=`rgba(4,2,10,${amb})`;l.fillRect(0,0,W,H);
+ l.globalCompositeOperation='destination-out';
+ if(!room){l.fillStyle='rgba(0,0,0,.22)';l.beginPath();l.moveTo(64,32);l.lineTo(92,32);l.lineTo(150,FY);l.lineTo(90,FY);l.fill();
+  const gr=l.createRadialGradient(212,80,2,212,80,28);gr.addColorStop(0,'rgba(0,0,0,.4)');gr.addColorStop(1,'rgba(0,0,0,0)');l.fillStyle=gr;l.fillRect(180,50,60,60);
+  if(par.st==='warn'){l.fillStyle='rgba(0,0,0,.7)';l.fillRect(296,FY-2,24,3)}
+  if(aw){const bx=160+Math.sin(t*1.1)*135;l.fillStyle='rgba(0,0,0,.85)';l.beginPath();l.moveTo(130,76);l.lineTo(bx-16,FY+10);l.lineTo(bx+16,FY+10);l.fill()}}
+ g.drawImage(L,0,0,W,H);
+ // glints on usable objects
+ if(S==='play'){const p=.35+.25*Math.sin(t*4);O.forEach(o=>{if(fear>=o.u&&!(cds[o.id]>0)&&Math.abs(px-o.cx)<=o.rg&&!(o.bed&&!inBed())&&o.id!=='wh'&&o.id!=='rev'){g.strokeStyle=`rgba(255,200,120,${p})`;g.lineWidth=.6;g.strokeRect(o.r[0]-1,o.r[1]-1,o.r[2]+2,o.r[3]+2)}})}
+ const ec=inBed()||vis?'#ff2a3a':'#c01a28',ey=inBed()?FY-8:FY-13;rc(ec,px-4,ey,2,2);rc(ec,px+2,ey,2,2);
+ if(revT>0){rc('#ff2a3a',140,FY-24,5,5);rc('#ff2a3a',160,FY-24,5,5);rc('#ff2a3a',150,FY-18,3,3)}
+ if(fearFlash>0){g.fillStyle=`rgba(120,0,20,${fearFlash*.5})`;g.fillRect(0,0,W,H)}
+ const vg=g.createRadialGradient(160,90,70,160,90,200);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.65)');g.fillStyle=vg;g.fillRect(0,0,W,H);
+ hud()}
+function bar(x,y,w,v,c,lab){rc('#000',x-1,y-1,w+2,7);rc('#201530',x,y,w,5);rc(c,x,y,w*v/100,5);g.fillStyle='#cfc3e0';g.font='6px monospace';g.fillText(lab,x+w+4,y+5)}
+function hud(){bar(6,6,80,fear,'#b01030','FEAR');bar(6,16,80,noise,noise>70?'#ff7a1a':'#c8a020','NOISE');
+ g.font='7px monospace';
+ if(par.st==='warn'){g.fillStyle='#ff5a5a';g.fillText('! FOOTSTEPS - HIDE !',200,24)}
+ else if(pk>0){g.fillStyle='#ffd05a';g.fillText('! CHILD IS LOOKING UNDER BED !',130,24)}
+ const mins=Math.floor(t/DAY*360),hh=Math.floor(mins/60),mm=mins%60;g.fillStyle='#cfc3e0';g.fillText(`${(hh+12)%12||12}:${String(mm).padStart(2,'0')} AM`,274,8);
+ const h=hover();if(S==='play'&&h){const lk=fear<h.u,cd=cds[h.id]>0;g.fillStyle=lk?'#8a7a9a':'#ffd9a0';g.textAlign='center';g.fillText(h.n+(lk?` [locked: fear ${h.u}%]`:cd?` [${cds[h.id].toFixed(1)}s]`:' - click'),160,172);g.textAlign='left'}
+ else{g.fillStyle='#6a5a7a';g.font='6px monospace';g.fillText(`Click objects to scare. Hide spots: ${Z.map(o=>o.n).join(', ')}. Spots seen: ${Z.filter(o=>visits>=o.l).length}/4`,6,176)}
+ floats.forEach(f=>{g.fillStyle=`rgba(255,80,100,${Math.min(1,f.t)})`;g.font='7px monospace';g.fillText(f.s,f.x,f.y)});
+ if(msgT>0){g.fillStyle='#e8dff5';g.font='7px monospace';g.textAlign='center';g.fillText(msg,160,150);g.textAlign='left'}}
+function center(t1,lines,col='#e8dff5'){g.fillStyle='rgba(0,0,0,.8)';g.fillRect(0,0,W,H);g.textAlign='center';g.fillStyle=col;g.font='bold 16px monospace';g.fillText(t1,160,45);g.font='7px monospace';g.fillStyle='#cfc3e0';lines.forEach((s,i)=>g.fillText(s,160,66+i*11));g.textAlign='left'}
+function render(){draw();
+ if(S==='title')center('THE MONSTER UNDER THE BED',['You are the villain. Scare the child before sunrise.','','A/D or arrows: crawl through the shadows','CLICK objects in the room to scare: toys, books, window,','wardrobe, mobile, light switch, toy chest. Get close first!','Under the bed: click the bed to whisper, the dark gap to reveal.','Hide in: bed, wardrobe, hamper, toy chest.','Parents search more spots every visit - keep moving.','','Press SPACE or tap START'],'#ff4a5a');
+ if(S==='over')center('CAUGHT',[why,`Fear reached: ${Math.floor(fear)}%`,'','Press SPACE to try again'],'#ff4a5a');
+ if(S==='win')center('THE CHILD WILL NEVER SLEEP AGAIN',['Fear meter full. The dark belongs to you.','','Press SPACE to haunt another night'],'#ff4a5a');
+ C.style.cursor=S==='play'&&hover()?'pointer':'default'}
+const keys={};
+function start(){if(S!=='play'){reset();S='play';say('Hide. Wait. Scare.',3);tone(55,2,'sawtooth',.06)}}
+addEventListener('keydown',e=>{keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(['ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
+ if(e.key===' '||e.key==='Enter')start();
+ if(e.key.toLowerCase()==='e'&&S==='play'){const o=O.filter(o=>fear>=o.u&&!(cds[o.id]>0)&&Math.abs(px-o.cx)<=o.rg&&!(o.bed&&!inBed())).sort((a,b)=>Math.abs(px-a.cx)-Math.abs(px-b.cx))[0];if(o)use(o)}});
+addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
+function pos(e){const r=C.getBoundingClientRect();mx=(e.clientX-r.left)/r.width*W;my=(e.clientY-r.top)/r.height*H}
+C.addEventListener('pointermove',pos);C.addEventListener('pointerleave',()=>{mx=my=-1});
+C.addEventListener('pointerdown',e=>{window.focus();pos(e);if(S!=='play'){start();return}const h=hover();if(h){if(h.id==='wh'||h.id==='rev'){const rv=O.find(o=>o.id==='rev');if(h.id==='wh'||fear>=rv.u)use(h);else say('Reveal locked until fear 55%')}else use(h)}});
+const T=document.getElementById('t');
+[['◀','ArrowLeft'],['▶','ArrowRight']].forEach(([s,k])=>{const b=document.createElement('button');b.textContent=s;b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false));T.appendChild(b)});
+const sb=document.createElement('button');sb.textContent='START';sb.onclick=start;T.appendChild(sb);
+let last=performance.now();(function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;update(dt);render();requestAnimationFrame(loop)})(last);
+setInterval(()=>{if(S==='play'&&R()<.3)tone(40+R()*30,1.5,'sine',.03)},2000);
+</script></body></html>

@@ -1,0 +1,954 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Room Remembers</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=IM+Fell+English:ital@0;1&family=Reenie+Beanie&display=swap" rel="stylesheet">
+<style>
+/* Layout: one framed wall-view (you stand in the middle and turn) over a typewriter caption strip, then turn controls and pocket items. Overlays hold title, keypad, name prompt, journal and endings. Single dark look by choice: the lamp is the only warm thing. */
+:root{
+  --bg:#0a0907; --panel:#13100c; --ink:#d8cdb4; --dim:#8b8068; --lamp:#e6a54b; --rust:#9a3b2b; --line:#2b251c;--rustText:#c4523d; --field:#050403;
+  --display:'IM Fell English',Georgia,'Times New Roman',serif;
+  --body:'Courier Prime','Courier New',monospace;
+  --scrawl:'Reenie Beanie','Comic Sans MS',cursive;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 24px}
+#app{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap}
+h1{margin:0;font:400 1.7rem/1.1 var(--display);letter-spacing:.02em;text-wrap:balance}
+#hud{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#visit{color:var(--dim);font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;margin-right:4px}
+button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);padding:8px 14px;cursor:pointer;min-height:40px}
+button:hover{border-color:var(--lamp);color:var(--lamp)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+button:disabled{opacity:.4;cursor:default}
+#stage{position:relative;width:100%;aspect-ratio:8/5;background:var(--field);border:1px solid var(--line);overflow:hidden;touch-action:manipulation}
+#c{display:block;width:100%;height:100%}
+#wallTag{position:absolute;left:12px;top:10px;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);pointer-events:none;text-shadow:0 0 4px #000}
+#hover{position:absolute;right:12px;top:10px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--lamp);pointer-events:none;text-shadow:0 0 4px #000;opacity:.9}
+#objective{font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);min-height:1.4em;display:flex;gap:10px;flex-wrap:wrap}
+#objective b{color:var(--lamp);font-weight:700}
+#caption{min-height:5.2em;padding:10px 2px 0;border-top:1px solid var(--line);color:var(--ink);font-size:1rem;max-width:68ch}
+#caption.dim{color:var(--dim)}
+.intr{color:var(--rustText);font-style:italic}
+#notes li.alien{color:var(--rustText);font-style:italic}
+#notes li.gone{color:var(--dim);letter-spacing:.15em}
+#controls{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+#inv{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-height:40px;align-items:center}
+.chip{font-size:.8rem;padding:6px 10px;min-height:32px;border-color:var(--dim);color:var(--ink)}
+.empty{color:var(--dim);font-size:.8rem;letter-spacing:.08em}
+@media (max-width:620px){#controls{grid-template-columns:1fr 1fr}#inv{grid-column:1/-1;order:3}h1{font-size:1.4rem}}
+.overlay{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgba(5,4,3,.94);
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow:auto}
+.sheet{width:min(560px,100%);display:flex;flex-direction:column;gap:14px}
+.sheet h2{margin:0;font:400 2.6rem/1.05 var(--display);text-wrap:balance}
+.sheet h3{margin:0;font:400 1.3rem/1.2 var(--display);color:var(--lamp)}
+.sheet p{margin:0;color:var(--ink);max-width:62ch}
+.sheet .small{color:var(--dim);font-size:.85rem}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.primary{border-color:var(--lamp);color:var(--lamp)}
+#pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:260px}
+#pad button{min-height:52px;font-size:1.2rem}
+#padShow{font:700 2.2rem/1 var(--body);letter-spacing:.4em;color:var(--lamp);min-height:1.2em}
+#nameIn{font:700 1.6rem var(--body);letter-spacing:.2em;text-transform:uppercase;background:var(--field);color:var(--ink);border:1px solid var(--dim);padding:10px 12px;width:100%}
+#notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+#notes li{padding:8px 0;border-bottom:1px solid var(--line)}
+#mem{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;color:var(--dim);font-size:.9rem}
+#mem b{color:var(--ink);font-weight:400}
+#intText p,#endText p{opacity:0;animation:rise 2.4s ease forwards;font-size:1.05rem}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#intText p,#endText p{animation:none;opacity:1}}
+</style>
+
+<div id="app">
+  <header>
+    <h1>The Room Remembers</h1>
+    <div id="hud">
+      <span id="visit">Chapter I</span>
+      <button id="btnJournal" type="button">Journal</button>
+      <button id="btnSound" type="button" aria-pressed="true">Sound on</button>
+    </div>
+  </header>
+  <div id="objective"><b>Objective</b><span id="objText"></span></div>
+  <div id="stage">
+    <canvas id="c" width="960" height="600" aria-label="The room, seen from the middle of the floor"></canvas>
+    <div id="wallTag"></div><div id="hover"></div>
+  </div>
+  <div id="caption" aria-live="polite"></div>
+  <div id="controls">
+    <button id="turnL" type="button">&#9664; Turn left</button>
+    <div id="inv"></div>
+    <button id="turnR" type="button">Turn right &#9654;</button>
+  </div>
+</div>
+
+<div id="title" class="overlay">
+  <div class="sheet">
+    <h2>The Room Remembers</h2>
+    <p>You wake on a bed in a room you do not know. There is a door. It is locked.</p>
+    <p>Look around. Turn with the buttons or the arrow keys. Click what you want to touch. The Objective line above the room tells you what to do next.</p>
+    <p class="small">Four chapters. Whatever you look at, touch, or ignore is kept. Headphones help. The Journal keeps what you learn, because the room will not.</p>
+    <div class="row"><button id="btnStart" class="primary" type="button">Open your eyes</button></div>
+  </div>
+</div>
+
+<div id="intOv" class="overlay" hidden>
+  <div class="sheet">
+    <p id="intKick" class="small"></p>
+    <h2 id="intTitle"></h2>
+    <div id="intText" class="sheet"></div>
+    <div class="row"><button id="intGo" class="primary" type="button" hidden>Continue</button></div>
+  </div>
+</div>
+
+<div id="padOv" class="overlay" hidden>
+  <div class="sheet">
+    <h3>Desk drawer</h3>
+    <p class="small">A four digit lock. The brass is worn on every number.</p>
+    <div id="padShow">&nbsp;</div>
+    <div id="pad"></div>
+    <div class="row"><button id="padClose" type="button">Step back</button></div>
+  </div>
+</div>
+
+<div id="nameOv" class="overlay" hidden>
+  <div class="sheet">
+    <h3>The wardrobe</h3>
+    <p>Something on the other side is holding very still. It is waiting for you to say it.</p>
+    <form id="nameForm" class="sheet" autocomplete="off">
+      <label for="nameIn" class="small">Say her name</label>
+      <input id="nameIn" maxlength="12" spellcheck="false">
+      <div class="row"><button class="primary" type="submit">Say it</button><button id="nameClose" type="button">Not yet</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="jOv" class="overlay" hidden>
+  <div class="sheet">
+    <h3>Journal</h3>
+    <p class="small">Written by you, in the margin of the room's attention. Rooms forget nothing. You forget everything. Write it down.</p>
+    <ul id="notes"></ul>
+    <h3>Fragments</h3>
+    <div id="frags" class="sheet"><p class="small">Nothing yet. They arrive when the room is ready.</p></div>
+    <h3>What the room remembers about you</h3>
+    <ul id="mem"></ul>
+    <div class="row"><button id="jClose" type="button">Close</button></div>
+  </div>
+</div>
+
+<div id="endOv" class="overlay" hidden>
+  <div class="sheet">
+    <h2 id="endTitle"></h2>
+    <div id="endText" class="sheet"></div>
+    <div class="row"><button id="btnAgain" class="primary" type="button" hidden>Wake up again</button></div>
+  </div>
+</div>
+<script>
+/* ===== CORE ===== */
+const W=960,H=600,FY=440;
+const $=id=>document.getElementById(id);
+const cv=$('c'),cx=cv.getContext('2d');
+const WALLS=['North wall','East wall','South wall','West wall'];
+const NAMES={door:'the door',paintA:'the house painting',paintB:'the portrait',lamp:'the lamp',clock:'the clock',drawer:'the drawer',
+  notebook:'the notebook',tape:'the cassette player',bed:'the bed',wardrobe:'the wardrobe',shelf:'the bookshelf',vent:'the vent',
+  dresser:'the dresser',cassette:'the cassette',drawing:'the drawing',doorghost:'the wall',odd:'the object'};
+let S;
+function fresh(){return{
+  wall:0,loop:0,dread:0,time:0,turns:0,changes:0,turnsL:0,turnsR:0,
+  gaze:{},touched:{},visits:[1,0,0,0],away:[0,0,0,0],
+  doorWall:0,doorState:'normal',doorUnlocked:false,hasKey:false,
+  paint:{a:0,b:0},lampDim:0,lampOut:0,clockHere:true,clockBack:0,
+  drawerOpen:false,keyInDrawer:true,photoInDrawer:true,
+  bedShift:0,dresser:null,shelf:true,
+  cassette:{spawned:false,have:false,played:false},drawing:{spawned:false,have:false},
+  odds:[],oddKinds:[0,1,2,3],stretch:[0,0,0,0],msgs:[],count:null,knock:0,
+  notes:[],inv:[],read:{photo:false,twist:false},playing:false,ended:false,blinkAt:14,flick:0,wardrobeOpen:false,blinkAlpha:0,whiteout:0,whiteTarget:0,bl:null,stare:{id:null,t:0},pendingStare:null,busy:false,oid:0,idle:0,alien:[],jOpen:0,tagGlitch:0,hudGlitch:0,idleHit:0,ch:1,frags:[],nbc:{},wrongNames:0,beats:{},intCb:null
+};}
+S=fresh();
+function addNote(t){if(!S.notes.includes(t)){S.notes.push(t);toast()}}
+function toast(){const b=$('btnJournal');b.textContent='Journal •';setTimeout(()=>b.textContent='Journal',2500)}
+function addInv(k){if(!S.inv.includes(k)){S.inv.push(k);renderInv()}}
+function dropInv(k){S.inv=S.inv.filter(x=>x!==k);renderInv()}
+function rnd(a,b){return a+Math.random()*(b-a)}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function gz(...ids){return ids.reduce((s,i)=>s+(S.gaze[i]||0),0)}
+
+/* ===== CAPTION ===== */
+let capTimer=null,capFull='',intrT=null;
+function finishCap(t,noIntr){
+  const el=$('caption');el.textContent=t;
+  if(!noIntr&&S&&Math.random()<clamp((S.dread-18)/110,0,.5))intrT=setTimeout(()=>{
+    const s=document.createElement('span');s.className='intr';s.textContent=' '+intr();el.appendChild(s);if(Math.random()<.5)sfx('whisper')},rnd(1100,2600));
+}
+function say(t,dim,noIntr){
+  clearInterval(capTimer);clearTimeout(intrT);capFull=t;const el=$('caption');el.classList.toggle('dim',!!dim);el.textContent='';let i=0;
+  capTimer=setInterval(()=>{i+=2;el.textContent=t.slice(0,i);if(i>=t.length){clearInterval(capTimer);finishCap(t,noIntr)}},16);
+}
+$('caption').addEventListener('click',()=>{if(capTimer){clearInterval(capTimer);capTimer=null;finishCap(capFull,true)}});
+
+/* ===== AUDIO ===== */
+const A={ctx:null,on:true,master:null,drone:null,filt:null,gainD:null,noise:null,hbT:0};
+function audioStart(){
+  if(A.ctx||!(window.AudioContext||window.webkitAudioContext))return;
+  try{
+    const c=A.ctx=new (window.AudioContext||window.webkitAudioContext)();
+    A.master=c.createGain();A.master.gain.value=A.on?.9:0;A.master.connect(c.destination);
+    const nb=c.createBuffer(1,c.sampleRate*2,c.sampleRate),d=nb.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;A.noise=nb;
+    A.filt=c.createBiquadFilter();A.filt.type='lowpass';A.filt.frequency.value=160;
+    A.gainD=c.createGain();A.gainD.gain.value=.07;
+    [55,55.6,82.7].forEach((f,i)=>{const o=c.createOscillator();o.type=i<2?'sawtooth':'sine';o.frequency.value=f;
+      const g=c.createGain();g.gain.value=i<2?.5:.25;o.connect(g).connect(A.filt);o.start()});
+    A.filt.connect(A.gainD).connect(A.master);
+    const ns=c.createBufferSource();ns.buffer=nb;ns.loop=true;const bp=c.createBiquadFilter();bp.type='bandpass';bp.frequency.value=380;bp.Q.value=.6;
+    const ng=c.createGain();ng.gain.value=.012;ns.connect(bp).connect(ng).connect(A.master);ns.start();
+    const hum=c.createOscillator();hum.type='sine';hum.frequency.value=120;A.hum=c.createGain();A.hum.gain.value=.012;hum.connect(A.hum).connect(A.master);hum.start();
+  }catch(e){A.ctx=null}
+}
+function audioDread(){
+  if(!A.ctx)return;const d=S.dread/100;
+  A.filt.frequency.setTargetAtTime(150+d*420,A.ctx.currentTime,2);
+  A.gainD.gain.setTargetAtTime(.06+d*.12,A.ctx.currentTime,2);
+}
+function panFor(w){const r=(w-S.wall+4)%4;return{pan:r===1?.8:r===3?-.8:0,vol:r===0?1:r===2?.55:.8,dull:r===2}}
+function out(w){
+  const c=A.ctx,p=panFor(w==null?S.wall:w),g=c.createGain(),pn=c.createStereoPanner?c.createStereoPanner():null;
+  g.gain.value=p.vol;let n=g;if(p.dull){const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=900;g.connect(f);n=f}
+  if(pn){pn.pan.value=p.pan;n.connect(pn).connect(A.master)}else n.connect(A.master);return g;
+}
+function nz(dest,t,dur,type,f0,f1,q,vol){
+  const c=A.ctx,s=c.createBufferSource();s.buffer=A.noise;s.loop=true;
+  const f=c.createBiquadFilter();f.type=type;f.Q.value=q;f.frequency.setValueAtTime(f0,t);f.frequency.linearRampToValueAtTime(f1,t+dur);
+  const g=c.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+dur*.2);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(f).connect(g).connect(dest);s.start(t,Math.random());s.stop(t+dur+.05);
+}
+function tone(dest,t,dur,f,vol,type){
+  const c=A.ctx,o=c.createOscillator();o.type=type||'sine';o.frequency.value=f;const g=c.createGain();
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(dest);o.start(t);o.stop(t+dur+.05);
+}
+const SFX={
+  creak(w){const t=A.ctx.currentTime,o=out(w);nz(o,t,rnd(.7,1.3),'bandpass',rnd(250,400),rnd(600,1000),9,.35)},
+  knock(w,n){const t=A.ctx.currentTime,o=out(w);for(let i=0;i<(n||3);i++){const tt=t+i*rnd(.28,.4);tone(o,tt,.18,rnd(70,95),.7);nz(o,tt,.08,'lowpass',500,200,1,.4)}},
+  whisper(w){const t=A.ctx.currentTime,o=out(w);nz(o,t,rnd(.9,1.6),'bandpass',rnd(1500,2200),rnd(2200,3200),10,.12)},
+  steps(w){const t=A.ctx.currentTime,o=out(w);for(let i=0;i<4;i++){const tt=t+i*.55;tone(o,tt,.14,rnd(55,70),.5);nz(o,tt,.1,'lowpass',300,150,1,.2)}},
+  drag(w){const t=A.ctx.currentTime,o=out(w);nz(o,t,1.1,'lowpass',200,380,2,.5);tone(o,t,1.1,48,.25,'sawtooth')},
+  click(w){const t=A.ctx.currentTime,o=out(w);tone(o,t,.07,1800,.2,'square');tone(o,t+.09,.12,900,.2,'square')},
+  box(w){const t=A.ctx.currentTime,o=out(w),n=[392,330,294,262,247,196,0,262];n.forEach((f,i)=>f&&tone(o,t+i*.5+rnd(0,.03),1.3,f*(1-S.dread/900*(i%2)),.07,'triangle'))},
+  sweep(){const t=A.ctx.currentTime,o=out(S.wall);nz(o,t,2.5,'bandpass',200,2000,3,.2)},
+  breath(w,near){const t=A.ctx.currentTime,o=out(w),v=near?.2:.07;nz(o,t,1.5,'bandpass',500,900,2,v);nz(o,t+1.9,1.9,'bandpass',900,450,2,v*.9)},
+  thud(w){const t=A.ctx.currentTime,o=out(w);tone(o,t,.5,45,.9);nz(o,t,.2,'lowpass',250,80,1,.5)}
+};
+function sfx(n,w,a){if(A.ctx&&A.on&&SFX[n])try{SFX[n](w,a)}catch(e){}}
+function heartbeat(){
+  if(!A.ctx||!A.on||S.dread<55||S.ended)return;
+  const t=A.ctx.currentTime,o=A.master;tone(o,t,.16,52,.35*(S.dread/100));tone(o,t+.2,.14,46,.28*(S.dread/100));
+}
+setInterval(heartbeat,1100);
+setInterval(()=>{
+  if(!A.ctx||!A.on||!S||S.ended||paused||S.dread<15)return;
+  const near=S.idle>8;sfx('breath',near?S.wall:(S.wall+2)%4,near);
+},4600);
+$('btnSound').addEventListener('click',()=>{
+  A.on=!A.on;$('btnSound').textContent=A.on?'Sound on':'Sound off';$('btnSound').setAttribute('aria-pressed',A.on);
+  if(A.master)A.master.gain.value=A.on?.9:0;audioStart();
+});
+/* ===== RENDER ===== */
+const lerp=(a,b,t)=>a+(b-a)*t;
+const hexRGB=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+function mix(a,b,t){const A_=hexRGB(a),B_=hexRGB(b);return 'rgb('+A_.map((v,i)=>Math.round(lerp(v,B_[i],t))).join(',')+')'}
+let HS=[];
+function hs(id,x,y,w,h,extra){HS.push(Object.assign({id,x,y,w,h},extra||{}))}
+let grain=null;
+(function(){const g=document.createElement('canvas');g.width=g.height=200;const c=g.getContext('2d'),im=c.createImageData(200,200);
+  for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255}c.putImageData(im,0,0);grain=g})();
+const SCRAWL="'Reenie Beanie','Comic Sans MS',cursive";
+let seed=7;const sr=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const E=100; /* overdraw so stretched or wobbling walls never show a black edge */
+
+function shell(w){
+  const d=S.dread/100;
+  const base=mix(mix('#7a6c44','#4b513f',clamp(d*1.7,0,1)),'#41302c',clamp((d-.55)*2.2,0,1));
+  cx.fillStyle=base;cx.fillRect(-E,-E,W+2*E,FY+E);
+  cx.fillStyle='rgba(0,0,0,.09)';for(let x=-E-(-E%48);x<W+E;x+=48)cx.fillRect(x,-E,22,FY+E);
+  const st=cx.createRadialGradient(150+w*230,90,10,150+w*230,90,260);st.addColorStop(0,'rgba(20,10,0,.3)');st.addColorStop(1,'rgba(20,10,0,0)');
+  cx.fillStyle=st;cx.fillRect(0,0,W,FY);
+  cx.fillStyle='rgba(0,0,0,.4)';cx.fillRect(-E,-E,W+2*E,E+26);
+  cx.fillStyle='rgba(255,230,180,.08)';cx.fillRect(-E,26,W+2*E,3);
+  cx.fillStyle=mix('#38291c','#1f1c17',d);cx.fillRect(-E,330,W+2*E,FY-330);
+  cx.strokeStyle='rgba(0,0,0,.45)';cx.lineWidth=2;for(let x=-90;x<W+E;x+=130)cx.strokeRect(x,348,100,72);
+  cx.fillStyle='rgba(255,230,180,.14)';cx.fillRect(-E,326,W+2*E,5);
+  cx.fillStyle='#1a120b';cx.fillRect(-E,FY-12,W+2*E,16);cx.fillStyle='rgba(255,230,180,.08)';cx.fillRect(-E,FY-12,W+2*E,2);
+  const fg=cx.createLinearGradient(0,FY,0,H+E);fg.addColorStop(0,mix('#3a2c1d','#262119',d));fg.addColorStop(1,'#120d09');
+  cx.fillStyle=fg;cx.fillRect(-E,FY+4,W+2*E,H-FY+E);
+  cx.strokeStyle='rgba(0,0,0,.4)';cx.lineWidth=2;
+  for(let i=-12;i<=12;i++){cx.beginPath();cx.moveTo(480+i*150,H+E);cx.lineTo(480+i*72,FY+4);cx.stroke()}
+  [470,505,555].forEach(y=>{cx.beginPath();cx.moveTo(-E,y);cx.lineTo(W+E,y);cx.stroke()});
+}
+function frame(x,y,w,h){cx.fillStyle='#160f09';cx.fillRect(x-9,y-9,w+18,h+18);cx.strokeStyle='#8d6d36';cx.lineWidth=3;cx.strokeRect(x-6,y-6,w+12,h+12)}
+
+/* door geometry shared by drawing and message layout */
+function doorRect(){const dw=S.doorWall,bx=dw===0?385:40,bw=dw===0?190:130;return{bx,bw,y:120}}
+function drawDoor(){
+  if(S.wall!==S.doorWall)return;
+  const {bx,bw,y}=doorRect(),h=FY-y,d=S.dread/100;
+  const w=S.doorState==='narrow'?bw*.6:bw,x=bx+(bw-w)/2;
+  if(S.doorState==='gone'){
+    cx.fillStyle='rgba(255,240,200,.05)';cx.fillRect(bx,y,bw,h);cx.strokeStyle='rgba(0,0,0,.25)';cx.lineWidth=1;cx.strokeRect(bx,y,bw,h);
+    hs('doorghost',bx,y,bw,h);return;
+  }
+  cx.fillStyle='#120c07';cx.fillRect(x-10,y-10,w+20,h+10);
+  cx.fillStyle=mix('#5a3e2d','#2f231c',d);cx.fillRect(x,y,w,h);
+  cx.strokeStyle='rgba(0,0,0,.5)';cx.lineWidth=3;
+  cx.strokeRect(x+w*.14,y+18,w*.72,h*.3);cx.strokeRect(x+w*.14,y+h*.42,w*.72,h*.5);
+  cx.fillStyle='#b09450';cx.beginPath();cx.arc(x+w-w*.16,y+h*.55,7,0,7);cx.fill();
+  cx.fillStyle='#2a2116';cx.fillRect(x+w-w*.22,y+h*.6,w*.12,26);cx.fillStyle='#050302';cx.beginPath();cx.arc(x+w-w*.16,y+h*.6+9,3,0,7);cx.fill();cx.fillRect(x+w-w*.16-1.5,y+h*.6+9,3,10);
+  cx.fillStyle=S.doorUnlocked?'rgba(255,235,180,.95)':'rgba(255,225,160,.55)';cx.fillRect(x+3,FY-6,w-6,S.doorUnlocked?5:3);
+  hs('door',x-8,y-8,w+16,h+8);
+  if(S.dresser){
+    const dx=bx-25,dwid=bw+50;cx.fillStyle='#2e2014';cx.fillRect(dx,290,dwid,FY-290);cx.fillStyle='#41301f';cx.fillRect(dx-6,284,dwid+12,14);
+    cx.strokeStyle='rgba(0,0,0,.6)';cx.lineWidth=2;for(let r=0;r<3;r++){cx.strokeRect(dx+10,306+r*44,dwid-20,38);cx.fillStyle='#a58a4a';cx.fillRect(dx+dwid/2-12,322+r*44,24,5)}
+    hs('dresser',dx-6,284,dwid+12,FY-284);
+  }
+}
+/* Painting of the house. It never shows a creature: it shows the player's own room, then the player. */
+function paintA(x,y,w,h,lv){
+  cx.save();cx.translate(x+w/2,y+h/2);cx.rotate(lv>=3?-.13:lv*.015);cx.translate(-w/2,-h/2);
+  frame(0,0,w,h);cx.save();cx.beginPath();cx.rect(0,0,w,h);cx.clip();
+  if(lv>=4){
+    cx.fillStyle='#0a0705';cx.fillRect(0,0,w,h);
+    const lx=w*.26,lw=w*.48,fy=h*.74;
+    const g=cx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#5a4a30');g.addColorStop(1,'#8a6a3a');cx.fillStyle=g;cx.fillRect(lx,h*.06,lw,h*.88);
+    cx.fillStyle='#3a2a1a';cx.fillRect(lx,fy,lw,h-fy);
+    cx.fillStyle='#6b6048';cx.fillRect(lx+lw*.08,h*.5,lw*.3,h*.1);cx.fillStyle='#1f1a14';cx.fillRect(lx+lw*.08,h*.58,lw*.3,3);
+    cx.fillStyle='#120d09';cx.beginPath();cx.arc(w*.5,h*.4,w*.038,0,7);cx.fill();
+    cx.beginPath();cx.moveTo(w*.5-w*.06,fy);cx.lineTo(w*.5-w*.045,h*.46);cx.lineTo(w*.5+w*.045,h*.46);cx.lineTo(w*.5+w*.06,fy);cx.fill();
+    cx.fillStyle='#050302';cx.fillRect(0,0,lx,h);cx.fillRect(lx+lw,0,w-lx-lw,h);
+  }else{
+    const g=cx.createLinearGradient(0,0,0,h);g.addColorStop(0,lv>=3?'#3a1d1d':'#34344a');g.addColorStop(1,lv>=3?'#8a3a2a':'#8d5b3a');cx.fillStyle=g;cx.fillRect(0,0,w,h);
+    cx.fillStyle='#1a2418';cx.beginPath();cx.ellipse(w/2,h+10,w*.7,h*.38,0,0,7);cx.fill();
+    const hh=h*(.34+(lv>=2?.12:0)),top=h*.7-hh;cx.fillStyle='#120e0c';cx.fillRect(w*.38,top,w*.24,hh);
+    cx.beginPath();cx.moveTo(w*.35,top);cx.lineTo(w*.5,top-h*.14);cx.lineTo(w*.65,top);cx.fill();
+    cx.fillStyle='#f0b84e';cx.fillRect(w*.46,top+8,w*.08,h*.1);
+    if(lv>=1)cx.fillRect(w*.41,top+8,w*.04,h*.1);
+    if(lv>=2){cx.fillRect(w*.55,top+8,w*.04,h*.1);cx.fillRect(w*.43,top+hh*.55,w*.06,h*.08);cx.fillRect(w*.51,top+hh*.55,w*.06,h*.08)}
+    if(lv>=3){cx.fillStyle='#d8d0b4';cx.fillRect(w*.46,top+hh*.55,w*.08,h*.05);cx.fillStyle='#8a8f86';cx.fillRect(w*.46+4,top+hh*.55+2,w*.06,h*.03)}
+  }
+  cx.restore();cx.restore();
+}
+/* The portrait: a child counting, face to the wall. She grows to match the sleeper on the bed. */
+function paintB(x,y,w,h,lv){
+  frame(x,y,w,h);cx.save();cx.beginPath();cx.rect(x,y,w,h);cx.clip();
+  const g=cx.createLinearGradient(0,y,0,y+h);g.addColorStop(0,'#33352f');g.addColorStop(1,'#1d1e1a');cx.fillStyle=g;cx.fillRect(x,y,w,h);
+  if(lv>=2){cx.strokeStyle='rgba(210,200,170,.55)';cx.lineWidth=1.5;const n=Math.min(12,(lv-1)*4);
+    for(let i=0;i<n;i++){const gx=x+14+Math.floor(i/5)*20,k=i%5;cx.beginPath();if(k<4){cx.moveTo(gx+k*3,y+22);cx.lineTo(gx+k*3,y+44)}else{cx.moveTo(gx-2,y+42);cx.lineTo(gx+11,y+24)}cx.stroke()}}
+  const gr=lv>=3?1.2:1,mx=x+w/2,tilt=Math.sin(S.time*.5)*.03*Math.min(lv,2),body=lv>=3?'#6f726c':'#5a3a30';
+  cx.fillStyle=body;cx.beginPath();cx.ellipse(mx,y+h+6,w*.36*gr,h*.24*gr,0,Math.PI,0);cx.fill();
+  cx.save();cx.translate(mx,y+h*.5);cx.rotate(tilt);
+  cx.fillStyle='#18130f';cx.beginPath();cx.ellipse(0,0,w*.15*gr,h*.14*gr,0,0,7);cx.fill();
+  if(lv>=4){cx.fillStyle='#c9bfa4';cx.beginPath();cx.ellipse(w*.11,w*.02,w*.035,h*.07,.2,0,7);cx.fill()}
+  cx.restore();
+  cx.strokeStyle=body;cx.lineCap='round';cx.lineWidth=10*gr;
+  if(lv<4){cx.beginPath();cx.moveTo(mx-w*.26*gr,y+h*.88);cx.lineTo(mx-w*.2,y+h*.5);cx.lineTo(mx-w*.07,y+h*.4);cx.moveTo(mx+w*.26*gr,y+h*.88);cx.lineTo(mx+w*.2,y+h*.5);cx.lineTo(mx+w*.07,y+h*.4);cx.stroke()}
+  else{cx.beginPath();cx.moveTo(mx-w*.26*gr,y+h*.88);cx.lineTo(mx-w*.3,y+h*1.05);cx.moveTo(mx+w*.26*gr,y+h*.88);cx.lineTo(mx+w*.3,y+h*1.05);cx.stroke()}
+  cx.restore();
+}
+function drawWall0(){
+  paintA(100,100,170,130,S.paint.a);hs('paintA',90,92,190,146);
+  if(S.cassette.spawned&&!S.cassette.have){cx.save();cx.translate(150,488);cx.scale(1.3,1.3);cx.fillStyle='#1a1712';cx.fillRect(0,0,46,28);cx.fillStyle='#8a7f69';cx.fillRect(5,5,36,12);
+    cx.fillStyle='#0a0907';cx.beginPath();cx.arc(15,11,4,0,7);cx.arc(31,11,4,0,7);cx.fill();cx.restore();hs('cassette',142,482,70,44)}
+}
+function clockFace(){
+  const x=480,y=170,r=52;
+  if(!S.clockHere){cx.strokeStyle='rgba(255,240,200,.1)';cx.lineWidth=2;cx.beginPath();cx.arc(x,y,r,0,7);cx.stroke();hs('clockghost',x-r,y-r,r*2,r*2);return}
+  cx.fillStyle='#17110c';cx.beginPath();cx.arc(x,y,r+7,0,7);cx.fill();cx.fillStyle='#cfc4a6';cx.beginPath();cx.arc(x,y,r,0,7);cx.fill();
+  cx.strokeStyle='#241c14';cx.lineWidth=2;for(let i=0;i<12;i++){const a=i/12*6.283;cx.beginPath();cx.moveTo(x+Math.cos(a)*(r-9),y+Math.sin(a)*(r-9));cx.lineTo(x+Math.cos(a)*(r-3),y+Math.sin(a)*(r-3));cx.stroke()}
+  const ha=((3+17/60)/12)*6.283-1.5708,ma=(17/60)*6.283-1.5708;cx.lineWidth=4;
+  cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+Math.cos(ha)*r*.5,y+Math.sin(ha)*r*.5);cx.stroke();cx.lineWidth=2.5;
+  cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+Math.cos(ma)*r*.78,y+Math.sin(ma)*r*.78);cx.stroke();
+  const sa=S.dread>40?-S.time*3:-1.5708+Math.sin(S.time*30)*.02;cx.strokeStyle='#7a2c20';cx.lineWidth=1;
+  cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+Math.cos(sa)*r*.85,y+Math.sin(sa)*r*.85);cx.stroke();
+  hs('clock',x-r-6,y-r-6,r*2+12,r*2+12);
+}
+function drawWall1(){
+  clockFace();
+  const top=326;
+  cx.fillStyle='#120c07';cx.fillRect(284,366,596,74);          /* knee space */
+  cx.fillStyle='#2f2217';cx.fillRect(262,top+18,636,24);       /* apron */
+  cx.fillRect(262,top+18,18,114);cx.fillRect(880,top+18,18,114); /* legs */
+  cx.fillStyle='#3f2e1d';cx.fillRect(250,top,660,18);cx.fillStyle='rgba(255,230,180,.14)';cx.fillRect(250,top,660,3);
+  if(S.drawerOpen){cx.fillStyle='#0b0805';cx.fillRect(292,368,216,14);cx.fillStyle='#46331f';cx.fillRect(284,382,232,56);cx.fillStyle='#050302';cx.fillRect(296,388,208,12)}
+  else{cx.fillStyle='#38291b';cx.fillRect(284,368,232,62)}
+  cx.strokeStyle='rgba(0,0,0,.6)';cx.lineWidth=2;cx.strokeRect(284,S.drawerOpen?382:368,232,S.drawerOpen?56:62);
+  cx.fillStyle='#b09450';cx.fillRect(388,(S.drawerOpen?382:368)+22,24,6);hs('drawer',284,366,232,74);
+  cx.fillStyle='#4a2a22';cx.beginPath();cx.moveTo(545,top);cx.lineTo(650,top);cx.lineTo(640,top-14);cx.lineTo(555,top-14);cx.fill();
+  cx.fillStyle='#d9cfb4';cx.fillRect(560,top-12,76,10);hs('notebook',545,top-18,108,22);
+  cx.fillStyle='#1b1712';cx.fillRect(670,top-32,86,32);cx.fillStyle='#403a30';cx.fillRect(678,top-27,70,12);
+  cx.fillStyle='#0a0907';cx.beginPath();cx.arc(695,top-21,4,0,7);cx.arc(731,top-21,4,0,7);cx.fill();hs('tape',665,top-38,96,40);
+  const lit=S.lampOut>0?0:clamp(1-S.lampDim,.1,1);
+  cx.fillStyle='#161009';cx.beginPath();cx.ellipse(822,top,36,7,0,0,7);cx.fill();cx.fillRect(819,250,6,76);
+  cx.fillStyle=mix('#2a2118','#f0b24a',lit);cx.beginPath();cx.moveTo(790,262);cx.lineTo(854,262);cx.lineTo(838,220);cx.lineTo(806,220);cx.fill();
+  hs('lamp',786,214,72,118);
+}
+function drawWall2(){
+  const wx=690,bx=210+S.bedShift*60,blocked=bx+400>wx+10;
+  if(S.knock>0){cx.save();cx.translate(Math.sin(S.time*80)*2,0)}
+  cx.fillStyle='#2a1c11';cx.fillRect(wx,130,160,FY-130);cx.fillStyle='#1d120a';cx.fillRect(wx-8,122,176,12);
+  cx.strokeStyle='#0a0603';cx.lineWidth=3;cx.strokeRect(wx+8,146,144,FY-170);cx.beginPath();cx.moveTo(wx+80,146);cx.lineTo(wx+80,FY-24);cx.stroke();
+  if(S.wardrobeOpen){cx.fillStyle='#fff3d0';cx.fillRect(wx+10,148,140,FY-174)}
+  cx.fillStyle='#a58a4a';cx.fillRect(wx+68,260,6,26);cx.fillRect(wx+86,260,6,26);
+  cx.fillStyle='#120b06';cx.fillRect(wx+4,FY-24,16,24);cx.fillRect(wx+140,FY-24,16,24);
+  if(S.knock>0)cx.restore();
+  if(!blocked)hs('wardrobe',wx-8,122,176,FY-122);
+  /* bed, seen from the side: headboard left, footboard right */
+  const hv=S.dread>35;
+  cx.fillStyle='#24180e';cx.fillRect(bx,296,16,144);cx.fillRect(bx+386,352,14,88);
+  cx.fillStyle='#2f2013';cx.fillRect(bx+16,392,370,14);cx.fillStyle='#1b110a';cx.fillRect(bx+16,406,370,34);
+  cx.fillStyle='#d4cbb0';cx.fillRect(bx+16,362,370,32);
+  cx.fillStyle='rgba(0,0,0,.18)';cx.fillRect(bx+16,388,370,6);
+  cx.fillStyle='#7f857c';cx.beginPath();cx.moveTo(hv?bx+210:bx+130,356);cx.lineTo(bx+386,356);cx.lineTo(bx+386,396);cx.lineTo(hv?bx+196:bx+120,396);cx.closePath();cx.fill();
+  cx.strokeStyle='rgba(0,0,0,.25)';cx.lineWidth=2;for(let i=0;i<4;i++){cx.beginPath();cx.moveTo(bx+170+i*52,358);cx.lineTo(bx+160+i*52,394);cx.stroke()}
+  if(hv){cx.fillStyle='#d4cbb0';cx.beginPath();cx.moveTo(bx+210,356);cx.lineTo(bx+196,396);cx.lineTo(bx+150,376);cx.closePath();cx.fill()}
+  cx.fillStyle='#ddd5bb';cx.beginPath();cx.ellipse(bx+66,352,48,13,0,0,7);cx.fill();
+  cx.fillStyle='rgba(0,0,0,.2)';cx.beginPath();cx.ellipse(bx+62,354,28,8,0,0,7);cx.fill();
+  if(S.dread>70){cx.fillStyle='rgba(0,0,0,.17)';cx.beginPath();cx.ellipse(bx+112,355,15,5,0,0,7);cx.fill()}
+  hs('bed',bx-4,292,410,150);
+}
+function drawWall3(){
+  const dd=S.dread/100,sx0=215,sw=285;
+  if(S.shelf){
+    cx.fillStyle='#26190f';cx.fillRect(sx0,118,sw,FY-118);
+    cx.save();cx.beginPath();cx.rect(sx0+8,126,sw-16,FY-142);cx.clip();
+    seed=11;for(let r=0;r<4;r++){const y=134+r*76;cx.fillStyle='#120b06';cx.fillRect(sx0+8,y+60,sw-16,8);
+      let x=sx0+14;while(x<sx0+sw-14){const bw=8+sr()*12,bh=34+sr()*24;cx.fillStyle=mix(['#5a2a22','#2c3a40','#4a4326','#3a2a44'][Math.floor(sr()*4)],'#1c1a17',dd*.6);cx.fillRect(x,y+60-bh,bw,bh);x+=bw+2}}
+    cx.restore();hs('shelf',sx0,118,sw,FY-118);
+  }else{
+    cx.fillStyle='rgba(255,240,200,.07)';cx.fillRect(sx0,118,sw,FY-118);
+    if(S.drawing.spawned&&!S.drawing.have){cx.save();cx.translate(352,250);cx.rotate(-.03);cx.fillStyle='#d8d0b8';cx.fillRect(-70,-52,140,104);
+      cx.strokeStyle='#7a2c20';cx.lineWidth=2;cx.beginPath();cx.moveTo(-30,20);cx.lineTo(-30,-4);cx.moveTo(30,20);cx.lineTo(30,-14);
+      cx.moveTo(-30,5);cx.lineTo(30,5);cx.stroke();cx.beginPath();cx.arc(-30,-12,7,0,7);cx.arc(30,-22,5,0,7);cx.stroke();
+      cx.strokeRect(-56,-44,26,38);cx.restore();hs('drawing',272,196,160,110)}
+  }
+  paintB(620,100,130,170,S.paint.b);hs('paintB',610,90,150,190);
+  cx.fillStyle='#0c0907';cx.fillRect(790,372,86,64);cx.fillStyle='#2e2d29';
+  for(let i=0;i<6;i++){const o=S.dread>50?Math.sin(S.time*1.5+i)*3:0;cx.fillRect(794+o,378+i*10,78,5)}
+  hs('vent',784,366,98,76);
+}
+function drawOdds(){
+  S.odds.filter(o=>o.wall===S.wall&&!o.gone).forEach(o=>{
+    cx.save();cx.translate(o.x,512);cx.scale(1.5,1.5);
+    if(o.kind===0){cx.fillStyle='#9a2e25';cx.fillRect(0,-14,26,14);cx.fillRect(16,-24,10,12);cx.fillStyle='#1a0d0a';cx.fillRect(0,0,28,4)}
+    if(o.kind===1){cx.fillStyle='#b24a2a';cx.beginPath();cx.arc(14,-12,14,0,7);cx.fill();cx.strokeStyle='#e0c9a6';cx.lineWidth=2;cx.beginPath();cx.arc(14,-12,14,.4,2.4);cx.stroke()}
+    if(o.kind===2){cx.fillStyle='#d1b24f';cx.beginPath();cx.moveTo(0,0);cx.lineTo(4,-22);cx.lineTo(13,-10);cx.lineTo(22,-22);cx.lineTo(26,0);cx.fill()}
+    if(o.kind===3){cx.fillStyle='rgba(60,80,100,.5)';cx.beginPath();cx.ellipse(16,0,24,7,0,0,7);cx.fill();cx.fillStyle='#7aa0b8';[0,14,26].forEach((dx,i)=>{cx.beginPath();cx.arc(6+dx,-3-i%2*2,5,0,7);cx.fill()})}
+    cx.restore();hs('odd',o.x-10,512-42,56,52,{oid:o.id});
+  });
+}
+
+/* ---- wall writing: wrapped, measured, kept inside free wall space, drawn behind furniture ---- */
+const ZONES=[
+  [[610,50,330,240],[40,245,330,66]],
+  [[40,50,390,250],[560,40,380,150]],
+  [[200,40,470,240],[40,40,150,70]],
+  [[215,36,390,74],[780,50,160,260],[40,36,170,74]]
+];
+function layoutMsg(m){
+  const zs=ZONES[m.wall].slice().sort(()=>Math.random()-.5);
+  let door=null;if(m.wall===S.doorWall){const d=doorRect();door={x:d.bx-30,y:d.y-14,w:d.bw+60,h:FY-d.y+14}}
+  for(const z of zs){
+    for(let size=m.size;size>=26;size-=4){
+      cx.font=size+'px '+SCRAWL;let lines=[''];
+      m.text.split(' ').forEach(wd=>{const t=(lines[lines.length-1]+' '+wd).trim();if(cx.measureText(t).width<=z[2]-12)lines[lines.length-1]=t;else lines.push(wd)});
+      const tw=Math.max(...lines.map(l=>cx.measureText(l).width)),th=lines.length*size*.9;
+      if(tw>z[2]-12||th>z[3]-4)continue;
+      for(let t=0;t<10;t++){
+        const x=z[0]+6+rnd(0,z[2]-12-tw),y=z[1]+size*.8+rnd(0,Math.max(0,z[3]-th-6));
+        if(door&&x<door.x+door.w&&x+tw>door.x&&y>door.y&&y-size<door.y+door.h)continue;
+        const y0=y-size,y1=y0+th+size*.2;
+        if(S.msgs.some(o=>o!==m&&o.wall===m.wall&&o.lines&&o.bw&&x<o.x+o.bw+14&&x+tw>o.x-14&&y0<o.y+o.bh-o.size+10&&y1>o.y-o.size-10))continue;
+        m.bw=tw;m.bh=th;
+        m.lines=lines;m.size=size;m.x=x;m.y=y;m.rot=rnd(-.035,.035);return m;
+      }
+    }
+  }
+  return null;
+}
+function newMsg(wall,text,size,extra){const m=layoutMsg(Object.assign({wall,text,size:size||44,born:S.time},extra||{}));if(m)S.msgs.push(m)}
+function drawMsgs(){
+  S.msgs.filter(m=>m.wall===S.wall).forEach(m=>{
+    cx.save();cx.translate(m.x,m.y);cx.rotate(m.rot);cx.font=m.size+'px '+SCRAWL;
+    cx.globalAlpha=clamp((S.time-m.born)/2.5,0,1)*.9;
+    (m.counter?[String(Math.max(0,Math.ceil(S.count)))]:m.lines).forEach((l,i)=>{
+      cx.fillStyle='rgba(0,0,0,.45)';cx.fillText(l,2,i*m.size*.9+2);cx.fillStyle=m.counter?'#8a2a1d':'#9a3426';cx.fillText(l,0,i*m.size*.9)});
+    cx.restore();
+  });
+}
+const WALLFN=[drawWall0,drawWall1,drawWall2,drawWall3];
+let sxT=1,syT=1;
+function render(){
+  HS=[];const d=S.dread/100,w=S.wall,st=S.stretch[w];
+  cx.setTransform(1,0,0,1,0,0);cx.fillStyle='#000';cx.fillRect(0,0,W,H);
+  sxT=1-st*.06+(d>.5?Math.sin(S.time*.9)*.004*d:0);syT=1+st*.22+(d>.4?Math.sin(S.time*.7)*.006*d:0);
+  cx.save();cx.translate(W/2,H/2);cx.scale(sxT,syT);cx.translate(-W/2,-H/2);
+  shell(w);drawMsgs();WALLFN[w]();drawDoor();drawOdds();cx.restore();
+  let lx=480,ly=250,r=620-d*200;if(w===1){lx=800;ly=300;r=520-d*160}
+  const b=(S.lampOut>0?.05:(1-S.lampDim*.8))*(1-S.flick);
+  const gl=cx.createRadialGradient(lx,ly,0,lx,ly,r);
+  gl.addColorStop(0,'rgba(8,4,0,'+(.02+(1-b)*.45)+')');gl.addColorStop(.45,'rgba(6,3,0,'+(.16+(1-b)*.4+d*.1)+')');gl.addColorStop(1,'rgba(1,0,0,'+(.72+d*.12)+')');
+  cx.fillStyle=gl;cx.fillRect(0,0,W,H);
+  cx.globalCompositeOperation='lighter';const am=cx.createRadialGradient(lx,ly,0,lx,ly,r*.7);am.addColorStop(0,'rgba(230,150,60,'+(.16*b)+')');am.addColorStop(1,'rgba(230,150,60,0)');
+  cx.fillStyle=am;cx.fillRect(0,0,W,H);cx.globalCompositeOperation='source-over';
+  cx.globalAlpha=.06;cx.drawImage(grain,Math.random()*-80,Math.random()*-80,W+80,H+80);cx.globalAlpha=1;
+  if(S.blinkAlpha>0){cx.fillStyle='rgba(0,0,0,'+S.blinkAlpha+')';cx.fillRect(0,0,W,H)}
+  if(S.whiteout>0){cx.fillStyle='rgba(255,246,220,'+S.whiteout+')';cx.fillRect(0,0,W,H)}
+}
+/* ===== STORY ===== */
+let paused=true;
+const CH={1:{name:'Locked',roman:'I',floor:0,cap:30},2:{name:'The Same Room',roman:'II',floor:30,cap:48},3:{name:'What She Drew',roman:'III',floor:48,cap:68},4:{name:'Ready or Not',roman:'IV',floor:68,cap:92}};
+const MSGQ={
+  1:['ELI','LOOK AT ME','DO NOT BLINK','STILL HERE'],
+  2:['THE DOOR WAS NEVER LOCKED','YOU WERE COUNTING','WHERE DID YOU GO','COME BACK TO THE ROOM'],
+  3:['READY OR NOT','YOU PROMISED','SHE IS BEING VERY GOOD','IT IS SO DARK IN HERE','YOU WENT TO WATCH THE GAME'],
+  4:['MARA','MARA IS WAITING','YOU STOPPED COUNTING','SAY IT','SHE CAN HEAR YOU BREATHING']
+};
+const FRAG={
+  1:{title:'July',lines:['It was July. The house smelled of cut grass and coats that had been kept too long.','Your sister had made a crown from paper and crayon and wore it all afternoon. "Queen of hiding," she said. "Nobody ever finds me."','"Count to a hundred," she said. "No peeking, Eli."']},
+  2:{title:'The Count',lines:['You went upstairs to the spare room. You faced the wall, forehead against the wallpaper, hands over your eyes. You counted out loud so she would know you were being fair.','Somewhere past forty the television came on downstairs. A match. Your father shouting. The smell of something frying.','You thought: just until half time. Then you went down to see the score.']},
+  3:{title:'Dinner',lines:['You did not go back upstairs. You ate. Somebody asked where your sister was, and you said "Hiding," and everyone laughed, because hiding was what she was good at.','The wardrobe in the spare room had a latch on the outside. It swung shut by itself. You knew that. You had always known that. It is why she picked it.','When the light went, they began to call her name.']},
+  4:{title:'Every Night Since',lines:['In the years after, you did not say her name. Saying it made the house go quiet in a particular way.','So you built a room, and put yourself in it, and every night you counted to a hundred and never once said the three words that come after. Because then you would have to look.','You scratched your own face out of the only photograph. You set the clock to the minute you stopped counting.']}
+};
+function topName(){const e=Object.entries(S.gaze).filter(([k,v])=>NAMES[k]&&!/ghost/.test(k)&&v>0).sort((a,b)=>b[1]-a[1]);return e[0]}
+function objective(){
+  if(S.ended)return '';
+  switch(S.ch){
+  case 1:if(S.doorUnlocked)return 'Open the door.';if(S.hasKey)return 'You have a key. Try the door.';
+    if(S.touched.clock)return 'The desk drawer has a four digit lock. The clock may know the number.';return 'The door is locked. Find a way out.';
+  case 2:if(!S.cassette.spawned)return 'The door only led back. Turn around and check the north wall.';
+    if(!S.cassette.have)return 'Something fell behind the house painting.';if(!S.cassette.played)return 'Play the cassette on the desk.';return '';
+  case 3:if(S.shelf)return 'The door is gone. The room moves things when you are not looking.';
+    if(!S.drawing.have)return 'Something has been left on the west wall.';return 'Look at the photograph again.';
+  case 4:if(S.bedShift>=2)return 'The bed is blocking the wardrobe. Push it back.';return 'Say her name to the wardrobe.';
+  }return '';
+}
+
+/* ===== MEMORY + MUTATION ===== */
+function genMsg(){
+  const c=S.ch,pool=MSGQ[c].slice();if(c>1&&Math.random()<.3)pool.push(...MSGQ[c-1]);
+  const mem=[],t=topName();
+  if(S.turns>3)mem.push('YOU HAVE TURNED AWAY '+S.turns+' TIMES');
+  if(t&&t[1]>6)mem.push('YOU KEEP LOOKING AT '+NAMES[t[0]].toUpperCase());
+  if(S.turns>5&&S.turnsL!==S.turnsR)mem.push('YOU ALWAYS TURN '+(S.turnsL>S.turnsR?'LEFT':'RIGHT')+' FIRST');
+  const ig=S.away.map((a,i)=>[a,i]).sort((a,b)=>b[0]-a[0])[0];if(ig[0]>=3)mem.push('YOU NEVER LOOK AT THE '+WALLS[ig[1]].toUpperCase());
+  if(S.touched.lamp>1)mem.push('YOU TURNED OFF THE LIGHT TO SEE WHAT I DO');
+  if(S.touched.dresser>0)mem.push('YOU PUSHED IT AND I LET YOU');
+  if(S.touched.notebook>1)mem.push('YOU HAVE READ YOUR OWN HANDWRITING '+S.touched.notebook+' TIMES');
+  if(S.touched.bed>0)mem.push('YOU ALREADY SLEPT HERE');
+  if(S.touched.clock>1)mem.push('YOU KEEP CHECKING THE TIME. IT IS NOT FOR YOU');
+  if(S.touched.wardrobe>0)mem.push('YOU PRESSED YOUR EAR TO THE WOOD. SHE FELT IT');
+  if(S.touched.vent>0)mem.push('YOU HELD YOUR BREATH. SO DID I');
+  const all=pool.concat(mem,mem);
+  for(let i=0;i<8;i++){const m=pick(all);if(!S.msgs.some(x=>x.text===m))return m}
+  return null;
+}
+function addMsg(force){
+  const t=force||genMsg();if(!t)return;
+  const w=pick([0,1,2,3].filter(x=>x!==S.wall||Math.random()<.3));
+  const list=S.msgs.filter(m=>!m.counter);if(list.length>=8)S.msgs.splice(S.msgs.indexOf(list[0]),1);
+  newMsg(w,t,Math.round(rnd(38,56)));
+}
+const INTR=['You have read this before.','That is not what happened.','Look again.','You did not hear that.','Who is telling you this?','Keep your eyes where I can see them.','You are doing it again.','Nobody else is in the room. Nobody else was ever in the room.','It was not her fault.','It was yours.'];
+function intr(){
+  const t=topName(),m=['You have turned away '+S.turns+' times. You still came back.'];
+  if(t)m.push('You always look at '+NAMES[t[0]]+' when you are afraid.');
+  if(S.turns>6)m.push('You are in a pattern. It likes that.');
+  return Math.random()<.45?pick(m):pick(INTR.slice(0,S.ch>=3?10:8));
+}
+const LABELS={door:['the door','a door','the same door','was there a door','the way out?'],clock:['the clock','the time','3:17','still 3:17'],bed:['the bed','your bed','whose bed','where you slept'],
+  wardrobe:['the wardrobe','where she is','the hiding place'],lamp:['the lamp','the light','what keeps watch'],paintA:['the house painting','the house','your room, from far away'],
+  paintB:['the portrait','the child','who is counting']};
+function labelFor(id){
+  const base=NAMES[id]||'';if(S.dread<45||!LABELS[id])return base;
+  const k=Math.floor(S.time/5);if((k+id.length)%3!==0)return base;
+  const v=LABELS[id];return v[(k+id.length)%v.length];
+}
+const ALIEN=['You were not asleep.','Do not trust the order of these notes.','You wrote this one yourself. You do not remember.','The door was never locked.','She counted too. Nobody came.','Your handwriting is getting smaller.','Stop writing things down. It reads them first.'];
+function alienNote(){
+  const pool=ALIEN.concat(['You have opened this journal '+S.jOpen+' times. Why do you keep checking?']),t=pick(pool);
+  if(S.alien.some(a=>a.t===t))return;S.alien.push({t,at:Math.floor(rnd(0,S.notes.length+1))});toast();
+}
+function redactNote(){
+  const c=S.notes.map((n,i)=>[n,i]).filter(([n])=>!/3:17|0317|MARA|key|cassette|drawing|photograph/i.test(n)&&!/^█/.test(n));if(!c.length)return;
+  S.notes[pick(c)[1]]='█████ ████ ███████';
+}
+function morphMsg(){
+  const l=S.msgs.filter(m=>!m.counter);if(!l.length)return;const m=pick(l),old=m.text;
+  const pr={'LOOK AT ME':'LOOK AWAY','STILL HERE':'STILL WAITING','ELI':'ELI?','YOU PROMISED':'YOU PROMISED ME','SAY IT':'SAY IT NOW'};
+  m.text=pr[old]||(old.length<24?old+' AGAIN':old);if(m.text===old)return;const keep={x:m.x,y:m.y,lines:m.lines,size:m.size};
+  if(!layoutMsg(m)){m.text=old;Object.assign(m,keep)}else m.born=S.time-1.5;
+}
+function strangeSound(){
+  const w=pick([0,1,2,3].filter(x=>x!==S.wall)),opts=['creak','whisper','steps'];
+  if(S.ch>=2)opts.push('knock');if(S.ch>=3)opts.push('box','box');if(S.ch>=4)opts.push('knock','knock');
+  const s=pick(opts);if(s==='knock'){S.knock=1.4;sfx('knock',2,3)}else sfx(s,w);
+}
+function readyOrNot(){S.lampOut=4;sfx('knock',pick([0,1,2,3]),4);S.dread=Math.min(100,S.dread+4);S.count=100;
+  newMsg(S.wall,'READY OR NOT',64);say('The lamp dies. Four slow knocks from somewhere that has no wall.',true)}
+function vanishShelf(){S.shelf=false;S.drawing.spawned=true;sfx('drag',3)}
+function applyStare(id){
+  if(id==='lamp')S.lampDim=Math.min(.9,S.lampDim+.15);
+  else if(id==='wardrobe'){S.knock=1.4;sfx('knock',2,3)}
+  else if(id==='clock'&&S.count!=null)S.count=Math.max(4,S.count-12);
+  else addMsg();
+  if(Math.random()<.6)say('You looked too long. When you blinked, it was different.',true);
+}
+function mutate(){
+  const d=S.dread,c=S.ch;S.changes++;
+  if(S.pendingStare){applyStare(S.pendingStare);S.pendingStare=null}
+  if(S.count!=null){S.count-=rnd(4,7);if(S.count<=0)readyOrNot()}
+  const EV=[
+    [()=>2+d/30,()=>addMsg()],
+    [()=>1.2,()=>{S.lampDim=Math.min(.9,S.lampDim+.07)}],
+    [()=>c>=3?1.3:0,()=>{const w=pick([0,1,2,3]);S.stretch[w]=Math.min(1,S.stretch[w]+.2);sfx('creak',w)}],
+    [()=>2,strangeSound],
+    [()=>(c>=3&&S.msgs.length)?1:0,morphMsg],
+    [()=>c>=3?1.2:0,alienNote],
+    [()=>(c>=3&&S.notes.length>3)?.8:0,redactNote]
+  ];
+  const n=d<30?1:d<60?2:3;
+  for(let i=0;i<n;i++){
+    const ws=EV.map(e=>e[0]());const tot=ws.reduce((a,b)=>a+b,0);let r=Math.random()*tot,j=0;
+    while(j<EV.length-1&&(r-=ws[j])>0)j++;EV[j][1]();
+  }
+  audioDread();
+}
+
+/* ===== BLINK + TURN ===== */
+function startBlink(dur,mid){S.bl={t0:performance.now(),dur,mid,fired:false}}
+function turn(dir){
+  if(paused||S.bl||S.busy||S.ended)return;
+  dir<0?S.turnsL++:S.turnsR++;
+  startBlink(420,()=>{
+    S.turns++;S.dread=Math.min(100,S.dread+2.5);
+    const lost=S.dread>48&&Math.random()<.09;
+    S.wall=lost?S.wall:(S.wall+(dir<0?3:1))%4;const nw=S.wall,first=!lost&&S.visits[nw]===0,gone=S.away[nw];if(!lost)S.visits[nw]++;
+    S.away=S.away.map((a,i)=>i===nw?0:a+1);
+    if(S.dread>35&&Math.random()<.3)setTimeout(()=>sfx('steps',(nw+2)%4),rnd(900,1800));
+    if(S.dread>40&&Math.random()<.3)S.tagGlitch=1.3;
+    let cap=null;
+    /* scripted beats, in story order */
+    if(S.ch===1){
+      if(S.turns===1)S.lampDim=Math.max(S.lampDim,.12);
+      if(S.turns===2)newMsg(pick([0,1,2,3].filter(x=>x!==nw)),'ELI',60);
+      if(S.turns===3){S.paint.a=1;sfx('knock',2,2)}
+    }
+    if(S.ch===2&&nw===0&&!S.cassette.spawned){S.paint.a=3;S.cassette.spawned=true;sfx('thud',0);cap='The painting hangs crooked. Something small has fallen from behind it.'}
+    if(S.ch>=3&&S.shelf&&nw!==3){vanishShelf();cap='Somewhere behind you, something heavy slides across the floor.'}
+    if(S.clockHere&&S.touched.clock&&S.away[1]>=3&&nw!==1&&S.ch>=2){S.clockHere=false;S.clockBack=2;sfx('click',1)}
+    if(nw===1&&!S.clockHere){S.clockBack--;if(S.clockBack<=0)S.clockHere=true}
+    if(Math.random()<.4+S.dread/150)mutate();
+    $('wallTag').textContent=WALLS[nw];
+    if(cap)say(cap,true,true);
+    else if(lost)say('You turn. You are looking at the same wall you left. The room turned with you.',true);
+    else if(!first&&gone>=4&&Math.random()<.5)say('You were gone '+gone+' turns. It kept everything exactly where you left it, except what it moved.',true);
+    else if(first)say({1:'A desk. A lamp that hums at the edge of hearing. A clock on the wall, looking at you.',2:'Your bed, still warm. Beside it a tall wardrobe. The room is quiet in a way that is listening.',3:'A bookshelf of blank spines. A portrait. A low iron vent.'}[nw],true);
+  });
+}
+$('turnL').addEventListener('click',()=>turn(-1));$('turnR').addEventListener('click',()=>turn(1));
+addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if(e.key==='ArrowLeft'||e.key==='a')turn(-1);else if(e.key==='ArrowRight'||e.key==='d')turn(1);
+  else if(e.key==='j')openOv('jOv');else if(e.key==='Escape')closeOvs();
+});
+
+/* ===== INTERACTION ===== */
+function react(id){S.touched[id]=(S.touched[id]||0)+1;audioStart()}
+const NB={1:['The notebook is yours. The writing is steady at first, then not. "THE ROOM CHANGES WHEN I LOOK AWAY. WRITE EVERYTHING DOWN. IT WILL NOT BE THE SAME AFTER."',
+  '"The drawer is four numbers. The clock stopped when I stopped counting. Remember when it stopped."','"I keep hearing someone counting. I was the one who was counting. Wasn\'t I? Who was I counting for?"'],
+  2:['Under your handwriting there is a new line, in your handwriting: "The door only goes back. I tried it. Do not try it again. Listen to the tape."'],
+  3:['"She picked the wardrobe. She always picked the wardrobe. I should have looked there first. I should have looked."'],
+  4:['"Say it. Say her name. You have been counting for a very long time. It only stops when you are not afraid of what comes after."']};
+const NBN={1:['Notebook: the room changes when you look away. Write everything down.','Notebook: the drawer code is the time the clock stopped.','Notebook: "I was the one who was counting. Who was I counting for?"'],
+  2:['Notebook: the door only goes back. Listen to the tape.'],3:['Notebook: "She picked the wardrobe. I should have looked."'],4:['Notebook: "Say her name. It only stops when you are not afraid of what comes after."']};
+const ODDK=[
+  ['A small red shoe, left foot. The laces are in a double knot. You taught someone that knot.','A child\'s red shoe, double-knotted. You taught someone that knot.'],
+  ['A rubber ball, still warm, as if someone has only just stopped holding it.','A ball that was still warm. Someone was here a moment ago.'],
+  ['A paper crown, crayon letters across it: QUEEN OF HIDING.','A paper crown: QUEEN OF HIDING.'],
+  ['Marbles in a puddle of cold water. The puddle is spreading toward the wardrobe.','Marbles in cold water, spreading toward the wardrobe.']];
+function act(h){
+  if(paused||S.bl||S.busy||S.ended)return;
+  const id=h.id;react(id);
+  const T=S.touched[id];
+  if(S.dread>30&&Math.random()<.28)setTimeout(()=>sfx(Math.random()<.5?'click':'thud',(S.wall+2)%4),rnd(1800,3400));
+  switch(id){
+  case 'door':
+    if(S.ch>=2){say('The keyhole has been papered over. The door goes nowhere now. It is only the idea of a door.');addNote('The door has no keyhole now. It does not lead out.');break}
+    if(!S.doorUnlocked){
+      if(S.hasKey){S.doorUnlocked=true;sfx('click',S.doorWall);say('The key turns. The lock sounds relieved. The light under the door is brighter now.');addNote('The brass key opened the door.')}
+      else{say('Locked. The keyhole is cold. When you look through it there is nothing, not even dark.');addNote('The door is locked. It needs a key.')}
+    }else leaveRoom();break;
+  case 'doorghost':say(S.ch>=3?'Wallpaper. The door was never the way out. It was only the way back in.':'Wallpaper. The pattern runs straight through where the door was.');break;
+  case 'dresser':
+    S.dresser.hp--;sfx('drag',S.wall);S.dread+=1.5;
+    if(S.dresser.hp<=0){S.dresser=null;say('The dresser scrapes aside. Underneath it the floor is cleaner than the rest, as if it had stood there a long time.')}
+    else say('You push. It moves like it is deciding whether to let you. '+S.dresser.hp+' more.');break;
+  case 'paintA':
+    say(['A house on a hill at dusk. One window is lit. You could swear it was dark a moment ago.','A second window is lit now. Someone in there is awake.','The house has grown a floor. Every window is lit, and every curtain is drawn the same way.','The frame hangs crooked. In the lowest window you can make out a bed.','It is not a house any more. It is this room, seen through a gap in a door, from inside a wardrobe. Someone stands in the middle of the floor with their back to you. They have your posture.'][S.paint.a]);break;
+  case 'paintB':
+    say(['A child stands with her forehead against a wall and her hands over her eyes. Counting.','Her head has tilted, as if she is listening for you.','Tally marks cover the wall in front of her. She has been counting for a very long time.','She is taller than she was. Her clothes are the grey of your bedsheets.','Her hands have come down from her eyes. She has not turned around. She is deciding whether to.'][S.paint.b]);break;
+  case 'clock':
+    say(S.dread>40?'The second hand runs backwards. For a moment all the hands hold still at 3:17, then it goes on counting down.':'The clock is stopped at 3:17. The second hand trembles and goes nowhere.');
+    addNote('The clock on the east wall is stopped at 3:17.');break;
+  case 'clockghost':say('A pale circle on the wallpaper. The clock has gone somewhere you are not looking.');break;
+  case 'lamp':
+    S.lampOut=2.6;S.lampDim=Math.min(.9,S.lampDim+.08);S.dread+=3;sfx('click',1);
+    say('You switch it off. The dark is not empty. You switch it on. It was never off.');break;
+  case 'notebook':{
+    const pages=NB[S.ch],ns=NBN[S.ch];S.nbc[S.ch]=(S.nbc[S.ch]||0)+1;const i=Math.min(S.nbc[S.ch],pages.length)-1;
+    say(pages[i]);addNote(ns[i]);break}
+  case 'tape':
+    if(!S.cassette.have){say('A small cassette player. The slot is empty and the play button is worn smooth by one thumb.');addNote('The cassette player on the desk needs a tape.')}
+    else playTape();break;
+  case 'drawer':
+    if(S.ch>1){say('Empty. A crayon has rolled to the back, worn down to a stub.');break}
+    if(!S.drawerUnlocked){openPad();say('A four digit lock. The brass is worn on every number.',true)}
+    else takeFromDrawer();break;
+  case 'bed':
+    if(S.bedShift>=2){S.bedShift--;sfx('drag',2);say(S.bedShift>=2?'You shove the bed. It scrapes the floor the way an animal scrapes at a door. It is still in the way.':'You shove the bed back. The wardrobe is clear.')}
+    else{S.dread+=1;say('The sheets are rumpled and warm. The shape in them is yours. At the pillow there is a second, smaller dent.');addNote('You woke on the bed. The sheets were warm.');if(T%3===0)sfx('whisper',2)}break;
+  case 'wardrobe':
+    if(S.ch>=4){say('It stops knocking. It is listening for you.');openOv('nameOv');setTimeout(()=>$('nameIn').focus(),50)}
+    else{S.knock=1.4;sfx('knock',2,3);say('No keyhole, no lock. Something on the other side presses back, gently, trying to be quiet. It is too soon to answer it.');addNote('The wardrobe has no lock. Something inside knocks. It seems to want to be found.')}break;
+  case 'shelf':say('Books with nothing on their spines. One is thicker than the rest. You open it and every page says the same line: I WAS COUNTING.');break;
+  case 'vent':S.dread+=1;sfx('whisper',3);say(S.dread>50?'The vent has learned your rhythm. It is a little ahead of you now.':'Air moves out of the slats in a slow, even rhythm, the same as your breathing. You hold your breath. The vent does too.');break;
+  case 'cassette':S.cassette.have=true;addInv('Cassette');say('A cassette in a child\'s handwriting: FOR ELI. It was behind the painting the whole time.');addNote('A cassette labelled FOR ELI fell from behind the painting. It needs the player on the desk.');break;
+  case 'drawing':
+    S.drawing.have=true;addInv('Drawing');say('A crayon drawing taped where the bookshelf stood. Two stick figures, one tall and one small, a house, a wardrobe with a small face inside. In careful capitals: MARA AND ELI. HIDE AND SEEK.');
+    addNote('Drawing: MARA and ELI, hide and seek. A small face inside a wardrobe.');
+    setTimeout(()=>storyBeat(3),4200);break;
+  case 'odd':{const o=S.odds.find(x=>x.id===h.oid),K=ODDK[o.kind];S.dread+=1;say(K[0]);addNote(K[1]);break}
+  }
+}
+function takeFromDrawer(){
+  const got=[];if(S.keyInDrawer){S.keyInDrawer=false;S.hasKey=true;addInv('Brass key');got.push('a brass key')}
+  if(S.photoInDrawer){S.photoInDrawer=false;addInv('Photograph');got.push('a torn photograph')}
+  S.drawerOpen=true;sfx('click',1);
+  if(got.length){say('Inside the drawer: '+got.join(' and ')+'. The key is warm.');addNote('Drawer (0317): a brass key and a torn photograph.')}
+  else say('Empty. It smells like a coat closet.');
+}
+function playTape(){
+  if(S.playing||S.cassette.played)return S.cassette.played&&say('You know what is on it. You do not need to hear it again. You hear it anyway, faintly, from inside the wall.',true);
+  S.playing=true;S.dread=Math.min(100,S.dread+4);S.lampDim=Math.min(.9,S.lampDim+.1);
+  if(A.ctx&&A.on){const t=A.ctx.currentTime;nz(out(1),t,22,'highpass',2500,2500,.5,.05);sfx('box',1)}
+  const L=[[0,'Hiss. A small voice, counting: "...forty-six, forty-seven, forty-eight..."'],[5000,'Close to the microphone: "Eli? Are you still counting?"'],[10500,'"It is dark in here. It is okay. I am being really good. I am being so quiet."'],
+    [16500,'"If you are listening you can stop counting now. You can come and find me."'],[22500,'"My name is Mara. Say it so I know you remembered."'],[28500,'The tape runs out. Even the lamp has stopped humming.']];
+  L.forEach(([ms,t])=>setTimeout(()=>say(t,ms>=28000,true),ms));
+  setTimeout(()=>{S.cassette.played=true;S.playing=false;addNote('The tape: a girl called MARA is hiding in the dark and waiting to be found. "Say it so I know you remembered."');storyBeat(2)},30500);
+}
+
+/* ===== INVENTORY ===== */
+function renderInv(){
+  const el=$('inv');el.innerHTML='';
+  if(!S.inv.length){el.innerHTML='<span class="empty">POCKETS EMPTY</span>';return}
+  S.inv.forEach(k=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=k;b.addEventListener('click',()=>useInv(k));el.appendChild(b)});
+}
+function useInv(k){
+  if(paused||S.bl||S.busy||S.ended)return;
+  if(k==='Photograph'){
+    S.read.photo=true;
+    if(S.ch===3&&S.drawing.have&&!S.read.twist){
+      S.read.twist=true;say('A torn photograph of two children on a porch. You were sure the smaller face was the one scratched out. Look again. It is the taller one. It is the one who was supposed to be watching.');
+      S.alien.push({t:'You scratched out your own face. You do not remember doing it.',at:S.notes.length});addNote('The photograph: it is the taller face that is scratched out. Yours.');setTimeout(()=>storyBeat(4),4200);
+    }else say('A torn photograph of two children on a porch. One face has been scratched out. On the back: "MARA + ELI. July 11. Count to 100!"');
+    addNote('Photograph: MARA + ELI, July 11. "Count to 100!" One face scratched out.');
+  }
+  else if(k==='Brass key')say('A brass key, worn smooth. Warm, as if someone had been holding it only a moment ago.');
+  else if(k==='Cassette')say(S.cassette.played?'You know what is on it. The player is on the east wall desk.':'"FOR ELI". The player is on the desk, east wall.');
+  else if(k==='Drawing')say('Two stick figures, a house, a wardrobe with a small face inside. MARA AND ELI. HIDE AND SEEK.');
+}
+
+/* ===== POINTER ===== */
+let ptr=null;
+function toWall(e){const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;
+  return{x:(x-W/2)/sxT+W/2,y:(y-H/2)/syT+H/2}}
+function hit(){if(!ptr)return null;for(let i=HS.length-1;i>=0;i--){const h=HS[i];if(ptr.x>=h.x&&ptr.x<=h.x+h.w&&ptr.y>=h.y&&ptr.y<=h.y+h.h)return h}return null}
+cv.addEventListener('pointermove',e=>{ptr=toWall(e)});
+cv.addEventListener('pointerleave',()=>{ptr=null});
+cv.addEventListener('pointerdown',e=>{ptr=toWall(e);const h=hit();if(h)act(h)});
+cv.style.cursor='default';
+/* ===== OVERLAYS ===== */
+function openOv(id){$(id).hidden=false;paused=true;if(id==='jOv')renderJournal()}
+function closeOvs(){['padOv','nameOv','jOv'].forEach(i=>$(i).hidden=true);if(!S.ended&&$('title').hidden&&$('endOv').hidden&&$('intOv').hidden)paused=false;padVal=''}
+function renderJournal(){
+  S.jOpen++;const out=[];
+  for(let i=0;i<=S.notes.length;i++){
+    S.alien.filter(a=>Math.min(a.at,S.notes.length)===i).forEach(a=>out.push('<li class="alien">'+a.t.replace(/</g,'&lt;')+' (not your handwriting)</li>'));
+    if(i<S.notes.length)out.push('<li'+(/^█/.test(S.notes[i])?' class="gone"':'')+'>'+S.notes[i].replace(/</g,'&lt;')+'</li>');
+  }
+  $('notes').innerHTML=out.length?out.join(''):'<li class="small">Nothing yet. Look around.</li>';
+  $('frags').innerHTML=S.frags.length?S.frags.map(f=>'<h3>'+f.k+'. '+f.title+'</h3>'+f.lines.map(l=>'<p class="small">'+l+'</p>').join('')).join(''):'<p class="small">Nothing yet. They arrive when the room is ready.</p>';
+  const t=topName(),ig=S.away.map((a,i)=>[a,i]).sort((a,b)=>b[0]-a[0])[0],m=[];
+  m.push('Chapter: <b>'+CH[S.ch].roman+', '+CH[S.ch].name+'</b>');
+  m.push('Times you turned away: <b>'+S.turns+'</b> ('+S.turnsL+' left, '+S.turnsR+' right)');
+  if(t)m.push('Watched longest: <b>'+NAMES[t[0]]+'</b>, '+Math.round(t[1])+' seconds');
+  if(ig[0]>=2)m.push('Ignored longest: <b>'+WALLS[ig[1]].toLowerCase()+'</b>, '+ig[0]+' turns');
+  m.push('Things the room has changed: <b>'+S.changes+'</b>');
+  $('mem').innerHTML=m.map(x=>'<li>'+x+'</li>').join('');
+}
+$('btnJournal').addEventListener('click',()=>openOv('jOv'));
+$('jClose').addEventListener('click',closeOvs);
+$('padClose').addEventListener('click',closeOvs);
+$('nameClose').addEventListener('click',closeOvs);
+
+let padVal='';
+function openPad(){padVal='';$('padShow').innerHTML='&nbsp;';openOv('padOv')}
+(function(){const p=$('pad');['1','2','3','4','5','6','7','8','9','Clear','0','Back'].forEach(k=>{
+  const b=document.createElement('button');b.type='button';b.textContent=k==='Clear'?'C':k==='Back'?'⌫':k;
+  b.addEventListener('click',()=>{
+    audioStart();if(k==='Clear')padVal='';else if(k==='Back')padVal=padVal.slice(0,-1);else if(padVal.length<4)padVal+=k;
+    $('padShow').textContent=padVal||' ';sfx('click',1);
+    if(padVal.length===4){
+      if(padVal==='0317'){closeOvs();S.drawerUnlocked=true;S.dread+=2;takeFromDrawer()}
+      else{setTimeout(()=>{padVal='';$('padShow').textContent=' '},500);S.dread+=2;say('The lock does not move. Somewhere in the walls, something exhales.',true)}
+    }
+  });p.appendChild(b)})})();
+
+$('nameForm').addEventListener('submit',e=>{
+  e.preventDefault();const v=$('nameIn').value.trim().toUpperCase();$('nameIn').value='';
+  if(v==='MARA'){closeOvs();endFound();return}
+  closeOvs();S.wrongNames++;S.knock=2;sfx('knock',2,5);
+  if(S.wrongNames>=3){endStill();return}
+  S.dread=Math.min(100,S.dread+3);
+  say(v==='ELI'?'That is your name. She is the one who is hiding. The knocking comes faster.':S.wrongNames===2?'The knocking slows. It is giving you one more chance. She said her name on the tape.':'The knocking stops. Then it starts again, faster. The room did not like that name.');
+  mutate();
+});
+
+/* ===== INTERLUDES AND CHAPTERS ===== */
+const ROMAN=['','I','II','III','IV'];
+function interlude(n,extra,cb){
+  const f=FRAG[n];S.frags.push({k:ROMAN[n],title:f.title,lines:f.lines});
+  paused=true;S.busy=true;sfx('box',1);
+  const lines=f.lines.concat(extra?['<b>'+extra+'</b>']:[]);
+  $('intKick').textContent='Fragment '+ROMAN[n]+' of IV';$('intTitle').textContent=f.title;
+  $('intText').innerHTML=lines.map((l,i)=>'<p style="animation-delay:'+(i*2.4+.5)+'s">'+l+'</p>').join('');
+  $('intGo').hidden=true;$('intOv').hidden=false;S.intCb=cb;
+  clearTimeout(interlude.t);interlude.t=setTimeout(()=>{$('intGo').hidden=false;$('intGo').focus()},lines.length*2400+900);
+}
+$('intOv').addEventListener('click',e=>{if(e.target.id!=='intGo'){document.querySelectorAll('#intText p').forEach(p=>{p.style.animation='none';p.style.opacity=1});clearTimeout(interlude.t);$('intGo').hidden=false}});
+$('intGo').addEventListener('click',()=>{
+  $('intOv').hidden=true;S.busy=false;paused=false;S.whiteTarget=0;last=performance.now();const cb=S.intCb;S.intCb=null;if(cb)cb();
+});
+function chLabel(){return 'Chapter '+CH[S.ch].roman}
+function beginChapter(n){
+  S.ch=n;S.dread=Math.max(S.dread,CH[n].floor);S.msgs=S.msgs.filter(m=>m.counter);S.blinkAt=S.time+10;
+  if(n===2){
+    S.doorUnlocked=false;S.hasKey=false;dropInv('Brass key');S.drawerOpen=true;S.keyInDrawer=false;
+    S.doorWall=3;S.doorState='narrow';S.dresser={hp:3};S.paint.a=1;S.paint.b=1;
+    S.odds=[{id:++S.oid,kind:0,wall:1,x:310},{id:++S.oid,kind:1,wall:3,x:650}];
+    S.wall=2;S.away=[1,1,0,1];S.visits[2]++;S.stretch=[.1,.1,.1,.1];S.lampDim=Math.max(S.lampDim,.2);addMsg('ELI');addMsg();
+    $('wallTag').textContent=WALLS[2];
+    say('White. Then the sheets, warm under your hand. You are on the bed again. The door is not where you left it, and there is a dresser in front of it.');
+    addNote('The door only led back to the bed.');
+  }
+  if(n===3){
+    S.doorState='gone';S.dresser=null;S.paint.b=2;S.odds.push({id:++S.oid,kind:2,wall:0,x:690});S.lampDim=Math.max(S.lampDim,.35);addMsg();
+    say('The lamp is a little dimmer. Where the door stood there is only wallpaper, and the wallpaper is warm.');
+  }
+  if(n===4){
+    S.paint.a=4;S.paint.b=4;S.bedShift=3;S.count=100;S.stretch=S.stretch.map(v=>Math.max(v,.25));
+    S.msgs.push({wall:1,x:300,y:230,rot:-.04,size:70,text:'',lines:[''],counter:true,born:S.time});
+    S.odds.push({id:++S.oid,kind:3,wall:2,x:430});
+    say('Somewhere a small voice has started counting down from a hundred. The bed has crept across the floor and pressed itself against the wardrobe.');
+  }
+  $('visit').textContent=chLabel();audioDread();
+}
+function storyBeat(n){
+  if(S.ended)return;
+  if(n===2)interlude(2,'Chapter III. '+CH[3].name,()=>beginChapter(3));
+  if(n===3)interlude(3,'',null);
+  if(n===4)interlude(4,'Chapter IV. '+CH[4].name,()=>beginChapter(4));
+}
+function leaveRoom(){
+  S.busy=true;S.whiteTarget=1;sfx('sweep');
+  setTimeout(()=>interlude(1,'Chapter II. '+CH[2].name,()=>beginChapter(2)),2200);
+}
+
+/* ===== ENDINGS ===== */
+function showEnd(title,lines,btn){
+  S.ended=true;paused=true;$('endTitle').textContent=title;
+  $('endText').innerHTML=lines.map((l,i)=>'<p style="animation-delay:'+(i*2.4+.6)+'s">'+l+'</p>').join('');
+  $('btnAgain').textContent=btn;$('btnAgain').hidden=false;$('endOv').hidden=false;
+}
+function endFound(){
+  S.busy=true;S.wall=2;S.wardrobeOpen=true;S.whiteTarget=1;$('wallTag').textContent=WALLS[2];
+  if(A.ctx&&A.on){const t=A.ctx.currentTime;[262,330,392,523].forEach((f,i)=>tone(A.master,t+i*.35,3,f,.06,'triangle'))}
+  say('"Mara."',false,true);
+  setTimeout(()=>showEnd('Found',[
+    'You say her name. The wardrobe does not open, because it was never closed. The latch swings free on its own, the way it always did.',
+    'Inside it is bright, and empty, and somewhere a child laughs the way a child laughs when she has finally been found.',
+    '"Ready or not," you say, thirty years late.',
+    'The room is only a room now. A bed. A desk. A lamp that does not flicker. A door that was never locked. You open your eyes.'],'Begin again'),4200);
+}
+function endStill(){
+  S.busy=true;S.whiteTarget=1;sfx('sweep');
+  setTimeout(()=>showEnd('Still Counting',[
+    'You say the wrong names one after another, like someone trying keys. The knocking slows. It stops.',
+    'You find that you are facing the wall. Your forehead is against the paper and your hands are over your eyes.',
+    '"One," you say. "Two."',
+    'The room remembers. It will keep the count for you, for as long as you cannot say her name.'],'Begin the count again'),2600);
+}
+$('btnAgain').addEventListener('click',()=>{
+  S=fresh();$('endOv').hidden=true;$('btnAgain').hidden=true;paused=false;renderInv();last=performance.now();
+  $('visit').textContent=chLabel();$('wallTag').textContent=WALLS[0];audioDread();
+  say('You wake. The sheets are warm. A locked door faces you, and it has not forgotten you either.');
+});
+
+/* ===== LOOP ===== */
+let last=performance.now(),lastObj='';
+function tick(now){
+  const dt=Math.min(.1,(now-last)/1000);last=now;
+  if(S.bl){
+    const p=(now-S.bl.t0)/S.bl.dur;S.blinkAlpha=clamp(Math.sin(Math.PI*clamp(p,0,1))*1.8,0,1);
+    if(p>=.5&&!S.bl.fired){S.bl.fired=true;S.bl.mid()}if(p>=1){S.bl=null;S.blinkAlpha=0}
+  }
+  S.whiteout+=(S.whiteTarget-S.whiteout)*Math.min(1,dt*1.3);
+  if(!paused){
+    S.time+=dt;if(!S.ended)S.dread=Math.min(CH[S.ch].cap,S.dread+(S.busy?0:dt*.45));
+    S.lampOut=Math.max(0,S.lampOut-dt);S.knock=Math.max(0,S.knock-dt);S.flick=Math.max(0,S.flick-dt*3);
+    if(Math.random()<(.01+S.dread/100*.04))S.flick=rnd(.3,.85);
+    S.idle+=dt;S.tagGlitch=Math.max(0,S.tagGlitch-dt);S.hudGlitch=Math.max(0,S.hudGlitch-dt);
+    const tg=S.tagGlitch>0?pick(['NOT A WALL','WHICH WALL','THE SAME WALL','']):WALLS[S.wall];if($('wallTag').textContent!==tg&&(S.tagGlitch<=0||Math.random()<.15))$('wallTag').textContent=tg;
+    if(S.dread>50&&S.hudGlitch<=0&&Math.random()<.002){S.hudGlitch=1.4;$('visit').textContent=pick(['Chapter ?','Chapter again','Chapter 0','Chapter you'])}
+    else if(S.hudGlitch<=0&&$('visit').textContent!==chLabel())$('visit').textContent=chLabel();
+    if(S.idle>22&&!S.busy&&!S.ended){S.idle=11;S.dread=Math.min(100,S.dread+1.5);S.flick=.8;sfx('whisper',(S.wall+2)%4);
+      say(pick(['Why did you stop moving?','Stillness. It likes stillness. It learns from it.','You are very quiet. So is it.','Hold still. It is easier if you hold still.']),true,true)}
+    const h=hit();$('hover').textContent=h&&!S.bl?labelFor(h.id).toUpperCase():'';cv.style.cursor=h?'pointer':'default';
+    if(h){S.gaze[h.id]=(S.gaze[h.id]||0)+dt;
+      if(S.stare.id===h.id)S.stare.t+=dt;else{S.stare.id=h.id;S.stare.t=0}
+      if(S.stare.t>8&&!S.bl&&!/ghost|odd|cassette|drawing|paint/.test(h.id)){S.pendingStare=h.id;S.stare.t=-8;S.blinkAt=S.time}
+    }else S.stare={id:null,t:0};
+    if(S.time>=S.blinkAt&&!S.bl&&!S.busy&&!S.ended){
+      startBlink(300,()=>{mutate();if(S.dread>25&&Math.random()<.12)say('You blink. The room is not quite as you left it.',true)});
+      S.blinkAt=S.time+rnd(11,24)-S.dread*.08;
+    }
+    const o=objective();if(o!==lastObj){lastObj=o;$('objText').textContent=o}
+  }
+  render();requestAnimationFrame(tick);
+}
+
+/* ===== START ===== */
+function boot(){renderInv();$('wallTag').textContent=WALLS[0];requestAnimationFrame(tick)}
+['pointermove','pointerdown','keydown'].forEach(e=>addEventListener(e,()=>{S.idle=0}));
+$('btnStart').addEventListener('click',()=>{
+  audioStart();$('title').hidden=true;paused=false;last=performance.now();
+  say('You wake. The sheets are warm, but you do not remember lying in them. A locked door faces you. Somewhere, very faintly, a lamp is humming.');
+});
+(document.fonts&&document.fonts.load?Promise.all([document.fonts.load("40px 'Reenie Beanie'"),document.fonts.load("16px 'Courier Prime'"),document.fonts.load("20px 'IM Fell English'")]).catch(()=>{}):Promise.resolve()).then(boot);
+</script>
+
+</body></html>

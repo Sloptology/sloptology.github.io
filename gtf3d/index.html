@@ -1,0 +1,163 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Grand Theft Fart 3D: The Haunted Bank of Doom</title>
+<style>
+:root{--bg:#050507;--fg:#e9ffd6;--ac:#9bcf3f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#050507}}
+:root[data-theme="dark"]{--bg:#050507}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:"Trebuchet MS",Verdana,sans-serif;overflow:hidden}
+canvas{display:block}
+#vig{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,transparent 35%,#600 100%)}
+#hud{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:12px;font-weight:bold;text-shadow:0 0 6px #000;pointer-events:none}
+#bar{width:160px;height:12px;background:#222;border:1px solid #555;margin-top:6px}#gas{height:100%;width:100%;background:var(--ac)}
+#sub{position:fixed;left:50%;bottom:calc(40px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:80%;text-align:center;font-size:20px;font-weight:bold;text-shadow:0 0 8px #000,0 0 3px #000;opacity:0;transition:opacity .4s;pointer-events:none}
+#menu,#boo{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;box-sizing:border-box}
+#menu{background:rgba(5,5,7,.92);cursor:pointer}
+h1{font-size:clamp(32px,7vw,64px);margin:0;color:var(--ac);text-shadow:0 0 18px #4a7a10,3px 3px 0 #300}
+h2{margin:6px 0 18px;color:#c33;letter-spacing:3px}
+p{max-width:560px;line-height:1.5}
+#mb{margin-top:14px;padding:12px 26px;font-size:20px;font-weight:bold;color:#111;background:var(--ac);border:0;border-radius:8px}
+#boo{display:none;background:#b00;font-size:min(40vw,320px);animation:sh .08s infinite}
+#boo b{font-size:.25em;color:#fff}
+@keyframes sh{0%{transform:translate(8px,-6px)}50%{transform:translate(-8px,6px)}100%{transform:translate(6px,8px)}}
+</style></head><body>
+<div id="vig"></div>
+<div id="hud"><div id="ct">Coins 0 / 7</div><div id="bar"><div id="gas"></div></div></div>
+<div id="sub"></div>
+<div id="boo">👻<b>BOO!</b></div>
+<div id="menu"><h1 id="mh">GRAND THEFT FART 3D</h1><h2 id="h2">THE HAUNTED BANK OF DOOM</h2>
+<p id="mp">Sneak in and steal every cursed coin, then run to the green exit. The bank’s ghosts wear clothespins, so they can’t smell you… but they can absolutely see you. Fart them into submission.</p>
+<p><b>WASD</b> move · <b>Mouse</b> or <b>Q/E</b> look · <b>SPACE</b> fart-dash · <b>F</b> stink cloud (stuns ghosts)<br>Eat bean cans to refill your gas. Panic makes you toot on its own.</p>
+<button id="mb">Click to enter… if you dare</button></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=i=>document.getElementById(i),R=(a,b)=>a+Math.random()*(b-a),cl=(v,a,b)=>Math.max(a,Math.min(b,v)),PI=Math.PI,pick=a=>a[Math.random()*a.length|0];
+let LV=1;try{LV=+localStorage.getItem('gtf')||1}catch(_){}
+const TH=[["THE HAUNTED BANK",0x030305,'#4d4052','90,140,30',0x404060],["THE SEWER OF DOOM",0x020a04,'#2f4a36','60,200,60',0x30603a],["THE BEAN MORGUE",0x02040c,'#3a4a66','120,160,255',0x304070],["FART HELL",0x0c0201,'#6a2a1e','255,90,20',0x703020]][(LV-1)%4],N=Math.min(15,7+2*LV),TOT=Math.min(9,4+LV),S=2*N+1,TS=3,WHT=3,M=[...Array(S)].map(()=>Array(S).fill(1));
+$('h2').textContent='LEVEL '+LV+': '+TH[0];
+(function carve(x,y){M[y][x]=0;[[2,0],[-2,0],[0,2],[0,-2]].sort(()=>Math.random()-.5).forEach(([dx,dy])=>{const nx=x+dx,ny=y+dy;if(nx>0&&ny>0&&nx<S-1&&ny<S-1&&M[ny][nx]){M[y+dy/2][x+dx/2]=0;carve(nx,ny)}})})(1,1);
+for(let i=0,n=0;i<500&&n<16;i++){const x=1+(Math.random()*(S-2)|0),y=1+(Math.random()*(S-2)|0);if(M[y][x]&&(x%2)!=(y%2)){M[y][x]=0;n++}}
+const open=[],wl=[];M.forEach((r,z)=>r.forEach((v,x)=>v?wl.push([x,z]):open.push([x,z])));
+const tl=v=>Math.floor(v/TS),wc=i=>(i+.5)*TS,isW=(x,z)=>{const a=tl(x),b=tl(z);return a<0||b<0||a>=S||b>=S||M[b][a]===1};
+const solid=(x,z,r)=>isW(x-r,z-r)||isW(x+r,z-r)||isW(x-r,z+r)||isW(x+r,z+r);
+function mv(o,dx,dz,r=.4){if(!solid(o.x+dx,o.z,r))o.x+=dx;if(!solid(o.x,o.z+dz,r))o.z+=dz}
+// ---- scene ----
+const ren=new THREE.WebGLRenderer({antialias:true});ren.toneMapping=THREE.ACESFilmicToneMapping;ren.toneMappingExposure=1.3;ren.outputEncoding=THREE.sRGBEncoding;ren.shadowMap.enabled=true;ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(innerWidth,innerHeight);document.body.prepend(ren.domElement);
+const sc=new THREE.Scene();sc.background=new THREE.Color(TH[1]);sc.fog=new THREE.FogExp2(TH[1],.1+Math.min(LV,6)*.006);
+const cam=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,80);cam.rotation.order='YXZ';sc.add(cam);
+sc.add(new THREE.AmbientLight(TH[4],.45));
+const fl=new THREE.SpotLight(0xfff2c0,2.4,30,.6,.5,1.2),ft=new THREE.Object3D();ft.position.set(0,0,-1);cam.add(fl,ft);fl.position.set(.2,-.2,0);fl.target=ft;
+fl.castShadow=true;fl.shadow.mapSize.set(512,512);cam.add(new THREE.PointLight(0x88aa66,.6,7));
+addEventListener('resize',()=>{ren.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()});
+const cvs=document.createElement('canvas');cvs.width=cvs.height=128;const c2=cvs.getContext('2d');c2.fillStyle=TH[2];c2.fillRect(0,0,128,128);c2.strokeStyle='#241c2a';c2.lineWidth=2;
+for(let y=0;y<128;y+=16)for(let x=(y/16%2)*16;x<144;x+=32)c2.strokeRect(x-16,y,32,16);
+for(let i=0;i<14;i++){c2.fillStyle=`rgba(${TH[3]},${R(.05,.2)})`;c2.beginPath();c2.arc(R(0,128),R(0,128),R(6,22),0,7);c2.fill()}
+for(let i=0;i<1500;i++){c2.fillStyle=`rgba(${Math.random()<.5?'0,0,0':'255,255,255'},${R(.03,.1)})`;c2.fillRect(R(0,128),R(0,128),R(1,3),R(1,3))}
+const tex=new THREE.CanvasTexture(cvs);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.encoding=THREE.sRGBEncoding;
+const im=new THREE.InstancedMesh(new THREE.BoxGeometry(TS,WHT,TS),new THREE.MeshStandardMaterial({map:tex,bumpMap:tex,bumpScale:3,roughness:.9}),wl.length),dm=new THREE.Object3D();
+wl.forEach(([x,z],i)=>{dm.position.set(wc(x),WHT/2,wc(z));dm.updateMatrix();im.setMatrixAt(i,dm.matrix)});im.castShadow=im.receiveShadow=true;sc.add(im);
+[[0,0x777777],[WHT,0x444444]].forEach(([y,c])=>{const t=tex.clone();t.needsUpdate=true;t.repeat.set(S,S);const p=new THREE.Mesh(new THREE.PlaneGeometry(S*TS,S*TS),new THREE.MeshStandardMaterial({map:t,bumpMap:t,bumpScale:3,color:c,roughness:.8}));p.receiveShadow=true;p.rotation.x=y?PI/2:-PI/2;p.position.set(S*TS/2,y,S*TS/2);sc.add(p)});
+// ---- state ----
+const P={x:wc(1),z:wc(1),vx:0,vz:0,gas:100},K={};
+let yaw=M[1][2]===0?-PI/2:PI,pitch=0,coins=0,fear=0,T=0,state=0,beatT=0,nerv=3,shake=0,hint=0,AC,D,bt=0,AC2;
+const mons=[],clouds=[],items=[];
+// ---- audio ----
+function sfx(f,d,type='sawtooth',v=.14,wob=30){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator(),n=AC.createGain(),l=AC.createOscillator(),lg=AC.createGain();
+ o.type=type;o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*.55,t+d);l.frequency.value=R(16,30);lg.gain.value=wob;
+ l.connect(lg);lg.connect(o.frequency);n.gain.setValueAtTime(v,t);n.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(n);n.connect(AC.destination);o.start();l.start();o.stop(t+d);l.stop(t+d)}
+function drone(){[41,43.3].forEach(f=>{const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=f;g.gain.value=.07;o.connect(g);g.connect(AC.destination);o.start()})}
+let st;function say(t,ms=2800){const s=$('sub');s.textContent=t;s.style.opacity=1;clearTimeout(st);st=setTimeout(()=>s.style.opacity=0,ms)}
+// ---- bfs ----
+function bfs(){D=[...Array(S)].map(()=>Array(S).fill(999));const px=tl(P.x),pz=tl(P.z);D[pz][px]=0;const q=[[px,pz]];
+ for(let i=0;i<q.length;i++){const [x,z]=q[i];[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const nx=x+a,nz=z+b;if(M[nz]&&M[nz][nx]===0&&D[nz][nx]==999){D[nz][nx]=D[z][x]+1;q.push([nx,nz])}})}}
+bfs();
+// ---- things ----
+const gc=document.createElement('canvas');gc.width=gc.height=64;{const x=gc.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'#fff');g.addColorStop(.3,'rgba(255,255,255,.35)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64)}
+const gt=new THREE.CanvasTexture(gc);
+function glow(c,s,o=.6){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:gt,color:c,transparent:true,opacity:o,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));sp.scale.set(s,s,1);return sp}
+const eyeM=new THREE.MeshBasicMaterial({color:0xff2222});eyeM.fog=false;
+function ghost(){const g=new THREE.Group(),mt=(c,e)=>new THREE.MeshStandardMaterial({color:c,emissive:e,roughness:1,side:THREE.DoubleSide}),sh=mt(0x23272c,0x07090c),bone=mt(0xb9b5a0,0x15130e),blk=new THREE.MeshBasicMaterial({color:0}),add=(o,x,y,z)=>{o.position.set(x,y,z);g.add(o);return o};
+ add(new THREE.Mesh(new THREE.CylinderGeometry(.22,.75,2.1,12,1,true),sh),0,1.15,0);
+ for(let i=0;i<10;i++){const a=i/10*6.28,s=add(new THREE.Mesh(new THREE.ConeGeometry(.13,R(.5,1.1),4),sh),Math.cos(a)*.72,.1,Math.sin(a)*.72);s.rotation.x=PI}
+ add(new THREE.Mesh(new THREE.SphereGeometry(.3,14,12),bone),0,2.4,.08).scale.set(.85,1.4,.95);
+ [-1,1].forEach(s=>{add(new THREE.Mesh(new THREE.SphereGeometry(.1,8,8),blk),s*.12,2.5,.32).scale.set(1,1.3,.5);add(new THREE.Mesh(new THREE.SphereGeometry(.04,6,6),eyeM),s*.12,2.5,.34);add(glow(0xff2020,.7,.8),s*.12,2.5,.37)});
+ add(new THREE.Mesh(new THREE.SphereGeometry(.1,8,8),blk),0,2.22,.32).scale.set(.8,2,.5);
+ for(let i=0;i<5;i++){const x=-.06+i*.03;add(new THREE.Mesh(new THREE.ConeGeometry(.012,.07,4),bone),x,2.29,.35).rotation.x=PI;add(new THREE.Mesh(new THREE.ConeGeometry(.012,.07,4),bone),x,2.15,.35)}
+ add(new THREE.Mesh(new THREE.BoxGeometry(.08,.07,.09),new THREE.MeshBasicMaterial({color:0xff8800})),0,2.38,.37);
+ [-1,1].forEach(s=>{const a=new THREE.Group();a.position.set(s*.32,1.95,.1);a.rotation.set(1.35,0,-s*.25);g.add(a);
+  const l=new THREE.Mesh(new THREE.CylinderGeometry(.03,.05,1.4,6),bone);l.position.y=.7;a.add(l);
+  for(let k=-1;k<2;k++){const c=new THREE.Mesh(new THREE.ConeGeometry(.018,.22,4),bone);c.position.set(k*.04,1.5,0);c.rotation.z=-k*.35;a.add(c)}});
+ add(glow(0x66ffcc,2.6,.15),0,1.4,0);g.traverse(o=>o.castShadow=true);return g}
+function oldGhost(){const g=new THREE.Group(),sm=new THREE.MeshStandardMaterial({color:0xddddE8,emissive:0x1c1c2a,side:THREE.DoubleSide});
+ const s=new THREE.Mesh(new THREE.CylinderGeometry(.38,.85,2.3,14,1,true),sm);s.position.y=1.15;
+ const h=new THREE.Mesh(new THREE.SphereGeometry(.42,14,12),sm);h.position.y=2.3;g.add(s,h);
+ [-.16,.16].forEach(x=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.09,8,8),eyeM);e.position.set(x,2.38,.36);g.add(e)});
+ const m=new THREE.Mesh(new THREE.SphereGeometry(.13,8,8),new THREE.MeshBasicMaterial({color:0}));m.scale.set(1,1.7,.5);m.position.set(0,2.08,.38);g.add(m);
+ const p=new THREE.Mesh(new THREE.BoxGeometry(.12,.1,.14),new THREE.MeshBasicMaterial({color:0xff8800}));p.position.set(0,2.24,.43);g.add(p);
+ [-1,1].forEach(s=>{const a=new THREE.Mesh(new THREE.CylinderGeometry(.07,.1,.9,8),sm);a.position.set(s*.55,1.5,.35);a.rotation.set(-1.1,0,s*.5);g.add(a)});
+ const gl=glow(0x88ffaa,3,.25);gl.position.y=1.4;g.add(gl);g.traverse(o=>o.castShadow=true);return g}
+function spawn(){const c=open.filter(([x,z])=>D[z][x]>14),[x,z]=pick(c.length?c:open),g=ghost();g.position.set(wc(x),0,wc(z));sc.add(g);mons.push({g,x:wc(x),z:wc(z),tx:wc(x),tz:wc(z),vx:0,vz:0,stun:0,spin:0})}
+for(let i=1+Math.ceil(LV/2);i--;)spawn();
+const dg=new THREE.BufferGeometry(),dp=new Float32Array(2700);for(let i=0;i<2700;i+=3){dp[i]=R(0,S*TS);dp[i+1]=R(.3,2.8);dp[i+2]=R(0,S*TS)}dg.setAttribute('position',new THREE.BufferAttribute(dp,3));
+const dust=new THREE.Points(dg,new THREE.PointsMaterial({size:.06,color:0xbbbbbb,transparent:true,opacity:.5}));sc.add(dust);
+const far=open.filter(([x,z])=>D[z][x]>10);
+for(let i=0;i<TOT;i++){const [x,z]=far.splice(Math.random()*far.length|0,1)[0],m=new THREE.Mesh(new THREE.CylinderGeometry(.35,.35,.08,18).rotateX(PI/2),new THREE.MeshStandardMaterial({color:0xffd23f,emissive:0xaa7700,metalness:.6,roughness:.3}));
+ m.position.set(wc(x),1.2,wc(z));m.add(glow(0xffc030,1.8,.7));sc.add(m);items.push({m,x:wc(x),z:wc(z),k:0,on:1})}
+for(let i=0;i<8;i++){const [x,z]=pick(open),m=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.3,12),new THREE.MeshStandardMaterial({color:0xb5651d,emissive:0x3a1c00}));
+ m.position.set(wc(x)+R(-.8,.8),.2,wc(z)+R(-.8,.8));sc.add(m);items.push({m,x:m.position.x,z:m.position.z,k:1,on:1})}
+const exit=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,WHT,20,1,true),new THREE.MeshBasicMaterial({color:0x44ff66,transparent:true,opacity:.4,side:THREE.DoubleSide}));exit.material.fog=false;exit.position.set(wc(1),WHT/2,wc(1));exit.visible=false;sc.add(exit);
+// ---- farts ----
+const LINES=["EWWW, MY NOSE!","*GAGGING IN GHOST*","I’M ALREADY DEAD AND THIS IS WORSE","THE HORROR… THE SMELL…","WHO FED THE LIVING BEANS?!","MY CLOTHESPIN HAS FAILED ME!"];
+function fart(big){const r=big?4.2:1.8,fx=-Math.sin(yaw),fz=-Math.cos(yaw),x=P.x-(big?0:fx*.7),z=P.z-(big?0:fz*.7);
+ sfx(big?R(60,80):R(110,160),big?.9:.3);if(big)shake=.6;
+ const g=new THREE.Group(),mat=new THREE.SpriteMaterial({map:gt,color:big?0xa8c63a:0x9bcf3f,transparent:true,opacity:.3,depthWrite:false,fog:false});
+ for(let i=0;i<9;i++){const s=new THREE.Sprite(mat);s.position.set(R(-.6,.6),R(-.3,.5),R(-.6,.6));s.scale.setScalar(R(1.2,2));g.add(s)}
+ g.position.set(x,1,z);g.scale.setScalar(.1);sc.add(g);clouds.push({g,mat,x,z,r,life:big?7:2,max:big?7:2,age:0});
+ mons.forEach(m=>{const dx=m.x-x,dz=m.z-z,d=Math.hypot(dx,dz)||1;if(d<r+1){m.vx=dx/d*(big?9:5);m.vz=dz/d*(big?9:5);m.stun=big?4.5:1.2;m.spin=R(4,9)*(Math.random()<.5?-1:1);say(pick(LINES))}})}
+function die(){if(state!=1)return;state=2;sfx(900,1.2,'sawtooth',.3,400);sfx(300,1.2,'square',.2,100);$('boo').style.display='flex';document.exitPointerLock&&document.exitPointerLock();
+ setTimeout(()=>{$('boo').style.display='none';end('YOU DIED','Spooked to death. Cause: one ghost and several suspicious beans.')},1500)}
+function end(h,p){$('menu').style.display='flex';$('mh').textContent=h;$('mp').textContent=p;$('mb').textContent='Click to try again'}
+// ---- loop ----
+function upd(dt){T+=dt;dust.position.y=Math.sin(T*.4)*.25;
+ const a=(K.KeyD?1:0)-(K.KeyA?1:0),b=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0);
+ yaw+=((K.ArrowLeft||K.KeyQ?1:0)-(K.ArrowRight||K.KeyE?1:0))*1.9*dt;
+ const sy=Math.sin(yaw),cy=Math.cos(yaw),l=Math.hypot(a,b)||1,sp=3.8;
+ mv(P,((-sy*b+cy*a)/l*sp+P.vx)*dt,((-cy*b-sy*a)/l*sp+P.vz)*dt);
+ P.vx*=Math.pow(.02,dt);P.vz*=Math.pow(.02,dt);P.gas=Math.min(100,P.gas+5*dt);
+ shake*=Math.pow(.05,dt);
+ cam.position.set(P.x,1.6+Math.sin(T*9)*.04*(a||b?1:0)+R(-1,1)*shake*.1,P.z);cam.rotation.set(pitch+R(-1,1)*(shake*.05+fear*.004),yaw,0);
+ if((bt+=dt)>.25){bt=0;bfs()}
+ let md=99;
+ mons.forEach(m=>{const g=m.g;
+  if(m.stun>0){m.stun-=dt;mv(m,m.vx*dt,m.vz*dt);m.vx*=Math.pow(.05,dt);m.vz*=Math.pow(.05,dt);g.rotation.y+=m.spin*dt;g.rotation.z=Math.sin(T*25)*.25;if(m.stun<=0){m.tx=m.x;m.tz=m.z;g.rotation.z=0}}
+  else if(T>6){const dx=m.tx-m.x,dz=m.tz-m.z,d=Math.hypot(dx,dz);
+   if(d<.12){const cx=tl(m.x),cz=tl(m.z);let best=D[cz][cx],bx=cx,bz=cz;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([p,q])=>{const v=D[cz+q]&&D[cz+q][cx+p];if(v<best){best=v;bx=cx+p;bz=cz+q}});m.tx=wc(bx);m.tz=wc(bz)}
+   else{const s=Math.min(3.6,2+LV*.12+coins*.2)*dt;m.x+=dx/d*s;m.z+=dz/d*s;g.rotation.y=Math.atan2(dx,dz)}
+   if(Math.hypot(m.x-P.x,m.z-P.z)<1.1)die()}
+  g.position.set(m.x,.1+Math.sin(T*3+m.x)*.1,m.z);md=Math.min(md,Math.hypot(m.x-P.x,m.z-P.z))});
+ fear+=(cl(1-(md-1.5)/10,0,1)-fear)*Math.min(1,dt*3);$('vig').style.opacity=fear;
+ fl.intensity=2.4*(fear>.45&&Math.random()<.07*fear?.05:1);
+ if(fear>.55&&!hint){hint=1;say("A ghost is close! Ghosts can’t smell you (clothespins!), but they can see you. FART at them! (F)",5000)}
+ beatT-=dt;if(beatT<=0){beatT=1.3-.8*fear;sfx(55,.18,'sine',.2+fear*.3,0)}
+ nerv-=dt;if(fear>.7&&nerv<=0&&P.gas>=5&&state==1){nerv=R(1.5,3);P.gas-=5;fart(0);say("*nervous toot*",1400)}
+ clouds.forEach(c=>{c.age+=dt;c.life-=dt;c.g.scale.setScalar(c.r*Math.min(1,c.age*3)*.9);c.g.rotation.y+=dt*.5;c.mat.opacity=.3*Math.min(1,c.life/1.2);
+  if(c.r>3)mons.forEach(m=>{if(Math.hypot(m.x-c.x,m.z-c.z)<c.r)m.stun=Math.max(m.stun,.5)});if(c.life<=0)sc.remove(c.g)});
+ for(let i=clouds.length;i--;)if(clouds[i].life<=0)clouds.splice(i,1);
+ items.forEach(it=>{if(!it.on)return;if(it.k==0){it.m.rotation.y+=dt*2.5;it.m.position.y=1.2+Math.sin(T*2+it.x)*.15}
+  if(Math.hypot(it.x-P.x,it.z-P.z)<1){it.on=0;sc.remove(it.m);
+   if(it.k==0){coins++;sfx(760,.2,'square',.08,0);say(pick(["A cursed coin! It smells like regret.","Ca-ching! The bank manager’s ghost wants it back.","Coin stolen. Crime is going great."]));
+    if(coins==TOT>>1||coins==TOT-2)spawn();if(coins==TOT){exit.visible=true;say("ALL COINS! Run to the green light at the start!",5000)}}
+   else{P.gas=Math.min(100,P.gas+60);sfx(300,.25,'square',.08,0);say(pick(["BEAN CAN! Loaded and locked.","Cold beans. Glorious.","Fuel acquired. Ghosts beware."]),2000)}}});
+ if(coins==TOT&&Math.hypot(exit.position.x-P.x,exit.position.z-P.z)<1.4&&state==1){state=3;document.exitPointerLock&&document.exitPointerLock();sfx(500,.6,'square',.1,0);try{localStorage.setItem('gtf',LV+1)}catch(_){}end('LEVEL '+LV+' CLEARED!','Looted in '+(T|0)+' seconds and left a very smelly legacy. It only gets worse.');$('mb').textContent='Descend to level '+(LV+1)}
+ $('ct').textContent='Lv '+LV+' · Coins '+coins+' / '+TOT;$('gas').style.width=P.gas+'%'}
+let last=performance.now();
+(function loop(n){requestAnimationFrame(loop);const dt=Math.min(.05,(n-last)/1000);last=n;if(state==1)upd(dt);ren.render(sc,cam)})(last);
+// ---- input ----
+addEventListener('keydown',e=>{K[e.code]=1;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.repeat||state!=1)return;
+ if(e.code=='Space'&&P.gas>=25){P.gas-=25;P.vx+=-Math.sin(yaw)*16;P.vz+=-Math.cos(yaw)*16;fart(0)}
+ if(e.code=='KeyF'&&P.gas>=40){P.gas-=40;fart(1)}});
+addEventListener('keyup',e=>K[e.code]=0);
+addEventListener('mousemove',e=>{if(state==1&&(document.pointerLockElement||e.buttons)){yaw-=e.movementX*.0025;pitch=cl(pitch-e.movementY*.0025,-1.2,1.2)}});
+$('menu').addEventListener('click',()=>{if(state>=2){location.reload();return}
+ try{AC=new(window.AudioContext||window.webkitAudioContext)();drone()}catch(_){}
+ try{ren.domElement.requestPointerLock()}catch(_){}
+ state=1;$('menu').style.display='none';say("Find "+TOT+" cursed coins. Don’t get caught. Don’t clench.",4500)});
+</script></body></html>
