@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Saving Private JSON</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>html,body{margin:0;height:100%;background:#111;overflow:hidden;touch-action:none}canvas{display:block;width:100%;height:100%}</style></head><body>
+<canvas id="c"></canvas>
+<script>
+window.onerror=e=>document.body.insertAdjacentHTML('beforeend','<pre style="color:#f66;position:fixed;top:0">'+e+'</pre>');
+const cv=document.getElementById('c'),g=cv.getContext('2d');let W,H,S=1,VW=960;
+function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;S=H/540;VW=W/S}rs();addEventListener('resize',rs);
+const rng=a=>()=>(a=(a*1664525+1013904223)%4294967296)/4294967296;
+const NL=6;
+const TH=[{n:'THE OFFICE',bg:['#3a4256','#1c2030'],g:'#59627a',t:'#8a95b0',e:'🖨️'},{n:'DOWNTOWN',bg:['#1b2a52','#0a1020'],g:'#2a2f40',t:'#ffd060',e:'🐕'},{n:'THE PARK',bg:['#78c8ff','#d6f4ff'],g:'#5a4630',t:'#3fbf4a',e:'🐿️'},{n:'THE GYM',bg:['#3a1a1a','#150808'],g:'#4a2a2a',t:'#ff7a3a',e:'🥤'},{n:'THE SUBWAY',bg:['#101820','#05080c'],g:'#303840',t:'#c0c8d0',e:'🐀'},{n:'THE SERVER ROOM',bg:['#02100a','#000000'],g:'#0c2418',t:'#2cff7a',e:'🐛'},{n:'INSIDE THE COMPUTER',bg:['#1a0030','#000000'],g:'#2a0a4a',t:'#ff3df0',e:''}];
+const NPC=[
+{e:'🧔',l:[['YOU','Dave. I need to find Jason. My boss says he needs saving.'],['DAVE','Jason from Accounting? He microwaved a whole fish on Tuesday. HR has questions.'],['YOU','Is he okay?'],['DAVE','He says the fish started it. Try downtown, he went for hot dogs.'],['YOU','Hang in there Jason.']]},
+{e:'🌭',l:[['YOU','Sir, have you seen Jason? He is in trouble and I have a deadline.'],['VENDOR','Big Jason or crying Jason?'],['YOU','There are two kinds?'],['VENDOR','Crying Jason ate eleven of my hot dogs and called me a legend. Then he cried. Go to the park.']]},
+{e:'🐦',l:[['YOU','Pigeon. Have you seen Jason.'],['PIGEON','Coo. Jason lives in the fountain now.'],['YOU','Why.'],['PIGEON','Coo. He lost a bet. Nobody told him the bet ended. Try the gym.']]},
+{e:'💪',l:[['YOU','Bro. Jason. Have you seen him.'],['BRO','Jason?? Dude only trains calves. Four hours a day. No legs. No arms. Just calves.'],['YOU','That is concerning.'],['BRO','He said the real gains are in the subway. Left like six protein shakes ago.']]},
+{e:'🐀',l:[['YOU','Excuse me rat. Jason?'],['RAT','Squeak. Jason owes me four dollars and a slice.'],['YOU','Where is he now?'],['RAT','Squeak. Went into the server room looking for his lost sock. Pay me his four dollars.']]},
+{e:'🧹',l:[['YOU','Please. Jason. Where.'],['JANITOR','Which Jason?'],['YOU','The one I am supposed to save.'],['JANITOR','Ah. That Jason. Everyone ends up inside the big computer at the end of the hall.'],['YOU','Why.'],['JANITOR','Do not ask me.']]}];
+const FREAK=[['SYSTEM','private.json: UNSAVED CHANGES. AUTOSAVE FAILED.'],['YOU','JASON?! HE IS IN THERE?! WHAT A WEIRD WAY TO SPELL IT'],['YOU','HOLD ON JASON I AM COMING'],['YOU','AAAAAAAAAAAAA *JUMPS INTO MONITOR*'],['SYSTEM','VIRUS.EXE is blocking AUTOSAVE. Stomp it to push the save through.']];
+const END2=[['SYSTEM','VIRUS.EXE deleted. AUTOSAVE COMPLETE. Saved as: private.jason'],['YOU','I SAVED JASON. HE IS SAFE.'],['BOSS','From outside the monitor: Oh nice. Wait. Why is it saved as .jason?'],['YOU','That is how you spell his name.'],['BOSS','It is J-S-O-N. The file will not load now.'],['YOU','Then the file is spelled wrong.'],['BOSS','Take Friday off. Take every Friday off.']];
+let pr=[],bo=null,st='title',lv=0,P,sol,en,co,npc,goal,cam=0,talked=0,coins=0,asked=0,lines,li,after,toast='',tt=0,cp=0,K={},T=0;
+function say(l,cb){lines=l;li=0;after=cb;st='talk'}
+function note(s){toast=s;tt=2.5}
+function gen(n){bo=null;pr=[];
+ if(n===NL){sol=[{x:-60,y:440,w:1020,h:200},{x:-60,y:0,w:60,h:540},{x:900,y:0,w:60,h:540},{x:150,y:340,w:130,h:16},{x:620,y:340,w:130,h:16}];en=[];co=[];for(let k=0;k<8;k++)co.push({x:120+k*95,y:400,on:1});npc=-9999;goal=99999;bo={x:700,y:360,w:80,h:80,vy:0,hp:5,d:-1,inv:0,jt:1.5,pt:1.5,t:0};return}
+ const r=rng(n*91+7),L=3000+n*400;sol=[{x:-300,y:440,w:900,h:300}];en=[];co=[];let px=600,seg=[];
+ while(px<L){const gap=90+r()*55,w=280+r()*320,sx=px+gap;sol.push({x:sx,y:440,w,h:300});
+  if(r()<.7)sol.push({x:px+gap/2-50,y:350+r()*15,w:100,h:16});
+  if(r()<.6)sol.push({x:sx+w*.45,y:340+r()*30,w:120,h:16});
+  for(let k=0;k<3;k++)co.push({x:px+gap*.25+k*gap*.25,y:330,on:1});
+  for(let k=0;k<4;k++)co.push({x:sx+30+k*40,y:400,on:1});
+  seg.push(sx);
+  if(w>330&&r()<.85)en.push({x:sx+w*.6,y:410,lo:sx+10,hi:sx+w-40,d:1,on:1});px=sx+w}
+ const fx=px+100;sol.push({x:fx,y:440,w:500,h:300});goal=fx+330;
+ const mi=Math.max(1,Math.floor(seg.length/2));npc=seg[mi]+60;en=en.filter(e=>Math.abs(e.x-npc)>200)}
+function load(n){lv=n;gen(n);P={x:40,y:380,w:26,h:40,vx:0,vy:0,on:0,f:1};talked=0;cp=40;note('LEVEL '+(n+1)+': '+TH[n].n);st='play'}
+function respawn(m){P.x=cp;P.y=380;P.vy=0;note(m)}
+function ov(s){return P.x<s.x+s.w&&P.x+P.w>s.x&&P.y<s.y+s.h&&P.y+P.h>s.y}
+function mv(dx,dy){P.x+=dx;for(const s of sol)if(ov(s)){if(dx>0)P.x=s.x-P.w;else if(dx<0)P.x=s.x+s.w}
+ P.y+=dy;P.on=0;for(const s of sol)if(ov(s)){if(dy>0){P.y=s.y-P.h;P.vy=0;P.on=1}else if(dy<0){P.y=s.y+s.h;P.vy=0}}}
+function act(){if(st!=='play'||lv===NL)return;
+ if(Math.abs(P.x-npc)<60){say(NPC[lv].l,()=>{if(!talked){talked=1;asked++;cp=npc}note('Exit unlocked. Keep going!')});return}
+ if(Math.abs(P.x-goal)<60){if(!talked){note('Maybe ask someone about Jason first.');return}
+  if(lv<NL-1)load(lv+1);else say(FREAK,()=>load(NL))}}
+function adv(){if(st==='title'){load(0);say([['BOSS','Before you leave today, I need you to save JSON.'],['YOU','Save Jason? Of course. What a weird way to spell Jason, J-S-O-N.'],['BOSS','...Sure. Do not come back until it is saved.'],['YOU','A dude named Jason is in trouble. I am on it.']],()=>{})}
+ else if(st==='talk'){li++;if(li>=lines.length){const a=after;st='play';a&&a()}}else if(st==='end')location.reload()}
+addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','Space'].includes(e.code))e.preventDefault();if(K[e.code])return;K[e.code]=1;
+ if(e.code==='KeyE'||e.code==='Enter'){if(st==='play')act();else adv()}else if(st==='title'||(st==='talk'&&e.code==='Space'))adv();
+ if((e.code==='Space'||e.code==='KeyW'||e.code==='ArrowUp')&&st==='play'&&P.on)P.vy=-640});
+addEventListener('keyup',e=>K[e.code]=0);
+function touch(e){e.preventDefault();K.L=K.R=0;for(const t of e.touches){const f=t.clientX/W;if(f<.25)K.L=1;else if(f<.5)K.R=1}
+ if(e.type==='touchstart'){const f=e.changedTouches[0].clientX/W;if(st!=='play')adv();else if(f>=.75)act();else if(f>=.5&&P.on)P.vy=-640}}
+['touchstart','touchmove','touchend'].forEach(n=>cv.addEventListener(n,touch,{passive:false}));
+cv.addEventListener('mousedown',()=>{if(st!=='play')adv()});
+function upd(dt){T+=dt;if(tt>0)tt-=dt;if(st!=='play')return;
+ const d=(K.KeyD||K.ArrowRight||K.R?1:0)-(K.KeyA||K.ArrowLeft||K.L?1:0);P.vx=d*270;if(d)P.f=d;
+ P.vy=Math.min(P.vy+1800*dt,900);mv(P.vx*dt,0);mv(0,P.vy*dt);if(P.x<-250)P.x=-250;
+ if(P.y>700)respawn('You fell. Respawned.');
+ for(const c of co)if(c.on&&Math.abs(c.x-P.x-13)<22&&Math.abs(c.y-P.y-20)<30){c.on=0;coins++}
+ for(const e of en){if(!e.on)continue;e.x+=e.d*70*dt;if(e.x<e.lo||e.x>e.hi)e.d*=-1;
+  if(P.x<e.x+30&&P.x+P.w>e.x&&P.y<e.y+30&&P.y+P.h>e.y){if(P.vy>0&&P.y+P.h-e.y<24){e.on=0;P.vy=-420;coins+=2;note(['BONK','skill issue','ratio','L + stomped','get rekt Jason'][Math.random()*5|0])}else respawn(['Ouch! Back to the checkpoint.','you died lmao','that was embarrassing','JASON!!!'][Math.random()*4|0])}}
+ if(bo&&bo.hp>0){bo.t+=dt;bo.inv-=dt;bo.x+=bo.d*(110+(5-bo.hp)*45)*dt;if(bo.x<40){bo.x=40;bo.d=1}if(bo.x>780){bo.x=780;bo.d=-1}
+  bo.jt-=dt;if(bo.jt<=0&&bo.y>=360){bo.vy=-650;bo.jt=1.6}bo.vy+=1800*dt;bo.y+=bo.vy*dt;if(bo.y>360){bo.y=360;bo.vy=0}
+  bo.pt-=dt;if(bo.pt<=0){bo.pt=1.3-(5-bo.hp)*.1;pr.push({x:60+Math.random()*780,y:-20})}
+  for(let i=pr.length-1;i>=0;i--){const q=pr[i];q.y+=260*dt;if(q.y>450){pr.splice(i,1);continue}if(P.x<q.x+24&&P.x+P.w>q.x&&P.y<q.y+24&&P.y+P.h>q.y){pr.splice(i,1);respawn('virus popup got you')}}
+  if(P.x<bo.x+bo.w&&P.x+P.w>bo.x&&P.y<bo.y+bo.h&&P.y+P.h>bo.y&&bo.inv<=0){if(P.vy>0&&P.y+P.h-bo.y<34){bo.hp--;bo.inv=1;P.vy=-650;note('AUTOSAVE '+(5-bo.hp)*20+'%');if(bo.hp<=0)say(END2,()=>{st='end'})}else respawn('VIRUS.EXE says: ur file is mine')}}
+ cam=lv===NL?(900-VW)/2:Math.max(-100,P.x-VW*.35)}
+function wrap(t,mw){let l='',o=[];for(const a of t.split(' ')){if(g.measureText(l+a).width>mw&&l){o.push(l);l=''}l+=a+' '}o.push(l);return o}
+function draw(){g.setTransform(S,0,0,S,0,0);const th=TH[lv],gr=g.createLinearGradient(0,0,0,540);gr.addColorStop(0,th.bg[0]);gr.addColorStop(1,th.bg[1]);g.fillStyle=gr;g.fillRect(0,0,VW,540);
+ for(let i=0;i<14;i++){const bx=((i*140-cam*.25)%(VW+140)+VW+140)%(VW+140)-70,bh=80+((i*37)%5)*40;g.fillStyle=th.t+'33';g.fillRect(bx,440-bh,90,bh)}
+ if(st==='title'){g.textAlign='center';g.fillStyle='#fff';g.font='bold 54px monospace';g.fillText('SAVING PRIVATE JSON',VW/2,220);g.font='20px monospace';g.fillStyle='#ffd060';g.fillText('A Workplace Misunderstanding (this is a cry for help)',VW/2,260);g.fillStyle='#fff';g.fillText(Math.sin(T*4)>0?'Press any key / tap to start':'',VW/2,340);g.font='80px serif';g.fillText('🧑‍💼',VW/2,450);g.textAlign='left';return}
+ g.save();g.translate(-cam,0);
+ for(const s of sol){g.fillStyle=th.g;g.fillRect(s.x,s.y,s.w,s.h);g.fillStyle=th.t;g.fillRect(s.x,s.y,s.w,6)}
+ g.font='22px serif';for(const c of co)if(c.on)g.fillText('📎',c.x-11,c.y+8);
+ g.font='30px serif';for(const e of en)if(e.on)g.fillText(th.e,e.x,e.y+28);
+ if(lv<NL){g.font='46px serif';g.fillText(NPC[lv].e,npc-23,440);g.font='56px serif';g.fillText(lv<NL-1?'🚪':'🖥️',goal-28,440);
+  g.font='bold 18px monospace';g.fillStyle='#fff';if(!talked)g.fillText('❗',npc-8,385+Math.sin(T*5)*4);
+  if(Math.abs(P.x-npc)<60)g.fillText('[E] Ask about Jason',npc-70,360);
+  if(Math.abs(P.x-goal)<60)g.fillText(talked?'[E] Go':'(locked)',goal-30,360)}
+ if(bo&&bo.hp>0&&!(bo.inv>0&&(T*20|0)%2)){g.font='84px serif';g.fillText('🦠',bo.x-2,bo.y+74)}
+ g.font='26px serif';pr.forEach(q=>g.fillText('⚠️',q.x,q.y+24));
+ g.save();g.translate(P.x+13,0);g.scale(P.f,1);g.font='38px serif';g.fillText('🧑‍💼',-19,P.y+P.h-2);g.restore();g.restore();
+ g.fillStyle='#000a';g.fillRect(0,0,VW,34);g.fillStyle='#fff';g.font='15px monospace';
+ g.fillText('LV'+(lv+1)+' '+th.n+'   📎 '+coins+'   Jasons asked: '+asked+'/'+NL+'   '+(lv===NL?'AUTOSAVE '+(bo?(5-Math.max(0,bo.hp))*20:100)+'% - stomp the VIRUS':talked?'Reach the exit':'Find someone who knows Jason'),12,22);
+ if(tt>0){g.textAlign='center';g.fillStyle='#ffd060';g.font='bold 20px monospace';g.fillText(toast,VW/2,70);g.textAlign='left'}
+ if(st==='talk'){const L=lines[li],bw=Math.min(VW-40,720),bx=(VW-bw)/2,by=370;g.fillStyle='#000d';g.fillRect(bx,by,bw,150);g.strokeStyle='#fff';g.strokeRect(bx,by,bw,150);
+  g.font='bold 16px monospace';g.fillStyle=L[0]==='YOU'?'#7fd0ff':'#ffd060';g.fillText(L[0],bx+16,by+28);g.font='16px monospace';g.fillStyle='#fff';wrap(L[1],bw-32).forEach((s,i)=>g.fillText(s,bx+16,by+58+i*22));g.fillStyle='#aaa';g.fillText('[E / tap]',bx+bw-90,by+140)}
+ if(st==='end'){g.fillStyle='#000';g.fillRect(0,0,VW,540);g.textAlign='center';g.font='22px monospace';
+  [['> open private.jason','#2cff7a'],['ERROR: unknown file type ".jason"','#ff4a4a'],['ERROR: file will not load','#ff4a4a'],['ERROR: did you mean ".json"?','#ff4a4a'],['',''],['Jason: saved.','#2cff7a'],['File: broken.','#ff4a4a'],['',''],['paperclips collected: '+coins,'#fff']].forEach((s,i)=>{g.fillStyle=s[1];g.fillText(s[0],VW/2,130+i*34)});
+  g.fillStyle='#888';g.font='16px monospace';g.fillText('Thanks for playing SAVING PRIVATE JSON. [E / tap to restart]',VW/2,480);g.textAlign='left'}}
+let last=performance.now();(function loop(n){requestAnimationFrame(loop);upd(Math.min((n-last)/1000,.033));last=n;draw()})(last);
+</script></body></html>

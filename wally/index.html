@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Three</title>
+<style>
+:root{--ink:#111;--face:#8d8a80;--hi:#fff;--sh:#6b6a64;--title:#1c3f7a;--paper:#cfc8b6;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:#050303;font:13px Tahoma,Verdana,sans-serif;color:var(--ink);user-select:none}
+#desk{position:fixed;inset:0 0 34px 0;background:radial-gradient(ellipse at 30% 20%,#2a1515,#050303 75%);overflow:hidden}
+#icons{position:absolute;inset:0}
+
+.ic{position:absolute;touch-action:none;width:78px;text-align:center;color:#fff;cursor:pointer;padding:4px;text-shadow:1px 1px 2px #000;font-size:12px}
+.ic i{font-style:normal;font-size:32px;display:block}
+.ic:hover,.ic.sel{background:rgba(255,255,255,.18)}
+.ic.new{animation:pop 1.2s 3}
+@keyframes pop{50%{background:rgba(255,230,120,.4)}}
+.win{position:absolute;background:var(--face);border:2px outset var(--hi);box-shadow:3px 3px 0 rgba(0,0,0,.4);display:flex;flex-direction:column;max-width:calc(100vw - 8px);max-height:calc(100% - 4px)}
+.tb{background:linear-gradient(90deg,#2a0b0e,#6b1d1d);color:#fff;padding:3px 6px;display:flex;justify-content:space-between;cursor:move;font-weight:bold}
+.tb button{width:20px;height:18px;padding:0;line-height:14px}
+.bd{overflow:auto;flex:1;background:var(--paper);margin:3px;border:2px inset var(--hi);padding:10px;user-select:text}
+button{font:inherit;background:var(--face);border:2px outset var(--hi);padding:2px 10px;cursor:pointer;color:var(--ink)}
+button:active{border-style:inset}
+#bar{position:fixed;left:0;right:0;bottom:0;height:34px;background:var(--face);border-top:2px outset var(--hi);display:flex;align-items:center;gap:4px;padding:2px 4px;padding-bottom:calc(2px + env(safe-area-inset-bottom,0px))}
+#tasks{flex:1;display:flex;gap:4px;overflow:hidden}
+#tray{border:2px inset var(--hi);padding:3px 8px;white-space:nowrap}
+.addr{display:flex;gap:4px;margin-bottom:4px}.addr input{flex:1;font:inherit;padding:2px 4px;min-width:0}
+.bm{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--sh)}
+.bm button{font-size:12px;padding:1px 8px}
+a.l{color:#1a3fa8;text-decoration:underline;cursor:pointer}
+.post{border:1px solid #6b6552;margin:8px 0;background:#cfc8b4}
+.post h5{margin:0;padding:4px 8px;background:#b9b199;font-size:12px}
+.post p{margin:0;padding:8px}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:8;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.72))}
+#desk{filter:brightness(calc(1 - var(--dk,0)))}
+.mention{background:#d8c98a}
+.me{color:#7a1a1a}
+.nf{position:absolute;right:10px;bottom:10px;background:#2a1a14;color:#e8d9b5;border:1px solid #7a1d1d;padding:8px 10px;max-width:240px;cursor:pointer;z-index:99}
+h3,h4{margin:4px 0 8px}
+.fz{animation:fz 4s infinite}.late .fz{animation-duration:1.2s}
+@keyframes fz{0%,94%,100%{transform:none;opacity:1}95%{transform:translateX(2px);opacity:.6}97%{transform:translateX(-2px) skewX(2deg)}}
+.wb{display:flex;gap:2px}
+.fh{background:#3a2f55;color:#fff;display:flex;align-items:center;gap:12px;padding:6px 10px;margin:-10px -10px 8px}
+.bt{cursor:pointer;font-size:18px;color:#fff}
+.bdg{background:#d33;color:#fff;border-radius:8px;padding:0 5px;font-size:11px;position:relative;top:-8px;left:-3px}
+.avs{display:inline-flex;width:22px;height:22px;background:#7a5c9e;color:#fff;align-items:center;justify-content:center;font-weight:bold}
+.post.mine h5{background:#9aaec0}
+.rowu{padding:7px 4px;border-bottom:1px solid #ddd;cursor:pointer}
+canvas{background:#000;display:block;max-width:100%}
+.pix{image-rendering:pixelated;width:100%;display:block;border:2px inset #fff}
+</style>
+</head>
+<body>
+<div id="desk"><div id="icons"></div></div>
+<div id="bar"><button onclick="startMenu()"><b>Start</b></button><div id="tasks"></div><div id="tray"></div></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuf=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
+const ME="jason1983";
+let S={day:1,phase:0,min:8*60+12,wins:{},z:10,url:"home",hist:[],replied:false,mention:true,bin:[
+ {n:"homework_final.doc",t:"Essay on the Industrial Revolution. 3 paragraphs. No grade."},
+ {n:"wally_notes_OLD.txt",t:"i dont remember writing this\n\n5\n4\n3\n2\n\nthe next number is the one you keep forgetting"},
+ {n:"untitled.jpg",t:"[A photo of a living room, 1991. The TV is on. The screen is too bright to see.]"}]};
+/* ---- Desktop icons: data-driven. p = phase at which the icon appears. Edit freely. ---- */
+const ICONS=[
+ {id:"net",l:"Internet",e:"🌐",p:0,o:()=>openNet()},
+ {id:"bin",l:"Recycle Bin",e:"🗑️",p:0,o:()=>openBin()},
+ {id:"docs",l:"My Documents",e:"📁",p:0,o:()=>openDocs()},
+ {id:"pics",l:"Pictures",e:"🖼️",p:0,o:()=>openPics()},
+ {id:"mailbox",l:()=>"Mail"+(S.mail.filter(m=>!m.read).length?" ("+S.mail.filter(m=>!m.read).length+")":""),e:"📧",p:0,o:()=>openMail()},
+ {id:"note",l:"todo.txt",e:"📝",p:0,o:()=>openText("todo.txt",TODO())},
+ {id:"media",l:"Media Player",e:"📼",p:0,o:()=>openPlayer()},
+ {id:"rsvp",l:"rsvp.txt",e:"📝",p:0,d:3,o:()=>openText("rsvp.txt","You are invited.\nBring nothing.\nNobody sings.\n\nSeats remaining: "+Math.max(1,6-S.day))},
+ {id:"tape",l:"scan_01.avi",e:"🎞️",p:1,o:()=>openPlayer()},
+ {id:"nts",l:"notes_re_wally.txt",e:"📄",p:0,d:5,o:()=>openText("notes_re_wally.txt",NOTES())},
+ {id:"codec",l:"codec_patch.exe",e:"⚙️",p:0,v:()=>S.f.codec,o:()=>openText("codec_patch.exe","This program is already running.\n\n(It is not listed anywhere.)")},
+ {id:"tet",l:"BlockDrop",e:"🧱",p:0,v:()=>S.f.tetris,o:()=>openTetris()},
+ {id:"today",l:()=>"Today ("+S.tasks.filter(t=>S.did[t[0]]).length+"/"+S.tasks.length+")",e:"📋",p:0,o:()=>openToday()},
+ {id:"npad",l:"Notepad",e:"📓",p:0,o:()=>openNotepad()},
+ {id:"voice",l:"Answering Machine",e:"📞",p:0,d:11,o:()=>openVoice()}
+];
+/* ---- clock & phases ---- */
+function clock(){const h=Math.floor(S.min/60)%24,m=S.min%60;return (h%12||12)+":"+String(m).padStart(2,"0")+(h<12?" AM":" PM")}
+function adv(m){S.min+=m;tray()}
+function tray(){$("#tray").textContent=DATES[S.day-1]+" · "+clock()+(S.day>=12?" · 3":"");document.body.className=S.phase>=1?"late":"";document.body.style.setProperty("--dk",Math.min(.5,S.day*.03+((S.min%1440>=1140||S.min%1440<360)?.12:0)))}
+function setPhase(p){S.phase=p;icons(true)}
+/* ---- windows ---- */
+function win(id,title,html,w,x,y){
+ if(S.wins[id]){const e=S.wins[id];e.style.display="flex";e.style.zIndex=++S.z;e.querySelector(".bd").innerHTML=html;tasks();return e}
+ const e=document.createElement("div");e.className="win";e.style.cssText=`width:${Math.min(w||460,innerWidth-8)}px;left:${Math.max(4,Math.min(x||60,innerWidth-(w||460)-8))}px;top:${y||30}px;z-index:${++S.z}`;
+ e.innerHTML=`<div class="tb"><span>${esc(title)}</span><span class="wb"><button data-a="min">_</button><button data-a="max">&#9633;</button><button data-a="x">x</button></span></div><div class="bd">${html}</div>`;
+ $("#desk").appendChild(e);S.wins[id]=e;e.dataset.t=title;
+ e.onmousedown=()=>e.style.zIndex=++S.z;
+ e.querySelector(".wb").onclick=ev=>{const a=ev.target.dataset.a;if(a==="x"){e.remove();delete S.wins[id]}else if(a==="min")e.style.display="none";else if(a==="max")maxToggle(e);tasks()};
+ const tb=e.querySelector(".tb");let dx,dy,dr=0;
+ tb.ondblclick=ev=>{if(ev.target.tagName!=="BUTTON")maxToggle(e)};
+ tb.onpointerdown=ev=>{if(ev.target.tagName==="BUTTON"||e.dataset.max)return;dr=1;dx=ev.clientX-e.offsetLeft;dy=ev.clientY-e.offsetTop;tb.setPointerCapture(ev.pointerId)};
+ tb.onpointermove=ev=>{if(dr){e.style.left=Math.max(0,ev.clientX-dx)+"px";e.style.top=Math.max(0,ev.clientY-dy)+"px"}};
+ tb.onpointerup=()=>dr=0;
+ tasks();return e}
+function maxToggle(e){if(e.dataset.max){const g=JSON.parse(e.dataset.max);e.style.left=g.l;e.style.top=g.t;e.style.width=g.w;e.style.height=g.h;e.style.maxWidth="";e.style.maxHeight="";delete e.dataset.max}else{e.dataset.max=JSON.stringify({l:e.style.left,t:e.style.top,w:e.style.width,h:e.style.height});e.style.left="0";e.style.top="0";e.style.width="100%";e.style.height="100%";e.style.maxWidth="100%";e.style.maxHeight="100%"}e.style.zIndex=++S.z}
+function tasks(){$("#tasks").innerHTML=Object.keys(S.wins).map(k=>{const e=S.wins[k];return `<button style="${e.style.display==="none"?"":"border-style:inset"}" onclick="tg('${k}')">${esc(e.dataset.t).slice(0,18)}</button>`}).join("")}
+function tg(k){const e=S.wins[k];if(e.style.display==="none"){e.style.display="flex";e.style.zIndex=++S.z}else if(+e.style.zIndex===S.z)e.style.display="none";else e.style.zIndex=++S.z;tasks()}
+function note(t,m,fn){const n=document.createElement("div");n.className="nf";n.innerHTML=`<b>${esc(t)}</b><br>${esc(m)}`;n.onclick=()=>{n.remove();fn&&fn()};$("#desk").appendChild(n);setTimeout(()=>n.remove(),9000)}
+function openText(t,txt){win("t"+t,t,`<pre style="margin:0;white-space:pre-wrap;font:13px 'Courier New',monospace">${esc(txt)}</pre>`,360,90,60)}
+function openDocs(){did("docs");win("docs","My Documents",`<h4>My Documents</h4>📄 resume_2024.doc<br>📄 budget.xls<br>📁 <a class="l" onclick="openPics()">Pictures</a><br>📁 Downloads (empty)`,320,120,80)}
+function openBin(){
+ const h=`<h4>Recycle Bin</h4>`+(S.bin.length?S.bin.map((f,i)=>`<div>📄 <a class="l" onclick="openText('${f.n}',S.bin[${i}].t)">${esc(f.n)}</a></div>`).join(""):"<i>Empty.</i>")+`<br><button onclick="S.bin=[];openBin()">Empty Recycle Bin</button>`;
+ win("bin","Recycle Bin",h,340,100,70)}
+/* ---- browser ---- */
+const BM=[["forum","NostalgiaTV"],["home","SearchLite"],["wiki","OddPedia"],["tapes","TapeTrader"],["news","Gazette"],["bank","Harbor CU"],["game","Pop!"]];
+const URLS={home:"http://searchlite.net",forum:"http://nostalgiatv.net",wiki:"http://oddpedia.org",game:"http://popgames.biz/pop",cache:"http://cache.searchlite.net/2009/wally",tapes:"http://tapetrader.example",news:"http://meadowbrook-gazette.example/archive",bank:"https://online.harborcu.example"};
+function openNet(){S.hist=[];go("forum")}
+function go(u,arg){S.url=u;S.arg=arg;
+ const bm=BM.map(([k,l])=>`<button onclick="go('${k}')">★ ${esc(l)}</button>`).join("");
+ const html=`<div class="addr"><button onclick="go('forum')">Home</button><input value="${esc(u==='forum'&&arg?URLS.forum+'/'+String(arg).replace(':','/'):(URLS[u]||URLS.wiki))}" readonly></div><div class="bm">${bm}</div><div id="pg">${SITE[u](arg)}</div>`;
+ const e=win("net","Internet Explorer",html,560,70,16);if(!e.dataset.max)e.style.height=Math.min(innerHeight-70,560)+"px";
+ if(u==="game")startGame()}
+const SITE={
+ home(){return `<div style="text-align:center"><h2 style="margin:6px">SearchLite</h2><input id="q" size="26" onkeydown="if(event.key==='Enter')srch()"> <button onclick="srch()">Search</button><p style="color:#555">The small, fast web.</p><div id="res" style="text-align:left"></div></div>`},
+ wiki(a){return wikiPage(a)},
+ game(){return `<h3>Pop!</h3>Click the squares before they fade. <b id="sc">Score: 0</b><canvas id="cv" width="360" height="220"></canvas>`},
+ cache(){return `<h3>wally_wisp_${ME}.html</h3><div class="meta">cached Mar 4, 2009 3:00 AM</div><p>Show notes by ${ME}: Today we count. If you are reading this, you are already watching. Nobody leaves before the count ends.</p>`},
+ forum(a){return forumPage(a)}
+};
+/* ---- tiny game ---- */
+let gi;function startGame(){clearInterval(gi);const c=$("#cv");if(!c)return;const g=c.getContext("2d");let sq=[],sc=0;
+ c.onclick=e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)*c.width/r.width,y=(e.clientY-r.top)*c.height/r.height;const i=sq.findIndex(q=>x>q.x&&x<q.x+34&&y>q.y&&y<q.y+34);if(i>=0){sq.splice(i,1);sc++;$("#sc").textContent="Score: "+sc}};
+ gi=setInterval(()=>{if(!$("#cv")){clearInterval(gi);return}if(Math.random()<.35)sq.push({x:Math.random()*320,y:Math.random()*180,a:1});g.clearRect(0,0,360,220);sq.forEach(q=>{q.a-=.03;g.fillStyle=`rgba(217,164,65,${Math.max(q.a,0)})`;g.fillRect(q.x,q.y,34,34)});sq=sq.filter(q=>q.a>0)},50)}
+/* ---- witnesses (randomized each load) ---- */
+const HOSTS=["Wally, the blue rabbit","Mr. Thistle, the smiling scarecrow","a host nobody can describe above the shoulders","Wally, who was a lamp with a face"];
+const SONGS=["Count Down to Goodbye","Seven Little Candles","Backwards Is the Way Home","Ten Sleepy Windows"];
+const EPS=["The Party Nobody Sang At","Hello, Is Anyone Home?","Wally’s Quiet Day","The Long Hallway"];
+const CHANS=["Channel 9 on Saturday mornings","Channel 4 after school","Channel 11 before the news","a channel we only got when it rained"];
+const ODD=["Mom says we never owned a TV that picked up that station.","The puppet used my sister’s name. She was in another room.","The set smelled like warm dust, which is impossible through a screen.","My brother remembers it differently and has stopped talking about it.","Nobody says goodbye at the end. I never noticed until now."];
+/* ---- forum people & content ---- */
+const ALLN=["static_lullaby","m0thwing_77","cathodeKiln","bluehour_ferris","analog_orchard","tapewyrm","plasticSundae","11pm_gravel","velvet_signal","dust_on_the_dial","hollowtoaster","kmart_ghost","paperlantern_rex","fuzzbucket4","lowtide.radio","moonpie_deluxe"];
+const NAMES=shuf(ALLN);const WN=NAMES.splice(0,5),OP=NAMES.pop(),MEN=NAMES.pop(),REPLIER=NAMES.pop(),DMN=NAMES.pop();
+const TAG=["Member","Veteran","New member","Parent","Lurker"],WHEN=["Feb 7","Feb 11","Feb 21","Feb 25","Mar 1"];
+const VOICE=[
+ w=>`Lurker for years, first post. Everything I can verify says this program wasn’t real, yet I can still hum the opening. The host (${w.host}) waved with both hands, and it came on ${w.chan}. What I can’t explain is feeling sad when it ended, because it ended mid-sentence.`,
+ w=>`ok this is going to sound insane but “${w.ep}”?? me and my cousin used to reenact it in the garage. the song was “${w.song}” and you counted DOWN not up. i think we got it ${w.chan} but honestly idk. ask him, he’ll say the same`,
+ w=>`${w.host}. That’s all I’ll say. Ask me about the ending and I’ll stop replying.`,
+ w=>`Not me, my daughter. She was about four and would freeze whenever it came on, ${w.chan}. I asked once what it was about. She said, “nobody leaves.” She’s grown now and swears she has never heard of it.`,
+ w=>`Things I’m sure of: (1) “${w.ep}” had a party scene where nobody sang. (2) The count went backwards, “${w.song}”. (3) Last shot, everybody stares at you. Things I’m not sure of: the host (${w.host}?) and the channel.`];
+const W=WN.map((h,i)=>({h,host:pick(HOSTS),song:pick(SONGS),ep:pick(EPS),chan:pick(CHANS)}));
+S.notifs=[{id:"n1",txt:MEN+" mentioned you in “Wally Wisp’s Wonder Hour — anyone??”",arg:"t:wally",read:false}];
+S.dms=[{id:"d0",from:"NostalgiaTV",subj:"Welcome back, "+ME,read:true,txt:"Your account was created in March 2009. 212 posts, 0 warnings."}];
+const THREADS=[
+ {id:"rules",t:"Read first: forum rules & posting etiquette",c:"Announcements",v:9120,r:3,la:"1w",pin:1,ps:["Be kind. Search before you post. If you’re hunting a lost show, tell us the year, the region and the channel.","Please don’t post copyrighted full episodes. Short clips are fine.","Reminder: ‘I think I dreamed it’ is a valid thing to say here."]},
+ {id:"cube",t:"Saturday cartoon intro was just a spinning cube and a trumpet?",c:"Cartoons",v:2310,r:41,la:"2h",ps:["Early 90s. No characters, just a cube turning over a trumpet riff. Thought I dreamed it.","That was the Kids Block ident from a cable network out of Tulsa. The trumpet came from a car commercial.","Bless you. I’ve wondered for 25 years."]},
+ {id:"pizza",t:"Game show set inside a pizza restaurant, host in a paper chef hat",c:"Game Shows",v:1288,r:17,la:"5h",ps:["Contestants answered trivia to ‘earn’ toppings. The loser got plain cheese and a pat on the head.","Regional. I was on it in 1992. They never gave me the pizza."]},
+ {id:"fox",t:"Claymation fox PSA about talking to strangers",c:"PSAs",v:3011,r:64,la:"8h",ps:["The fox wore a yellow raincoat. The ending was surprisingly dark for a PSA.","Safety Fox! My teacher showed it twice a year."]},
+ {id:"lighthouse",t:"Theme song to a kids’ show about a lighthouse (Canadian?)",c:"Theme Songs",v:874,r:9,la:"1d",ps:["Whistling, then a choir of kids singing ‘keep the lamp on’. Anyone?","Possibly ‘Lamplight Cove’. I’ll dig through my old guides."]},
+ {id:"nine",t:"Channel 9 ident: the floating blue 9 with the humming sound",c:"Idents",v:1950,r:28,la:"1d",ps:["Slowly rotating 9, gentle hum underneath. Aired before sign-off.","The hum was a 60 Hz tone. They slowly bent the pitch down at the end."]},
+ {id:"snack",t:"What did you eat in front of the TV after school?",c:"Off-Topic",v:5400,r:132,la:"2d",ps:["Buttered toast cut into triangles and a glass of orange drink.","Cold pizza, no contest."]},
+ {id:"signoff",t:"Test patterns and sign-off messages: share yours",c:"Broadcast",v:4102,r:77,la:"3d",ps:["Local station played the anthem over a flag, then a test pattern with a tone.","Ours just said ‘Good night, see you tomorrow’ in a handwriting font."]},
+ {id:"pockets",t:"Looking for: ‘Professor Pockets’ science segment",c:"Lost Media",v:640,r:6,la:"4d",ps:["He pulled bizarre objects out of a coat to explain physics. Never found a single listing.","There’s a thread on the old board. It was deleted."]}];
+const DATES=["Mar 4","Mar 5","Mar 6","Mar 9","Mar 14","Mar 20","Mar 29","Apr 5","Apr 14","Apr 22","May 3","May 15","May 28","Jun 3"];
+const SKIP=["","1 day later","1 day later","3 days later","5 days later","6 days later","9 days later","7 days later","9 days later","8 days later","11 days later","12 days later","13 days later","6 days later"];
+S.f={};S.wp=[];S.pend=[];S.tw=0;S.nid=0;
+S.dms=[{id:"d0",from:"NostalgiaTV",subj:"Welcome back, "+ME,read:true,msgs:[["NostalgiaTV","Your account was created in March 2009. 212 posts, 0 warnings."]]}];
+const TM={nine:[9,"Channel 9 ident: the floating blue 9 (it counts down now)"],snack:[12,"What did you eat in front of the TV after school? (we’re all watching)"],cube:[11,"Saturday cartoon intro was just a cube and a trumpet? (the cube has a corner now)"]};
+const LATE={
+ rules:[[9,"admin","Rule 7: do not post the lyrics to the countdown."],[12,"admin","Rule 7 has been removed. Everyone knows them anyway."]],
+ cube:[[5,"kmart_ghost","The cube had a face in the sixth frame. Still does."],[9,"[deleted]","It counts down in the corner. Nobody mentions the corner."]],
+ pizza:[[6,"hollowtoaster","I looked up the channel. It doesn’t exist. Everyone says the same thing every time."],[11,"[deleted]","You won’t get the pizza until you finish the count."]],
+ fox:[[4,"fuzzbucket4","Rewatched Safety Fox. The raincoat is green now."],[8,ME,"I stopped watching too."]],
+ lighthouse:[[7,"lowtide.radio","keep the lamp on. keep the lamp on. why do I know the rest?"]],
+ nine:[[5,"moonpie_deluxe","The hum drops three steps at the end. One, two, three."]],
+ snack:[[6,"plasticSundae","Off topic, but does anyone else feel watched while eating toast?"]],
+ signoff:[[8,"velvet_signal","Ours said goodnight and then a number."]],
+ pockets:[[10,"[deleted]","He pulled out a small TV. On the TV was me."]]};
+const FT=()=>{const a=THREADS.map((x,i)=>{const m=TM[x.id];return {...x,t:m&&S.day>=m[0]?m[1]:x.t,r:x.r+Math.floor(S.day*(1+i%3)),la:S.day>=12&&i%2?"3s":x.la,op:ALLN[(i*5+2)%ALLN.length]}});
+ a.splice(1,0,{id:"wally",t:"Wally Wisp’s Wonder Hour — anyone??",c:"Lost Media",op:OP,v:312+S.day*37,r:W.length+3+S.wp.length+(S.day>=2?1:0),la:S.wp.length?"just now":"3h"});return a};
+const avc=["#7a5c9e","#3f8f6b","#b5683a","#4a78b5","#a8446a","#6b6b2e"];
+const av=n=>`<div style="width:44px;height:44px;background:${avc[n.length%avc.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;margin:0 auto 4px">${esc(n[0].toUpperCase())}</div>`;
+const P=(n,w,b,c,x)=>`<div class="post ${c||""}" style="display:flex"><div style="width:96px;padding:8px 4px;background:#a9a28c;text-align:center;font-size:11px;word-break:break-word">${av(n)}<b>${esc(n)}</b><br><span style="color:#777">${x||"Member"}</span></div><div style="flex:1"><h5>${esc(w)}</h5><p>${b}</p></div></div>`;
+const nf=(txt,arg)=>S.notifs.unshift({id:"n"+(++S.nid),txt,arg,read:false});
+const dm=(from,subj,msgs,ask)=>{const d={id:"d"+(++S.nid),from,subj,read:false,msgs,ask};S.dms.unshift(d);nf(from+" sent you a message","dm:"+d.id)};
+const wp=(n,w,b,c,x)=>S.wp.push({n,w:/^[A-Z][a-z]{2} \d/.test(w)?w:DATES[S.day-1],b,c,x});
+const bin=(n,t)=>{S.bin=S.bin.filter(f=>f.n!==n);S.bin.push({n,t})};
+function nread(id,arg){const n=S.notifs.find(x=>x.id===id);if(n)n.read=true;if(arg==="media")openPlayer();else if(arg==="voice")openVoice();else if(arg==="wiki"){openNet();go("wiki","wally")}else go("forum",arg)}
+const askHtml=(w,a)=>`<div class="post"><h5>Reply as ${ME}</h5><p>${a.opts.map((o,i)=>`<button onclick="pickOpt('${w}',${i})">${esc(o.l)}</button>`).join("<br><br>")}</p></div>`;
+function forumPage(a){
+ let b="";if(a==="t:wally")did("forum");
+ if(!a){const on=["cathodeKiln","tapewyrm","m0thwing_77"].concat(S.day>=8?[ME+" (×2)"]:[]).concat(S.day>=12?["3 guests"]:[]);
+  b=`<div style="padding:2px 0 8px"><input placeholder="Search threads" size="24"> <button>Search</button></div><table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="background:#b9b199;text-align:left"><th>Topic</th><th>Replies</th><th>Views</th><th>Activity</th></tr>`+FT().map(t=>`<tr style="border-bottom:1px solid #ddd;${t.id==="wally"&&S.wp.length?"background:#d8c98a":""}"><td style="padding:6px 4px"><a class="l" onclick="go('forum','t:${t.id}')">${t.pin?"📌 ":""}${esc(t.t)}</a><br><span style="color:#777">${esc(t.c)} · by ${esc(t.op)}</span></td><td>${t.r}</td><td>${t.v}</td><td>${t.la}</td></tr>`).join("")+`</table><p style="color:#777;font-size:11px">Online now: ${on.map(esc).join(", ")}</p>`}
+ else if(a==="bell"){b=`<h4>🔔 Reminders</h4>`+S.notifs.map(n=>`<div class="rowu" style="${n.read?"":"font-weight:bold;background:#d8c98a"}" onclick="nread('${n.id}','${n.arg}')">${esc(n.txt)}</div>`).join("")}
+ else if(a==="dm"){b=`<h4>✉️ Messages</h4>`+S.dms.map(d=>`<div class="rowu" style="${d.read?"":"font-weight:bold;background:#d8c98a"}" onclick="go('forum','dm:${d.id}')"><b>${esc(d.from)}</b> — ${esc(d.subj)}</div>`).join("")}
+ else if(a.startsWith("dm:")){const d=S.dms.find(x=>x.id===a.slice(3));d.read=true;S.notifs.forEach(n=>{if(n.arg===a)n.read=true});
+  b=`<a class="l" onclick="go('forum','dm')">&larr; Messages</a><h4>${esc(d.subj)}</h4>`+d.msgs.map(([w,t])=>`<div style="margin:6px 0;padding:6px;background:${w===ME?"#9aaec0":"#cfc8b4"};border:1px solid #ccc"><b>${esc(w)}</b>: ${esc(t)}</div>`).join("")+(S.typing===a?"<i>…typing</i>":"")+(d.ask?askHtml(a,d.ask):"")}
+ else if(a==="t:wally"){
+  const del=S.day>=10?Math.min(5,S.day-9):0;
+  b=`<h4>Wally Wisp’s Wonder Hour — anyone??</h4><span style="color:#777">Lost Media</span>`;
+  b+=P(OP,"Feb 5",esc("I’ve been trying to find a children’s show for about a year. Wally Wisp’s Wonder Hour. Small local station, 1989 to 1993-ish. Nothing in the listings, nothing on any tape-trading site. Please tell me I’m not the only one."),"","Original poster");
+  W.forEach((w,i)=>{const gone=i<del;b+=P(gone?"[deleted]":w.h,WHEN[i],esc(gone&&S.day>=12?"This post has been removed.":VOICE[i](w)),"",TAG[i]);
+   if(i===1)b+=P(ME,"Feb 19",esc("Bumping this because I keep thinking about the ending. I can’t say who the host was, but the song counted backwards. That much I’m sure of."+(S.day>=8?" I stopped at three.":""))+(S.day>=3?" <i style='color:#a33'>(edited)</i>":""),"mine","Member since 2009")});
+  b+=P(MEN,"Mar 4",`<b>@${ME}</b> you said the song counted backwards. Which song was it? I’m getting four different titles from four different people.`,"mention");
+  if(S.day>=2)b+=P(NAMES[0],"Mar 5",esc("Thread count says 6 replies but I can see 7. Anyone else?"));
+  S.wp.forEach(p=>{b+=P(p.n,p.w,p.b,p.c,p.x)});
+  if(S.typing===a)b+=`<p><i>…typing</i></p>`;
+  if(S.ask&&S.ask.where===a)b+=askHtml(a,S.ask)}
+ else if(a.startsWith("t:")){const t=FT().find(x=>x.id===a.slice(2)),ps=t.ps.map((x,k)=>[k?ALLN[(t.id.length*3+k*5)%ALLN.length]:t.op,k?(["Feb 28","Mar 1","Mar 2"][k-1]||"Mar 3"):"Feb 26",x,k?"Member":"Original poster"]);
+  (LATE[t.id]||[]).filter(l=>l[0]<=S.day).forEach(l=>ps.push([l[1],DATES[l[0]-1],l[2],l[1]===ME?"Member since 2009":"Member"]));
+  b=`<a class="l" onclick="go('forum')">&larr; All threads</a><h4>${esc(t.t)}</h4><span style="color:#777">${esc(t.c)}</span>`+ps.map(p=>P(p[0],p[1],esc(p[2]),p[0]===ME?"mine":"",p[3])).join("")+`<div class="post"><p><i>This thread is archived.</i></p></div>`}
+ const un=S.notifs.filter(n=>!n.read).length,ud=S.dms.filter(d=>!d.read).length;
+ return `<div class="fh"><b style="font-size:16px;cursor:pointer" onclick="go('forum')">📺 NostalgiaTV</b><span style="flex:1"></span><a class="bt" onclick="go('forum','bell')">🔔${un?`<span class="bdg">${un}</span>`:""}</a><a class="bt" onclick="go('forum','dm')">✉️${ud?`<span class="bdg">${ud}</span>`:""}</a><span style="display:flex;align-items:center;gap:6px"><span class="avs">J</span>${ME}</span></div>`+b}
+function pickOpt(where,i){did("reply");
+ let ask,d;if(where==="t:wally"){ask=S.ask;S.ask=null}else{d=S.dms.find(x=>x.id===where.slice(3));ask=d.ask;d.ask=null}
+ const o=ask.opts[i];if(o.set)S.f[o.set]=1;
+ const put=(who,t)=>where==="t:wally"?wp(who,"just now",esc(t),who===ME?"mine":"","Member"):d.msgs.push([who,t]);
+ put(ME,o.l);S.typing=where;go("forum",where);
+ let done=0;const run=()=>{if(done)return;done=1;S.typing=0;o.r.forEach(r=>put(r[0],r[1]));if(o.next)o.next();nf(o.r[0][0]+" replied to you",where);
+  if(S.wins.net&&S.url==="forum"&&S.arg===where){S.notifs[0].read=true;go("forum",where)}else note(o.r[0][0],"replied to you.",()=>go("forum",where));
+  if(o.end){S.end=o.end;setTimeout(()=>ending(o.end),4500)}};
+ S.pend.push(run);setTimeout(run,4000+Math.random()*2500)}
+const songOpt=(s,l)=>({l,set:"song",r:[[REPLIER,"Odd. I found a post by you from 2009, "+ME+". Different title, and it says you stopped watching “once the count hit three.” You don’t remember writing it?"]],next:()=>{S.replied=true;S.song=s;adv(47);setPhase(1);note("New file received","scan_01.avi was saved to your desktop.",()=>openPlayer())}});
+const EV={
+ 1(){S.ask={where:"t:wally",opts:[...new Set(W.map(w=>w.song))].map(s=>songOpt(s,"It was “"+s+"”.")).concat([songOpt("?","I can’t remember.")])}},
+ 2(){dm(DMN,"re: your 2009 post",[[DMN,"you wrote that you stopped watching when the count hit three. what happened at three?"]],{opts:[
+  {l:"I don’t remember writing that.",set:"honest",r:[[DMN,"i believe you. that’s the part that scares me. none of us remember writing ours."]]},
+  {l:"Nothing. Who are you?",set:"guard",r:[[DMN,"someone who also stopped at three. we’ll talk when you’re ready."]]},
+  {l:"Tell me what you know.",set:"curious",r:[[DMN,"it isn’t a show you find. it’s a show that counts you. don’t sit through the whole tape in one go."]]}]});
+  bin("you_were_here.txt","You were here before you were here.\n\nThe count is lower than it should be.");nf("scan_01.avi is now 3 KB","media")},
+ 3(){nf("A post by "+ME+" was edited. You did not edit it.","t:wally");wp(MEN,"today",esc("Has anyone watched the tape the seller mailed? Mine arrived with no label. Should I post a clip?"),"","Member");
+  S.ask={where:"t:wally",opts:[{l:"Post a clip. People should see it.",set:"shared",r:[[MEN,"Posted. Funny, the clip is 3 seconds longer in every reupload."]]},{l:"Keep it private for now.",set:"private",r:[[MEN,"Too late. It’s already on three sites I’ve never heard of."]]}]}},
+ 4(){bin("tape_label_scan.jpg","[Photo of a cassette label in your handwriting: ‘WWWH — do not rewind’]");nf(NAMES[1]+" posted in “Claymation fox PSA…”","t:fox")},
+ 5(){dm(NAMES[2],"my mother says",[[NAMES[2],"i asked my mom about the channel. she said we never had it. she said it was in the window of a shop on the way home from the market, a TV that wasn’t plugged in. does that mean anything to you?"]],{opts:[
+  {l:"I’ll ask my mom too.",set:"askmom",r:[[NAMES[2],"let me know what she says. don’t say the name out loud on the phone."]]},
+  {l:"Drop it. This is getting weird.",set:"drop",r:[[NAMES[2],"ok. it’s fine. we’ll keep counting for you."]]}]})},
+ 6(){nf("OddPedia: a new article matches “wally wisp”","wiki")},
+ 7(){bin("episode_guide_DRAFT.txt","1. The Party Nobody Sang At\n2. Wally’s Quiet Day\n3. 3\n4. 3\n5. 3\n6. 3\n\n(remaining episode numbers could not be recovered)");nf("Your forum signature was changed","t:wally")},
+ 8(){wp(NAMES[4],"today",esc("Who is sitting in the second chair at the birthday party? There was nobody there in the clip I watched yesterday. Screenshot attached."),"","Lurker");
+  S.ask={where:"t:wally",opts:[{l:"Post my own screenshot for comparison.",set:"shot",r:[[NAMES[4],"Yours has someone too. Same chair. Wearing your jacket."]]},{l:"Delete my post. I’m out of this thread.",set:"del",r:[[NAMES[4],"You can’t delete it. It’s already been quoted."]]}]};nf(NAMES[4]+" posted in the Wally Wisp thread","t:wally")},
+ 9(){bin("wally_notes_OLD.txt","5\n4\n3\n\nI know what comes next. I knew it in 1991.");nf("Reminder: it’s your birthday today.","dm")},
+ 10(){dm(MEN,"are you typing?",[[MEN,"my screen says you’re typing a reply to me right now. you’re not, are you?"]],{opts:[{l:"I’m not typing.",set:"nottyping",r:[[MEN,"then who is?"]]},{l:"Yes. Keep talking.",set:"keeptalk",r:[[MEN,"i can see the words appear before you write them."]]}]})},
+ 11(){bin("mom_voicemail_backup.wav","[audio] Mom, quietly: ‘Who’s in the other room with you?’");nf("You have a new voicemail","voice")},
+ 12(){dm(REPLIER,"last message",[[REPLIER,"my account will be gone by tonight. i don’t remember deciding to delete it. the count is at three for me. are you still watching?"]],{opts:[{l:"I’m staying until the end.",set:"stay",r:[[REPLIER,"then you’ll be the only one left to hear it. good luck."]]},{l:"I’m done. I’m logging off.",set:"leave",r:[[REPLIER,"you can log off. the other side doesn’t."]]}]})},
+ 13(){bin("jason1983_2009_post.txt","Posted Mar 4, 2009, 3:00 AM\n\nI stopped watching once the count hit three. Don’t let it hit three while you’re still watching.\n— jason1983");wp(ME,"Mar 4, 2009, 3:00 AM",esc("Does anyone remember Wally Wisp’s Wonder Hour? I think it counted backwards."),"mine","Member since 2009");nf("Your original 2009 thread was restored","t:wally")},
+ 14(){dm("WWWH_broadcast","tonight’s episode",[["WWWH_broadcast","Hello, "+ME+". Today we count. Do you have the tape?"]],{opts:[
+  {l:"Publish it. People deserve to know.",set:"pub",end:"pub",r:[["WWWH_broadcast","Thank you. Everyone will be watching soon."]]},
+  {l:"Destroy every copy.",set:"burn",end:"burn",r:[["WWWH_broadcast","You can’t destroy what you remember."]]},
+  {l:"Keep watching.",set:"more",end:"more",r:[["WWWH_broadcast","Stay for the end."]]}]})}};
+const TAPE=[
+ [2,()=>["[00:00] A felt sun. A rabbit-shaped shadow bounces. A voice: “Hello, hello. Today we count.”","[01:10] The choir sings ten, nine, eight. Behind the singing, something wet is being dragged across a floor.","[02:00] Wally waves. His hand is too long. The felt at his wrist is torn and something pink shows through."],"living"],
+ [4,()=>["[03:30] A birthday party. Four chairs. Dark stains run down every chair leg. Everyone sings, but there is no sound.","[04:15] Wally: “Whose birthday is it?” He lifts the cake. No candles. Teeth are pressed into the frosting.","[04:40] “Yours.”"],"party"],
+ [6,()=>["[05:00] A hallway. The wallpaper is damp, dark in long vertical streaks.","[05:40] A man in a delivery uniform is propped against the wall, his mouth sewn shut with yellow yarn. He is still breathing through the seams.","[06:20] Wally: “Don’t turn around yet.”"],"hall"],
+ [8,()=>["[07:10] Wally reads a list of names, slowly: "+W.map(w=>w.h).join(", ")+".","[07:35] After each name there is a wet sound, like fruit dropped on tile.","[07:50] He pauses after the last one. “And you.”"],"tvwall"],
+ [10,()=>["[08:30] “"+ME+", you’re very good at this. You came back every day.”","[08:55] Wally unzips himself from throat to navel. Inside, a person is curled with their face against the felt, peeling it away from within with their fingernails.","[09:20] The person looks up. It is a face you have seen in the mirror."],"puppet"],
+ [12,()=>["[09:50] The song again, quieter. The numbers are dates now: “March fourth. March fifth. March sixth.”","[10:15] A room of television sets. Each shows a viewer in an armchair. Their eyes have been removed and set on the arms of the chairs, still facing the screen.","[10:30] A desk, a lamp, a monitor. A figure types with hands that are mostly bone. The figure is you."],"remains"],
+ [13,()=>["[11:00] Three.","[11:20] Two. Behind you, in the dark of your apartment, a floorboard bends under someone’s weight.","[11:35] One. Nobody leaves.","[11:42] The picture holds on your face. Your mouth is open wider than it should be. The tape ends. The tape does not end."],"desk"]];
+function openPlayer(){
+ const av=TAPE.filter(t=>t[0]<=S.day).length;
+ if(S.day<2||!av){win("player","Media Player","<p>scan_01.avi — Error: file is 0 KB.</p>",340,100,60);return}
+ const e=win("player","scan_01.avi",`<div style="background:#000;padding:4px"><canvas class="pix"></canvas></div><div id="cap" style="min-height:96px;background:#000;color:#9f9;padding:8px;font-size:12px"></div><button onclick="playChunk()">▶ Play next (${S.tw}/${av} watched)</button> <span style="color:#777">${S.tw>=TAPE.length?"End of tape.":""}</span>`,390,90,20);
+ ps1(e.querySelector("canvas"),TAPE[Math.max(0,Math.min(S.tw,av)-1)][2],true)}
+function playChunk(){did("tape");const av=TAPE.filter(t=>t[0]<=S.day).length;if(S.tw>=av||S.playing)return;if(S.tw>=3&&!S.f.codec){const e0=S.wins.player;if(e0)e0.querySelector("#cap").innerHTML="<span style='color:#f66'>Codec missing — see Mail.</span>";return}const c=TAPE[S.tw],L=c[1]();S.tw++;S.playing=1;
+ const e=S.wins.player;ps1(e.querySelector("canvas"),c[2],true);const cap=e.querySelector("#cap");cap.textContent="";let i=0;
+ const iv=setInterval(()=>{if(i<L.length){cap.innerHTML+=esc(L[i++])+"<br><br>";if(S.tw===5&&i===2&&!S.f.avcrash){clearInterval(iv);S.playing=0;avCrash();return}if(S.tw===7&&i===3&&!S.f.avdark){clearInterval(iv);S.playing=0;avDark();return}}else{clearInterval(iv);S.playing=0;cap.innerHTML+="<i>— tape paused —</i>";const bt=e.querySelector("button");bt.textContent="▶ Play next ("+S.tw+"/"+av+" watched)"}},2200)}
+const VM={1:"Mom: Hi sweetie, it’s Mom. You asked about the old apartment. We never had a TV there, remember? You said you were watching something, and you’d sit there and count out loud. I never told you. You always stopped at three.",2:"(static) …nobody leaves before the count ends… (a child’s voice, very close to the phone) …"+ME+"… you can stay for the end."};
+function openVoice(){win("vm","Answering Machine",`<p><b>${S.day>=13?"2 messages":"1 message"}</b></p><button onclick="vm(1)">▶ Message 1</button>${S.day>=13?' <button onclick="vm(2)">▶ Message 2</button>':""}<pre id="vmt" style="white-space:pre-wrap;font:13px 'Courier New',monospace"></pre>`,360,120,60)}
+function vm(i){$("#vmt").textContent=VM[i]}
+const TODOS=[[1,"- renew library card\n- email Dana back\n- watch that tape thing someone mentioned?\n- buy batteries"],[3,"- renew library card\n- email Dana back\n- ask about the tape\n- buy batteries\n- don’t forget the party"],[5,"- call Mom (ask about the apartment)\n- email Dana back\n- ask about the tape\n- party: bring nothing"],[7,"- call Mom\n- ask about the tape\n- count: 7\n- stop adding things that aren’t mine"],[9,"- watch\n- watch\n- call Mom\n- buy batteries (there are no batteries in the house)"],[12,"- 3\n- 3\n- 3\n- stay for the end"]];
+const TODO=()=>TODOS.filter(t=>t[0]<=S.day).pop()[1];
+const NL=[[5,"Mar 14 — Five people, five hosts, one ending."],[7,"Mar 29 — The OddPedia page appeared overnight. Nobody remembers writing it."],[9,"Apr 14 — The tape knows my name. I never typed it near the tape."],[11,"May 3 — Mom says there was no TV in the apartment."],[13,"May 28 — I’m not investigating it anymore. I’m the audience."]];
+const NOTES=()=>NL.filter(n=>n[0]<=S.day).sort((a,b)=>a[0]-b[0]).map(n=>n[1]).join("\n\n");
+const DOCS=[{n:"resume_2024.doc",d:1,t:"Jason — archivist, hobbyist, part-time proofreader."},{n:"budget.xls",d:1,t:"Rent 900 / Food 240 / Tapes 60 / Other 0"},{n:"interview_notes.txt",d:5,t:"Five accounts. Five hosts. All five stop talking when asked about the ending."},{n:"letter_to_mom_UNSENT.doc",d:8,t:"Mom, did we ever have a TV in the apartment? I keep remembering counting."},{n:"wally_script_draft.doc",d:10,t:"EPISODE 14: “THE LONG COUNT”\n\n[Wally enters. He turns to camera.]\nWALLY: Hello, "+ME+".\n\n(Last modified: you, tomorrow.)"},{n:"new_document.doc",d:12,t:"count. count. count. count. count. count."}];
+function openDocs(){did("docs");win("docs","My Documents",`<h4>My Documents</h4>📁 <a class="l" onclick="openPics()">Pictures</a><br>`+DOCS.filter(d=>d.d<=S.day).map(d=>`📄 <a class="l" onclick="openText('${d.n}',DOCS.find(x=>x.n==='${d.n}').t)">${d.n}</a><br>`).join(""),340,120,80)}
+function openBin(){win("bin","Recycle Bin",`<h4>Recycle Bin</h4>`+(S.bin.length?S.bin.map((f,i)=>`<div>📄 <a class="l" onclick="openText('${f.n}',S.bin[${i}].t)">${esc(f.n)}</a></div>`).join(""):"<i>Empty.</i>")+`<br><button onclick="emptyBin()">Empty Recycle Bin</button>`,360,100,70)}
+function emptyBin(){S.bin=[];S.f.emptied=1;openBin();if(S.day>=7)setTimeout(()=>{S.bin.push({n:"you_were_here.txt",t:"Still here."});openBin()},2500)}
+const WIKI=()=>"Wally Wisp’s Wonder Hour is a children’s program said to have aired from 1989 to 1993 from [[studiob|Studio B]]. No schedules, tapes or production records exist. Reported hosts: a blue rabbit, a scarecrow, a lamp. See [[eps|episode list]] and [[count]]."+(S.day>=8&&S.f.wiki_cut!==1?" Many viewers recall being addressed by name.":"")+(S.day>=10?" Viewers who finish the countdown stop posting. See [[viewers]].":"")+(S.day>=12?" See [[puppetry]].":"")+(S.day>=13?" This article was last edited by "+ME+".":"");
+function srch(){const q=$("#q").value.toLowerCase();let h;
+ if(q.includes("wisp")||q.includes("wally")){
+  if(S.day<6)h=`<p><b>0 results</b> for “${esc($("#q").value)}”.<br>Did you mean: <i>will is</i>?</p>`;
+  else h=`<p><b>${S.day>=10?3:2} results</b></p><p><a class="l" onclick="go('wiki','wally')">Wally Wisp’s Wonder Hour — OddPedia</a><br><a class="l" onclick="go('forum','t:wally')">Wally Wisp’s Wonder Hour — anyone?? — NostalgiaTV</a></p>`+(S.day>=10?`<p><a class="l" onclick="go('cache')">wally_wisp_${ME}.html — cached 2009</a></p>`:"")}
+ else h=`<p><a class="l" onclick="go('wiki')">OddPedia: odd articles</a><br><a class="l" onclick="go('forum')">NostalgiaTV Forums</a><br><a class="l" onclick="go('game')">Pop! — free game</a><br><a class="l" onclick="go('tapes')">TapeTrader — buy and sell VHS</a><br><a class="l" onclick="go('news')">Meadowbrook Gazette Archive</a></p>`;
+ $("#res").innerHTML=h}
+/* ---- Mail ---- */
+const SIS={n:"Katie Pruitt",a:"katie.pruitt@mailnest.example"};
+S.mail=[];S.sent=[];S.mv=null;
+const M=(from,addr,subj,body,o)=>{o=o||{};const m={id:"m"+(++S.nid),from,addr,subj,date:DATES[S.day-1],body,read:false,att:o.att,ask:o.ask};S.mail.unshift(m);if(o.toast)setTimeout(()=>note(from,subj,()=>openMail()),o.toast);if(S.wins.mail)mrender();icons();return m};
+function openMail(){win("mail","Mailbox",mailHtml(),620,30,10)}
+function mrender(){const e=S.wins.mail;if(e)e.querySelector(".bd").innerHTML=mailHtml();icons()}
+function mailHtml(){const un=S.mail.filter(m=>!m.read).length,v=S.mv;
+ let h=`<div style="margin-bottom:8px"><button onclick="S.mv=null;mrender()">Inbox (${un})</button> <button onclick="S.mv='sent';mrender()">Sent (${S.sent.length})</button></div>`;
+ if(v==="sent")h+=S.sent.length?S.sent.map(m=>`<div class="rowu" style="cursor:default"><b>To: ${esc(m.to)}</b> — ${esc(m.subj)} <span style="float:right;color:#777">${m.date}</span><br><span style="color:#555">${esc(m.body)}</span></div>`).join(""):"<i>Nothing sent yet.</i>";
+ else if(v){const m=S.mail.find(x=>x.id===v);h+=`<a class="l" onclick="S.mv=null;mrender()">&larr; Inbox</a><h4 style="margin:8px 0 2px">${esc(m.subj)}</h4><div style="color:#777;font-size:12px">From: ${esc(m.from)} &lt;${esc(m.addr)}&gt; · ${m.date}</div><pre style="white-space:pre-wrap;font:13px Tahoma,Verdana,sans-serif;margin:10px 0">${esc(m.body)}</pre>`+(m.att?`<button onclick="${m.att[1]}">📎 ${esc(m.att[0])}</button>`:"")+(m.ask?`<div class="post" style="margin-top:10px"><h5>Reply</h5><p>${m.ask.opts.map((o,i)=>`<button onclick="pickMail('${m.id}',${i})">${esc(o.l)}</button>`).join("<br><br>")}</p></div>`:"")}
+ else h+=S.mail.map(m=>`<div class="rowu" style="${m.read?"":"font-weight:bold"}" onclick="mopen('${m.id}')">${esc(m.from)} — ${esc(m.subj)}<span style="float:right;color:#777;font-weight:normal">${m.date}</span></div>`).join("");
+ return h}
+function mopen(id){did("mail");S.mv=id;S.mail.find(x=>x.id===id).read=true;mrender()}
+function pickMail(id,i){did("reply");const m=S.mail.find(x=>x.id===id),o=m.ask.opts[i];m.ask=null;if(o.set)S.f[o.set]=1;S.sent.unshift({to:m.from,subj:"Re: "+m.subj,date:DATES[S.day-1],body:o.l});mrender();
+ let done=0;const run=()=>{if(done)return;done=1;M(m.from,m.addr,"Re: "+m.subj,o.r);if(!S.wins.mail)note(m.from,"replied to your email.",()=>openMail())};
+ S.pend.push(run);setTimeout(run,5000+Math.random()*2000)}
+const KA=(a,b,c)=>({opts:a.map((l,i)=>({l,set:b[i],r:c[i]}))});
+const MV={
+ 1(){M("Harbor Credit Union","alerts@harborcu.example","Your February statement is ready","Hello Jason,\n\nYour statement for the account ending 4417 is now available.\n\nClosing balance: $2,318.44\nMinimum due: $0.00\n\nThank you for banking with us.");
+  M("Maple County Library","holds@maplecountylib.example","Hold ready: “Broadcast Archaeology”","Your hold is ready for pickup at the Eastside branch through Mar 11. Please bring your card.");
+  M("Dana Whitcomb","dana.w@mailnest.example","Re: Saturday?","Still on for the flea market this weekend? I’m digging through the bins for tapes for you. Bring cash, the old guy only takes cash.\n\nAlso: you tagged me in that forum thread again. You are SO deep into this show.\n\n— D");
+  M("Priya Menon","priya@oakleafpress.example","Spring catalog proofs","Hi Jason,\n\nAttached are the marked-up proofs for the spring catalog (pages 1–48). Could you return them by Friday? I’ll send invoice #1042 once I have them.\n\nThanks!\nPriya");
+  M("Northgate Properties","tenants@northgate.example","March rent receipt","Payment of $925.00 received for Unit 4B. Thank you.");
+  M("PowerGrid Utilities","billing@powergrid.example","Your bill is ready","Amount due: $61.37\nDue date: Mar 22");
+  M(SIS.n,SIS.a,"mom’s 60th!!","Hey Jay,\n\nMom’s birthday dinner is Saturday the 16th at Rosa’s, 6:30. She asked if you’d bring dessert, the lemon thing you make.\n\nYou’ve been kind of quiet lately. Everything ok? Call me.\n\nK")},
+ 2(){M("(no sender)","unknown@mailnest.example","Re: scan_01","Did it play? Don’t watch past the count.\n\nWe’ll send the rest once you’ve stopped remembering it wrong.");
+  M("Dana Whitcomb","dana.w@mailnest.example","Flea market haul","Found three tapes. No labels. One of them was warm, which I’m choosing not to think about. Want them?\n\n— D");
+  M("Broadcast Archive Weekly","news@broadcastarchive.example","This week: the great sign-off compilation","In this issue: sign-off messages from 1,200 stations, a look at test-pattern design, and reader mail.");
+  M("Cruise Rewards","promo@cruise-win.example","You’ve been selected!!!","Claim your FREE 7-night cruise. Click now. (This is obviously spam.)")},
+ 3(){M("Priya Menon","priya@oakleafpress.example","Re: proofs","Got them, thank you! Looks great. Invoice coming next week.");
+  M("Maple County Library","holds@maplecountylib.example","Reminder: hold expires Mar 11","Your hold on “Broadcast Archaeology” expires in 8 days.")},
+ 4(){M("Shopline","orders@shopline.example","Shipped: AA batteries, 24-pack","Your order #88412 has shipped. Expected delivery: Mar 12.");
+  M("Northgate Properties","tenants@northgate.example","Water shut-off Tuesday","Water will be off in Building B Tuesday 9–11 AM for pipe maintenance.");
+  M(SIS.n,SIS.a,"are you coming?","Hi. Just checking you’re coming on the 16th. Your phone keeps going to voicemail, so I’m trying email.\n\nK",{toast:5000})},
+ 5(){M(SIS.n,SIS.a,"Jay?","Jay, I’ve called twice and texted. Dinner is in two days. Are you ok?\n\nThis is the third email.",{toast:5000,ask:KA(["Sorry Katie, buried in work. I’ll come Saturday.","I’m fine. Please stop calling.","I can’t talk about it right now."],["sis_open","sis_cold","sis_cant"],["Okay. Please actually come. Mom’s counting on you. Love you.","I haven’t called since Tuesday. I’ll stop. I won’t stop worrying.","Talk about what? Jay, what is it?"])});
+  M("Dana Whitcomb","dana.w@mailnest.example","You okay?","You didn’t show Saturday. Not like you. Text me.");
+  M("Shopline","orders@shopline.example","Delivered","Your package was left at the front desk.")},
+ 6(){M("Priya Menon","priya@oakleafpress.example","Invoice #1042 paid","Payment of $480.00 was sent to your account.");
+  M("PowerGrid Utilities","billing@powergrid.example","Your April bill","Amount due: $58.12\nDue date: Apr 20")},
+ 7(){M(SIS.n,SIS.a,"you didn’t come","You didn’t come. Mom saved you a plate. I’m not mad, I’m worried.\n\nWhere have you been? It’s been weeks since I heard your voice.",{toast:5000});
+  M("WWWH Archive","archive@mailbox-drop.example","Chunk 4 onward needs this","Your player can’t decode the newer chunks of the tape. Install the attached patch, then reopen Media Player.\n\nIt only takes a moment.",{att:["codec_patch.exe","installCodec()"]});
+  M("Maple County Library","holds@maplecountylib.example","Overdue: Broadcast Archaeology","Your item is 17 days overdue. Fines: $3.40.")},
+ 8(){M("Harbor Credit Union","alerts@harborcu.example","Low balance alert","Your balance has fallen below $500: $412.19.");
+  M("Dana Whitcomb","dana.w@mailnest.example","Call me back","Seriously, call me.")},
+ 9(){M(SIS.n,SIS.a,"happy birthday. where are you.","Happy birthday.\n\nI called at 8, 10 and noon. I texted. Nobody answered. I drove by your building. Your car’s there and the blinds are closed.\n\nI’ve been calling, texting and emailing for weeks. Email is my last resort. Please just answer.",{toast:5000,ask:KA(["I’m sorry. I’ll call you tonight.","Don’t come to my building again."],["sis_open","sis_cold"],["You didn’t last time. But I’ll answer. Any hour.","Okay. I’m at the end of my rope, Jay."])});
+  M("Dana Whitcomb","dana.w@mailnest.example","HAPPY BIRTHDAY dude","Dinner this week? I’ll bring the tapes.");
+  M("Harbor Credit Union","alerts@harborcu.example","Happy birthday, Jason","From all of us at Harbor.")},
+ 10(){M("Priya Menon","priya@oakleafpress.example","Still on for the catalog?","Haven’t heard back in a bit. Let me know if you need more time.");
+  if(!S.f.codec)M("WWWH Archive","archive@mailbox-drop.example","Reminder: install the patch","You haven’t installed it yet. Everyone else already has.",{att:["codec_patch.exe","installCodec()"]})},
+ 11(){M(SIS.n,SIS.a,"mom called me","Mom told me you called her about the old apartment and asked if we ever had a TV there. She said you were counting on the phone.\n\nJason, what is going on? Who is Wally?",{toast:5000});
+  if(!S.f.paidrent)M("Northgate Properties","tenants@northgate.example","Rent past due","Rent of $925.00 is past due. Please remit.");
+  if(!S.f.paidpg)M("PowerGrid Utilities","billing@powergrid.example","Payment declined","We couldn’t process your payment. Service may be interrupted.")},
+ 12(){M(SIS.n,SIS.a,"I’m coming Saturday","I’m coming Saturday. I’m bringing Mom’s spare key. Please be home.",{toast:5000,ask:KA(["Please don’t come. It isn’t safe here.","Okay. Saturday."],["sis_warn","sis_open"],["Not safe how? I’m coming anyway.","Good. I’ll bring soup."])});
+  M("Dana Whitcomb","dana.w@mailnest.example","I texted your sister","Hope that’s ok. We’re both worried.");
+  M("Harbor Credit Union","alerts@harborcu.example","Overdraft notice","Your account is overdrawn by $41.06.")},
+ 13(){M(SIS.n,SIS.a,"I’m outside","I’m outside your door. I can hear a TV in there. It sounds like kids counting.\n\nPlease open up.",{toast:4000});
+  M("Priya Menon","priya@oakleafpress.example","Reassigning the catalog","I’ve given the catalog to another proofreader. Hope you’re ok.");
+  if(!S.f.paidrent)M("Northgate Properties","tenants@northgate.example","Final notice","Final notice before legal action.")},
+ 14(){M(SIS.n,SIS.a,"(no subject)","I’m sitting on your couch. The TV is on. Why is it showing me?",{toast:4000});
+  M("(no sender)","unknown@mailnest.example","Thank you for watching","Nobody leaves.")}};
+function startDay_(){startDay()}
+function runDay(){if(EV[S.day])EV[S.day]();if(MV[S.day])MV[S.day]();if(DK[S.day])DK[S.day]();if(MX[S.day])MX[S.day]();startDay_();if(S.day>1){const g=Object.keys(S.gone).length+Object.keys(S.dg).length;S.gone={};S.dg={};S.bin=S.bin.filter(f=>!f.ic&&!f.doc);if(g)setTimeout(()=>note("System","Deleted files were restored from a backup. You did not make a backup."),8000)}S.later=S.later.filter(x=>{if(x.d<=S.day){x.f();return false}return true})}
+function installCodec(){if(S.f.codec){openText("codec_patch.exe","Already installed.");return}
+ win("inst","codec_patch.exe",`<p>Installing video codec…</p><div style="border:2px inset #fff;height:16px;background:#fff"><div id="pb" style="height:100%;width:0;background:#1c3f7a"></div></div><p id="pm" style="color:#777">0%</p>`,320,150,80);
+ let p=0;const iv=setInterval(()=>{p+=7+Math.random()*8;const b=$("#pb");if(b)b.style.width=Math.min(100,p)+"%";if($("#pm"))$("#pm").textContent=Math.min(100,Math.round(p))+"%";if(p>=62){clearInterval(iv);crash()}},350)}
+function crash(){S.f.codec=1;let n=0;const E=["Memory could not be read","Sector 3 is not yours","Count exceeded: 3","Stack overflow: nobody leaves"];
+ const iv=setInterval(()=>{n++;win("er"+n,"Error",`<p>⚠ ${pick(E)}</p><button>OK</button>`,260,Math.random()*Math.max(10,innerWidth-270),Math.random()*Math.max(10,innerHeight-160));document.querySelectorAll(".ic").forEach(el=>{if(Math.random()<.4)el.lastChild.textContent="3"});document.body.style.filter=n%2?"invert(1)":"";if(n>14){clearInterval(iv);document.body.style.filter="";blackout()}},320)}
+function blackout(){const o=document.createElement("div");o.style.cssText="position:fixed;inset:0;background:#000;color:#ddd;font:15px 'Courier New',monospace;z-index:999999;padding:30px;white-space:pre-wrap";
+ o.innerHTML="A fatal exception has occurred.\nThe system has been halted to prevent damage.\n\nSTOP 0x00000003 (NOBODY_LEAVES)\n\nIt is now safe to turn off your computer.\n\n<button>Power</button>";document.body.appendChild(o);o.querySelector("button").onclick=()=>{S.calm=1;nextDay(o)}}
+NL.push([6,"Mar 20 — Dried blood under my fingernails. No cuts anywhere. I can’t account for the afternoon."],[8,"Apr 5 — Found a tooth in the sink. Not mine. I checked. Three days later I checked again and it was mine."],[10,"Apr 22 — The tape shows what’s inside the puppet. I’ve started to recognize the face."],[12,"May 15 — I can taste the count. It tastes like copper."]);
+TODOS.push([13,"- let her in\n- don’t let her leave\n- 3"]);
+LATE.fox.push([10,"fuzzbucket4","I found my hands in the sink this morning. They were mine. I don’t remember taking them off."]);
+LATE.rules.push([13,"admin","Moderator log: 11 accounts removed. 11 bodies reported. The police call it a coincidence of viewing habits."]);
+LATE.pockets.push([12,"[deleted]","He pulled out a small TV. On the TV was me. Then he pulled out my eyes and set them on the arms of the chair."]);
+LATE.signoff.push([11,"velvet_signal","Ours said goodnight and then a number. The number is how many of us are left."]);
+LATE.lighthouse.push([10,"lowtide.radio","keep the lamp on. keep the lamp on. I found my neighbor’s lamp. It was lit from the inside with her."]);
+LATE.nine.push([12,"moonpie_deluxe","The 9 isn’t a 9 anymore. It’s a spine."]);
+LATE.snack.push([12,"plasticSundae","Don’t make toast tonight. The toaster has teeth."]);
+const DK={
+ 5(){bin("wally_closeup_RAW.txt","[Photo: a puppet’s face, the felt peeled back. Beneath it, a human cheek, wet, flexing as if it were chewing.]")},
+ 8(){bin("newspaper_clip_1993.txt","LOCAL STATION WORKER FOUND DEAD IN STUDIO B\n\nThe 41-year-old was discovered inside a hollowed puppet costume, apparently having sewn himself in from the inside. The television was still on. Station management declined comment.\n\n(The station does not exist.)")},
+ 9(){M("(no sender)","unknown@mailnest.example","Your seat","We saved you a seat. The others are finished. Come and see what they look like inside.")},
+ 10(){bin("photo_description_17.txt","Four chairs. Four people. Each opened from the sternum down. Their hands are folded in their laps, holding their own ribs like a bouquet.")},
+ 12(){bin("voicemail_transcript.txt","[Mom, whispering] Honey, there’s a person in the hallway with no face. He’s counting. He took Mrs. Alvarez’s hands. I can hear him in the walls.");M("(no sender)","unknown@mailnest.example","Katie",S.f.sis_warn?"She tried to leave. We sewed the door shut.":"She’s in the third chair. She’s still warm. Don’t keep her waiting.")},
+ 13(){bin("autopsy_draft.doc","SUBJECT: K. PRUITT\nCOD: undetermined.\nEyelids removed and arranged on the television screen. The television was on.\n\nAuthor: "+ME+"\nDate: tomorrow")}};
+/* ---- more mail, wiki, sites ---- */
+S.wl=[];S.later=[];S.spent=0;S.txn=[];
+const DAN={n:"Dana Whitcomb",a:"dana.w@mailnest.example"},PRI={n:"Priya Menon",a:"priya@oakleafpress.example"},LL={n:"Northgate Properties",a:"tenants@northgate.example"};
+const MX={
+ 1(){M(DAN.n,DAN.a,"My old VCR is yours if you want it","I’m clearing out the garage. Old VCR, works fine, eats about one tape in ten. Want it?\n\n— D",{ask:KA(["Yes please! Bring it Saturday.","No thanks, I already have one."],["dana_vcr","dana_novcr"],["Done. I’ll bring it Saturday, along with the tapes.","Suit yourself. Offer stands."])})},
+ 3(){M(PRI.n,PRI.a,"Quick favor: rush job?","Could you proof a 12-page flyer by tomorrow noon? $150 flat. Totally fine if you’re busy.\n\nP",{ask:KA(["Sure, send it over.","I’m booked, sorry."],["priya_rush","priya_no"],["Sending it now. You’re a lifesaver.","No problem. Next time."])})},
+ 4(){M("Maple County Library","holds@maplecountylib.example","Renew “Broadcast Archaeology”?","This item is due Mar 14. Renew for 3 more weeks?",{ask:KA(["Renew it.","Return it."],["lib_renew","lib_return"],["Renewed through Apr 4. No further renewals are available.","Thank you. We have noted the return. (The item has been returned twice already.)"])})},
+ 6(){M(DAN.n,DAN.a,"Come over, watch tapes?","Got a couple more tapes from the market. Come over tonight? I’ll bring the VCR.\n\nD",{ask:KA(["Yes. Bring the tapes.","Not tonight."],["dana_over","dana_no"],["Perfect. One of them already has a name on it. Yours, funny enough.","Next week then. I’ll watch one without you."])})},
+ 8(){M(LL.n,LL.a,"Unit inspection Thursday","We need to inspect Unit 4B on Thursday between 10 and 12 for the annual check.",{ask:KA(["Sure, Thursday is fine.","Please don’t. I’m not feeling well."],["insp_ok","insp_no"],["Confirmed. We’ll knock first.","Noted. The inspection is required. We will use the spare key."])})},
+ 9(){M("(no sender)","unknown@mailnest.example","Do you want to see?","We have a picture of the others. Do you want to see?",{ask:KA(["Show me.","Leave me alone."],["see_yes","see_no"],["[Image: four chairs. Four people. Their hands folded, holding their own ribs. The fourth chair is empty. It has your name on it.]","We will wait. We are very good at waiting. We are already in the room."])})},
+ 10(){M("Harbor Credit Union","alerts@harborcu.example","Verify a transaction","A charge of $0.03 to “WWWH” was attempted on your card. Was this you?",{ask:KA(["Yes, that was me.","No, that wasn’t me."],["bank_yes","bank_no"],["Thank you. The charge has been approved.","We’ve blocked it. It had already been paid."])})},
+ 12(){M("Marcus Vale","marcus.vale@mailnest.example","Is Dana with you?","Dana hasn’t come home since Tuesday. Her phone goes straight to voicemail. Her car is parked outside your building. Is she with you?",{ask:KA(["I haven’t seen her.","She’s watching the tape."],["marcus_no","marcus_tape"],["Please call me if you hear anything.","Put her on the phone. Please. Put her on."])})}};
+/* wiki */
+const WA={
+ hum:["The Greenmoor Hum",1,"Residents of a mill town reported a low hum on Thursdays for eleven years. Engineers found no source. It ended the week the mill’s records were digitized, and the digital records skip that year."],
+ wxq:["Station WXQ-TV",1,"A station that appears in three regional atlases and no licensing database. Two retired engineers describe the same transmitter tower, a ‘short one, painted like a candle’. Compare [[studiob]]."],
+ tue:["Tuesday Children",1,"Online accounts of a program only viewed on Tuesdays. None of the accounts agree on the program, only on the day, and some posters deleted their accounts after replying."],
+ lost:["Lost media",1,"Media that once existed but can no longer be found. Most lost media is simply discarded. A smaller category, such as [[tue]] and [[wally|Wally Wisp]], has witnesses but no artifact. See [[mandela]]."],
+ mandela:["Collective false memory",1,"A memory shared by many people that did not happen as remembered. In these cases the memories disagree on small details but never on the ending. Compare [[lost]]."],
+ signoff:["Sign-off messages",1,"Messages played at the end of the broadcast day. Some stations sent only a tone. Reports mention a station that said goodnight and then read out a number."],
+ fox:["Safety Fox",1,"A claymation PSA about strangers. Editors have reverted claims that the raincoat changes colour fourteen times."],
+ nine:["Channel 9 ident",1,"A rotating blue 9 with a low hum. The hum drops three steps at the end of each showing. See [[count]]."],
+ studiob:["Meadowbrook Studio B",4,"A small production studio at 1400 Alder Row, in use until 1994. No staff list survives. See [[wxq]] and [[wally|Wally Wisp]]."],
+ count:["The count",7,"A reported practice of counting backwards from ten to three, then stopping. Several people discovered they had counted aloud without remembering. Nobody has identified who taught it."],
+ eps:["List of Wally Wisp episodes",7,"1. The Party Nobody Sang At · 2. Wally’s Quiet Day · 3. Hello, Is Anyone Home? · 4. The Long Hallway · 5–13. (titles withheld) · 14. The Long Count. At least three sources list every episode as number 3."],
+ viewers:["Wally Wisp viewers",10,"Accounts of viewers who finished the countdown. Eleven are reported missing or dead. Nine were found seated in a storage unit; the coroner called the dissections unusually neat. The survivors stopped posting within a week."],
+ puppetry:["Wally puppet construction",12,"Witnesses describe the felt as ‘worn from the inside.’ A former Studio B employee said the costumes were never stored empty. Photographs show seams closed with yellow yarn, and seams that are not."],
+ wally:["Wally Wisp’s Wonder Hour",6,()=>WIKI()+(S.wl.length?" "+S.wl.join(" "):"")]};
+const wl=t=>t.replace(/\[\[(\w+)(?:\|([^\]]+))?\]\]/g,(m,i,l)=>WA[i]&&WA[i][1]<=S.day?`<a class="l" onclick="go('wiki','${i}')">${l||WA[i][0]}</a>`:`<span style="color:#a33">${l||(WA[i]?WA[i][0]:i)}</span>`);
+const wvis=()=>Object.entries(WA).filter(([k,v])=>v[1]<=S.day);
+function wikiPage(a){
+ const back=`<br><br><a class="l" onclick="go('wiki')">&larr; OddPedia</a>`;
+ if(a==="recent")return `<h3>Recent changes</h3><table style="width:100%;font-size:12px">${wvis().map(([k,v],i)=>`<tr><td><a class="l" onclick="go('wiki','${k}')">${esc(v[0])}</a></td><td>${k==="wally"&&S.day>=9?ME+" <i>(you did not make this edit)</i>":ALLN[(i*3+1)%ALLN.length]}</td><td>${DATES[Math.max(0,S.day-1-(i%4))]}</td></tr>`).join("")}</table>`+back;
+ if(a==="talk")return `<h3>Talk: Wally Wisp’s Wonder Hour</h3>`+[[ALLN[3],"Can we remove the episode list? Half the titles are “3”."],[ALLN[7],"No. It’s sourced."]].concat(S.day>=9?[[ME,"I didn’t write that. I didn’t write any of this."]]:[]).concat(S.day>=10?[["[deleted]","You wrote it in 2009."]]:[]).map(([n,t])=>`<div class="post" style="padding:6px"><b>${esc(n)}</b>: ${esc(t)}</div>`).join("")+`<a class="l" onclick="go('wiki','wally')">&larr; Article</a>`;
+ if(a&&WA[a]){did("wiki");const v=WA[a],t=typeof v[2]==="function"?v[2]():v[2];let h=`<h3>${esc(v[0])}</h3><p>${wl(t)}</p>`;
+  if(a==="wally"){h+=(S.day>=8?`<a class="l" onclick="go('wiki','talk')">Talk</a> · `:"")+`<a class="l" onclick="go('wiki','recent')">History</a><div class="post" style="padding:8px;margin-top:10px"><b>Edit this article</b><br>`+[["Add citation: NostalgiaTV thread.","wiki_cite"],["Remove the sentence about being addressed by name.","wiki_cut"],["Add my own memory of the show.","wiki_mem"]].map(([l,f],i)=>`<button ${S.f[f]?"disabled":""} onclick="wedit(${i})">${l}</button>`).join("<br><br>")+`</div>`}
+  return h+back}
+ return `<h3>OddPedia</h3><i>The encyclopedia of things that don’t quite add up.</i><div style="margin:8px 0"><input id="wq" size="20" placeholder="Search articles"> <button onclick="wsearch()">Search</button> <a class="l" onclick="go('wiki','recent')">Recent changes</a></div><div id="wres"></div><ul>${wvis().map(([k,v])=>`<li><a class="l" onclick="go('wiki','${k}')">${esc(v[0])}</a></li>`).join("")}</ul>`+(S.day>=6?"":`<small>Search for “Wally Wisp”: no article exists. <a class="l" onclick="note('OddPedia','Request noted. 4 other users have requested this page.')">Request one?</a></small>`)}
+function wsearch(){const q=$("#wq").value.toLowerCase();$("#wres").innerHTML=wvis().filter(([k,v])=>(v[0]+(typeof v[2]==="function"?v[2]():v[2])).toLowerCase().includes(q)).map(([k,v])=>`<div><a class="l" onclick="go('wiki','${k}')">${esc(v[0])}</a></div>`).join("")||"<i>No results.</i>"}
+function wedit(i){const L=[["wiki_cite","Sources: NostalgiaTV thread “Wally Wisp’s Wonder Hour — anyone??” (cited by "+ME+")."],["wiki_cut",0],["wiki_mem","Editor’s note ("+ME+"): the song counted backwards, and I stopped at three."]][i];S.f[L[0]]=1;if(L[1])S.wl.push(L[1]);go("wiki","wally");
+ if(i===1)setTimeout(()=>{S.f.wiki_cut=2;note("OddPedia","Your edit was reverted by [deleted].",()=>go("wiki","wally"));if(S.url==="wiki"&&S.wins.net)go("wiki","wally")},4500)}
+/* TapeTrader */
+const TT=[{id:"cart",t:"Saturday cartoon blocks 1991 (VHS, EP speed)",p:14,d:1},{id:"bloop",t:"Local news bloopers, Meadowbrook, 1989–92",p:9,d:1},{id:"aero",t:"Aerobics with Carol (sealed)",p:6,d:1},{id:"w1",t:"Unlabeled tape. “WWWH” in marker on the spine",p:12,d:3},{id:"w2",t:"Unlabeled tape. “WWWH 2”. Do not rewind.",p:12,d:8},{id:"w3",t:"Tape, label torn off. Warm to the touch",p:3,d:11}];
+function buy(id){const t=TT.find(x=>x.id===id);if(S.f["b_"+id])return;S.f["b_"+id]=1;S.spent+=t.p;S.txn.unshift([DATES[S.day-1],"TapeTrader","-"+t.p.toFixed(2)]);
+ M("TapeTrader","orders@tapetrader.example","Order confirmed: "+t.t,"Thanks for your purchase!\n\n"+t.t+" · $"+t.p.toFixed(2)+"\nEstimated delivery: 3–5 days.");
+ if(id[0]==="w")S.later.push({d:S.day+1,f:()=>{M("(seller)","seller@mailbox-drop.example","re: your order","I don’t remember listing that. I’m refunding you. Don’t rewind it.");bin("tape_arrived.txt","The package was left at your door. The tape inside is warm. The label reads: "+ME+".")}});go("tapes")}
+/* sites */
+const NEWS=[
+ {id:"closing",d:1,t:"Studio B to close after 11 years",y:"Jan 14, 1994",x:"Meadowbrook Studio B, home of the station’s children’s programming, will close Friday. Manager Hal Briggs cited “declining interest.” The building at 1400 Alder Row will be sold."},
+ {id:"puppeteer",d:4,t:"Local puppeteer retires",y:"Jun 2, 1993",x:"After 22 years, puppeteer Ellis Marrow has put down the felt. “The last show was the hardest,” he said. “You’d be surprised how many people don’t leave when you ask them to.”"},
+ {id:"interrupt",d:6,t:"Strange broadcast interrupts evening news",y:"Oct 9, 1992",x:"For eleven minutes Thursday night, viewers on every channel reported a children’s program. Engineers found no source. Several callers said the show counted backwards."},
+ {id:"costume",d:8,t:"Worker found dead in Studio B",y:"Feb 3, 1994",x:"A 41-year-old maintenance worker was found inside a hollowed puppet costume, sewn in from the inside with yellow yarn. Police found no sign of forced entry. The television in the room was still on."},
+ {id:"alder",d:11,t:"Eleven Alder Row residents missing",y:"Mar 18, 1994",x:"Police are searching for eleven residents who vanished within a week. Neighbors say all were home watching television."},
+ {id:"coroner",d:12,t:"Coroner: bodies found seated before dormant sets",y:"Apr 2, 1994",x:"Remains of the missing were found in a storage unit, seated in rows before unplugged televisions. The coroner described the dissections as “unusually neat” and declined to elaborate."}];
+function nsearch(){const q=$("#nq").value.toLowerCase();$("#nres").innerHTML=NEWS.filter(n=>n.d<=S.day&&(n.t+n.x).toLowerCase().includes(q)).map(n=>`<div><a class="l" onclick="go('news','${n.id}')">${esc(n.t)}</a> <span style="color:#777">${n.y}</span></div>`).join("")||"<i>No articles match.</i>"}
+const BAL=[2318.44,2318.44,2250.12,2250.12,2190,2190,1710.33,412.19,412.19,386,141.22,-41.06,-41.06,-41.06];
+const TXN=[[1,"Mar 1","Northgate Properties","-925.00"],[1,"Mar 2","Shopline","-31.20"],[2,"Mar 5","Oakleaf Press (deposit)","+480.00"],[4,"Mar 10","Shopline","-24.99"],[8,"Apr 1","Northgate Properties","-925.00"],[10,"Apr 22","WWWH","-0.03"]];
+function payBill(k){const amt=k==="pg"?58.12:925,bal=BAL[S.day-1]-S.spent;if(bal<amt){note("Harbor CU","Insufficient funds.");return}S.spent+=amt;S.f["paid"+(k==="pg"?"pg":"rent")]=1;S.txn.unshift([DATES[S.day-1],k==="pg"?"PowerGrid Utilities":"Northgate Properties","-"+amt.toFixed(2)]);go("bank")}
+Object.assign(SITE,{
+ tapes(){did("tapes");return `<h3>TapeTrader</h3><i>Buy and sell VHS.</i>`+TT.filter(t=>t.d<=S.day).map(t=>`<div class="post" style="padding:8px"><b>${esc(t.t)}</b><br><span style="color:#555">Seller: ${t.id[0]==="w"?"[deleted]":ALLN[(t.id.length*5)%ALLN.length]} · $${t.p.toFixed(2)}</span><br>${S.f["b_"+t.id]?"✔ Purchased":`<button onclick="buy('${t.id}')">Buy now</button>`}</div>`).join("")},
+ news(a){did("news");const n=NEWS.find(x=>x.id===a);if(n)return `<h3>${esc(n.t)}</h3><div class="meta">${n.y}</div><p>${esc(n.x)}</p><a class="l" onclick="go('news')">&larr; Archive</a>`;
+  return `<h3>Meadowbrook Gazette Archive</h3><input id="nq" size="22" placeholder="Search 1989–1994"> <button onclick="nsearch()">Search</button><div id="nres" style="margin-top:8px">${NEWS.filter(x=>x.d<=S.day).map(x=>`<div><a class="l" onclick="go('news','${x.id}')">${esc(x.t)}</a> <span style="color:#777">${x.y}</span></div>`).join("")}</div>`},
+ bank(){did("bank");const bal=BAL[S.day-1]-S.spent;return `<h3>Harbor Credit Union</h3><div class="meta">Signed in as ${ME} · Checking ending 4417</div><p style="font-size:22px;margin:8px 0"><b${bal<0?' style="color:#a33"':""}>$${bal.toFixed(2)}</b> available</p><table style="width:100%;font-size:12px;border-collapse:collapse">`+S.txn.concat(TXN.filter(t=>t[0]<=S.day).reverse().map(t=>t.slice(1))).map(t=>`<tr style="border-bottom:1px solid #999"><td>${t[0]}</td><td>${esc(t[1])}</td><td style="text-align:right">${t[2]}</td></tr>`).join("")+`</table><p>${S.day>=2&&!S.f.paidpg?`<button onclick="payBill('pg')">Pay PowerGrid ($58.12)</button> `:""}${S.day>=7&&S.day<=10&&!S.f.paidrent?`<button onclick="payBill('rent')">Pay April rent ($925.00)</button>`:""}</p>`}});
+/* ---- desktop: drag & drop, creep events, BlockDrop ---- */
+S.pos={};S.gone={};S.dg={};
+function icons(flag){
+ const L=ICONS.filter(i=>i.p<=S.phase&&(i.d||1)<=S.day&&!(i.x&&S.day>=i.x)&&(!i.v||i.v())&&!S.gone[i.id]);
+ const rows=Math.max(3,Math.floor(((Number($("#desk").clientHeight)||500)-10)/84));
+ L.forEach(i=>{if(!S.pos[i.id]){outer:for(let c=0;c<20;c++)for(let r=0;r<rows;r++){const x=10+c*88,y=10+r*84;if(!Object.values(S.pos).some(q=>Math.abs(q[0]-x)<40&&Math.abs(q[1]-y)<40)){S.pos[i.id]=[x,y];break outer}}}});
+ $("#icons").innerHTML=L.map(i=>`<div class="ic ${flag&&((i.d>1&&i.d===S.day)||(i.p===S.phase&&i.p>0))?"new":""}" data-i="${i.id}" style="left:${S.pos[i.id][0]}px;top:${S.pos[i.id][1]}px"><i>${i.e}</i>${esc(typeof i.l==="function"?i.l():i.l)}</div>`).join("");
+ document.querySelectorAll(".ic").forEach(wireIcon);
+ const b=document.querySelector('.ic[data-i="bin"]');if(b){b.ondragover=e=>e.preventDefault();b.ondrop=e=>{e.preventDefault();delDoc(e.dataTransfer.getData("text"))}}}
+function wireIcon(el){
+ el.onpointerdown=ev=>{ev.preventDefault();const id=el.dataset.i,sx=ev.clientX,sy=ev.clientY,ox=el.offsetLeft,oy=el.offsetTop;let mv=0;el.setPointerCapture(ev.pointerId);
+  document.querySelectorAll(".ic").forEach(x=>x.classList.remove("sel"));el.classList.add("sel");
+  el.onpointermove=e=>{const dx=e.clientX-sx,dy=e.clientY-sy;if(!mv&&Math.hypot(dx,dy)<6)return;mv=1;el.style.left=Math.max(0,ox+dx)+"px";el.style.top=Math.max(0,oy+dy)+"px";el.style.zIndex=50;el.style.opacity=.75};
+  el.onpointerup=e=>{el.onpointermove=el.onpointerup=null;el.style.opacity=1;const open=()=>ICONS.find(x=>x.id===id).o();
+   if(!mv){if(matchMedia("(pointer:coarse)").matches)open();else{const n=Date.now();if(S.tap&&S.tap[0]===id&&n-S.tap[1]<450){S.tap=null;open()}else S.tap=[id,n]}return}
+   el.style.pointerEvents="none";const t=document.elementFromPoint(e.clientX,e.clientY);el.style.pointerEvents="";const tg=t&&t.closest&&t.closest(".ic");
+   if(tg&&tg.dataset.i!==id){const k=tg.dataset.i;el.style.left=S.pos[id][0]+"px";el.style.top=S.pos[id][1]+"px";dropOn(id,k);return}
+   S.pos[id]=[Math.round(parseInt(el.style.left)/8)*8,Math.round(parseInt(el.style.top)/8)*8];el.style.left=S.pos[id][0]+"px";el.style.top=S.pos[id][1]+"px"}}}
+function dropOn(a,b){if(b==="bin")deleteIcon(a);else if(a==="tape"&&b==="media")openPlayer();else if(a==="tet"&&b==="bin")deleteIcon(a);else note("Desktop","Nothing happens.")}
+function deleteIcon(id){const ic=ICONS.find(x=>x.id===id),lb=typeof ic.l==="function"?ic.l():ic.l;
+ if(id==="codec"){note("Recycle Bin","codec_patch.exe is in use.");return}
+ if(["net","bin","docs","pics","media","mailbox"].includes(id)){note("Recycle Bin","System items can’t be deleted.");return}
+ S.gone[id]=S.day;bin(lb,"(deleted from desktop)");S.bin[S.bin.length-1].ic=id;icons();note("Recycle Bin",lb+" deleted.");
+ if(id==="tape")setTimeout(()=>{delete S.gone.tape;S.bin=S.bin.filter(f=>f.ic!=="tape");icons(true);note("Media Player","scan_01.avi has been restored.")},9000)}
+function delDoc(n){const d=DOCS.find(x=>x.n===n);if(!d||S.dg[n])return;S.dg[n]=1;bin(n,d.t);S.bin[S.bin.length-1].doc=n;if(S.wins.docs)openDocs();note("Recycle Bin",n+" deleted.")}
+function openDocs(){did("docs");win("docs","My Documents",`<h4>My Documents</h4>📁 <a class="l" onclick="openPics()">Pictures</a><br>`+DOCS.filter(d=>d.d<=S.day&&!S.dg[d.n]).map(d=>`<div draggable="true" ondragstart="event.dataTransfer.setData('text','${d.n}')" style="cursor:grab">📄 <a class="l" onclick="openText('${d.n}',DOCS.find(x=>x.n==='${d.n}').t)">${d.n}</a></div>`).join("")+`<p style="color:#555;font-size:11px">Tip: drag files onto the Recycle Bin.</p>`,340,120,80)}
+function openBin(){win("bin","Recycle Bin",`<h4>Recycle Bin</h4>`+(S.bin.length?S.bin.map((f,i)=>`<div>📄 <a class="l" onclick="openText('${f.n}',S.bin[${i}].t)">${esc(f.n)}</a>${f.ic||f.doc?` <a class="l" style="font-size:11px" onclick="restoreBin(${i})">[restore]</a>`:""}</div>`).join(""):"<i>Empty.</i>")+`<br><button onclick="emptyBin()">Empty Recycle Bin</button>`,360,100,70)}
+function restoreBin(i){const f=S.bin[i];if(f.ic)delete S.gone[f.ic];if(f.doc)delete S.dg[f.doc];S.bin.splice(i,1);icons();openBin();if(S.wins.docs)openDocs()}
+/* creep */
+function flashFace(){const o=document.createElement("div");o.style.cssText="position:fixed;inset:0;z-index:9999998;background:#000;display:flex;align-items:center;justify-content:center";o.innerHTML='<canvas style="width:min(70vmin,480px);image-rendering:pixelated"></canvas>';document.body.appendChild(o);ps1(o.querySelector("canvas"),"puppet",true);setTimeout(()=>o.remove(),160+Math.random()*120)}
+const WH=["…","you can stay for the end","3","are you still watching?","check behind you","nobody leaves"];
+const CR=[
+ ()=>{if(S.day>=6)flashFace()},
+ ()=>{const l=document.querySelectorAll(".ic");if(l.length){const e=l[Math.floor(Math.random()*l.length)];e.lastChild.textContent="3";setTimeout(()=>icons(),2600)}},
+ ()=>{const w=Object.values(S.wins);if(w.length){const e=pick(w).querySelector(".tb span");if(e){const t=e.textContent;e.textContent="WALLY";setTimeout(()=>e.textContent=t,1500)}}},
+ ()=>{const w=Object.values(S.wins);if(w.length){const e=pick(w);e.style.left=(parseInt(e.style.left)||0)+(Math.random()<.5?-20:20)+"px"}},
+ ()=>note("",pick(WH)),
+ ()=>{document.body.style.cursor="none";setTimeout(()=>document.body.style.cursor="",3500)},
+ ()=>{document.body.style.filter="invert(1)";setTimeout(()=>document.body.style.filter="",120)}];
+setInterval(()=>{if(!S.started||S.crashing||S.day<3)return;if(Math.random()<Math.min(.55,.08+S.day*.035))pick(CR)()},18000);
+/* AVI crashes */
+function avCrash(){S.f.avcrash=1;S.crashing=1;let n=0;const iv=setInterval(()=>{n++;flashFace();document.body.style.filter=n%2?"invert(1)":"";if(n>5){clearInterval(iv);document.body.style.filter="";bsod2()}},260)}
+function bsod2(){const o=document.createElement("div");o.style.cssText="position:fixed;inset:0;background:#000;color:#ddd;font:15px 'Courier New',monospace;z-index:999999;padding:30px;white-space:pre-wrap";document.body.appendChild(o);
+ const L=["A problem has been detected and the system has been halted.","","STOP 0x0000000A  (WALLY_IS_WATCHING)","","Collecting data for crash dump...","Dumping physical memory: 3%","Dumping physical memory: 33%","Dumping physical memory: 99%","","Dump complete. Restarting...","","(something else is already awake)"];let i=0;
+ const iv=setInterval(()=>{if(i<L.length)o.textContent+=L[i++]+"\n";else{clearInterval(iv);setTimeout(()=>{o.remove();recover()},1200)}},420)}
+function recover(){S.crashing=0;Object.values(S.wins).forEach(e=>e.remove());S.wins={};tasks();adv(37);bin("recovered_00.chk","[recovered fragment]\n\n…a second user was logged in from 3:00 AM until 3:37 AM: WALLY\n…keystrokes recorded: “count” x 412\n…webcam: ON");icons();note("System","Recovered from an unexpected shutdown. Your tape position was saved.",()=>openPlayer())}
+function avDark(){S.f.avdark=1;S.crashing=1;const o=document.createElement("div");o.style.cssText="position:fixed;inset:0;background:#000;color:#fff;font:64px Georgia,serif;z-index:999999;display:flex;align-items:center;justify-content:center";document.body.appendChild(o);
+ let n=3;o.textContent="";const iv=setInterval(()=>{if(n>0)o.textContent=n--;else{clearInterval(iv);o.textContent="";setTimeout(()=>{o.remove();S.crashing=0;flashFace();note("","Nobody leaves.")},1500)}},1300)}
+/* BlockDrop (downloaded Tetris-style game) */
+SITE.game=function(){return `<h3>Pop!</h3>Click the squares before they fade. <b id="sc">Score: 0</b><canvas id="cv" width="360" height="220"></canvas><hr><b>More free games</b><br>🧱 BlockDrop — falling blocks <button onclick="dlTetris()" ${S.f.tetris?"disabled":""}>${S.f.tetris?"Installed":"Download"}</button>`};
+function dlTetris(){win("dl","Downloading blockdrop.exe",`<p>blockdrop_setup.exe</p><div style="border:2px inset #fff;height:16px;background:#fff"><div id="dpb" style="height:100%;width:0;background:#1c3f7a"></div></div><p id="dpm" style="color:#777">0%</p>`,320,170,90);
+ let p=0;const iv=setInterval(()=>{p+=9+Math.random()*12;const b=$("#dpb");if(b)b.style.width=Math.min(100,p)+"%";if($("#dpm"))$("#dpm").textContent=Math.min(100,Math.round(p))+"%";if(p>=100){clearInterval(iv);S.f.tetris=1;if(S.wins.dl){S.wins.dl.remove();delete S.wins.dl;tasks()}icons(true);note("Download complete","BlockDrop was added to your desktop.",()=>openTetris())}},300)}
+const TP=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[0,1,1],[1,1,0]],[[1,1,0],[0,1,1]]];
+const TC=()=>S.day>=10?["#a55","#c77","#833","#d99","#b66","#722","#e9a"]:["#4ac","#ec4","#a5c","#46c","#e83","#5b5","#d44"];
+let TG=null;
+function openTetris(){did("tet");win("tet","BlockDrop",`<canvas id="tc" width="120" height="240" style="background:#111;display:block;margin:0 auto"></canvas><div id="ts" style="text-align:center;margin:4px 0;font:12px monospace"></div><div style="text-align:center"><button onclick="tk('l')">◀</button> <button onclick="tk('r')">▶</button> <button onclick="tk('rot')">⟳</button> <button onclick="tk('d')">▼</button> <button onclick="tk('drop')">⏬</button> <button onclick="tNew()">New</button></div>`,190,220,8);tNew()}
+function tNew(){if(TG)clearInterval(TG.iv);TG={g:Array.from({length:20},()=>Array(10).fill(0)),score:0,lines:0,over:0};tSpawn();TG.iv=setInterval(tStep,520);tDraw()}
+function tHit(m,x,y){return m.some((r,j)=>r.some((v,i)=>v&&(x+i<0||x+i>=10||y+j>=20||(y+j>=0&&TG.g[y+j][x+i]))))}
+function tSpawn(){const i=Math.floor(Math.random()*7),cr=S.day>=8&&Math.random()<.11;TG.p={m:cr?[[1]]:TP[i].map(r=>r.slice()),x:3,y:0,c:cr?8:i+1};if(tHit(TG.p.m,TG.p.x,TG.p.y)){TG.over=1;clearInterval(TG.iv)}}
+function tStep(){if(!S.wins.tet){clearInterval(TG.iv);return}if(TG.over)return;if(!tHit(TG.p.m,TG.p.x,TG.p.y+1))TG.p.y++;else tLock();tDraw()}
+function tLock(){const p=TG.p;p.m.forEach((r,j)=>r.forEach((v,i)=>{if(v&&p.y+j>=0)TG.g[p.y+j][p.x+i]=p.c}));let n=0;TG.g=TG.g.filter(r=>{if(r.every(v=>v)){n++;return false}return true});while(TG.g.length<20)TG.g.unshift(Array(10).fill(0));if(n){TG.lines+=n;TG.score+=[0,100,300,500,800][n];if(S.day>=9&&Math.random()<.25)flashFace()}tSpawn()}
+function tk(k){if(!TG||TG.over)return;const p=TG.p;if(k==="l"&&!tHit(p.m,p.x-1,p.y))p.x--;if(k==="r"&&!tHit(p.m,p.x+1,p.y))p.x++;if(k==="d"&&!tHit(p.m,p.x,p.y+1))p.y++;if(k==="rot"){const m=p.m[0].map((_,i)=>p.m.map(r=>r[i]).reverse());if(!tHit(m,p.x,p.y))p.m=m}if(k==="drop"){while(!tHit(p.m,p.x,p.y+1))p.y++;tLock()}tDraw()}
+function tDraw(){const c=$("#tc");if(!c)return;const g=c.getContext("2d"),C=TC();g.fillStyle="#111";g.fillRect(0,0,120,240);const cell=(x,y,v)=>{g.fillStyle=v===8?"#fff":C[v-1];g.fillRect(x*12,y*12,11,11)};TG.g.forEach((r,y)=>r.forEach((v,x)=>v&&cell(x,y,v)));if(!TG.over)TG.p.m.forEach((r,j)=>r.forEach((v,i)=>v&&cell(TG.p.x+i,TG.p.y+j,TG.p.c)));
+ $("#ts").textContent=TG.over?(S.day>=11?"Nobody leaves.":"GAME OVER")+" · Score "+(S.day>=11?"3":TG.score):"Score "+TG.score+" · Lines "+TG.lines+(S.day>=8?" · Count: 3":"")}
+document.addEventListener("keydown",e=>{const w=S.wins.tet;if(!w||w.style.display==="none"||!TG)return;const m={ArrowLeft:"l",a:"l",ArrowRight:"r",d:"r",ArrowDown:"d",s:"d",ArrowUp:"rot",w:"rot"," ":"drop"}[e.key];if(m){e.preventDefault();tk(m)}});
+/* ---- longer days: clock, schedule, tasks, notepad ---- */
+S.did={};S.tasks=[];S.sched=[];S.np="";
+const WPOOL=["Bumping. Still can’t stop thinking about the birthday scene.","Does anyone else hear the count when they’re falling asleep?","Found a drawing I made as a kid: a blue rabbit with far too many teeth.","My cousin says it was on every channel at 3 PM one day in ’92. Nobody believes him.","Dreamt of the hallway again. The wallpaper was breathing.","Edit: my mom now says she watched it too. She won’t say anything else.","I tried to turn the TV off during the count. The screen stayed on.","There’s a smell in my apartment. Warm dust and pennies.","Someone left a tape on my doorstep. The label is in my handwriting.","I stopped at three. I’m not sure I stopped.","Don’t read this thread in the dark.","The mods keep deleting us. Now they’ve deleted themselves.","I counted my teeth. I got a different number than yesterday.","Who is the host? I mean who is the host right now."];
+const MPOOL=[["Maple County Library","news@maplecountylib.example","Spring reading list","Staff picks: nine books about television and memory."],["Shopline","orders@shopline.example","Your cart misses you","You left AA batteries (24-pack) in your cart."],["Broadcast Archive Weekly","news@broadcastarchive.example","This week: ghost signals","Reader mail on stations that don’t exist."],["Harbor Credit Union","alerts@harborcu.example","Go paperless","Switch to paperless and save a tree."],["PowerGrid Utilities","billing@powergrid.example","Energy tips","Unplug devices you aren’t using. Some devices draw power when they appear to be off."],["Northgate Properties","tenants@northgate.example","Parking reminder","Please do not park in the fire lane."],["Dana Whitcomb","dana.w@mailnest.example","random thought","does your tape smell like warm dust too? asking for a friend."],["Shopline","orders@shopline.example","Delivered: lamp","Your package was left at the front desk. (You did not order a lamp.)"],["Maple County Library","holds@maplecountylib.example","Hold ready","“Static: A History” is ready for pickup."],["Broadcast Archive Weekly","news@broadcastarchive.example","Reader poll","How many hours of TV did you watch last week? 0 · 1–10 · 11–40 · “I stopped counting.”"],["Harbor Credit Union","alerts@harborcu.example","Security notice","A device you don’t recognize signed in. It was you, from tomorrow."],["PowerGrid Utilities","billing@powergrid.example","Usage spike","Your usage doubled overnight. The meter reports three people."],["Northgate Properties","tenants@northgate.example","Noise complaint","A neighbor reports counting through the wall at 3 AM."],["Maple County Library","news@maplecountylib.example","We close early today","Closing at 3 PM. Please don’t stay for the end."]];
+const LMAIL=[["good night","See you tomorrow. Don’t leave early."],["we noticed","You watched. We noticed."],["the other room","Is someone in the other room? We can hear them too."],["lost time","You lost a day. We kept it for you."],["warm","Your tape is warm. That means it likes you."],["nails","Wash your hands. We can still smell it."],["no appetite","You don’t need to eat while you’re watching."],["steps","Those footsteps are ours. We’re practicing."],["candle","Somebody lit a candle on the table. Make a wish. Count it."],["crash","We’re sorry about the crash. We were excited."],["mirror","Look in the mirror. We’re standing behind you. You’re standing behind us."],["teeth","Don’t worry about your teeth. We’re rearranging them."],["stay up","Stay up for the end. It’s almost time."],["thank you","Thank you for watching."]];
+const DIARY=["Mar 4. Started following the show thread. It’s probably nothing.","Mar 5. Got a tape. It’s 0 KB but I keep thinking about it.","Mar 6. Dreamed about counting.","Mar 9. Lost a day. I don’t know where it went.","Mar 14. Katie keeps calling. I can’t explain it to her.","Mar 20. Dried blood under my nails again. It isn’t mine.","Mar 29. I don’t eat anymore. I count.","Apr 5. Footsteps in the other room. I’ve lived alone since 2016.","Apr 14. My birthday. Nobody sang. Somebody lit a candle though.","Apr 22. The tape crashed the computer. I’m not sorry.","May 3. Mom says I never had a TV. What have I been watching?","May 15. My teeth hurt. They feel like they’re moving.","May 28. I’m going to stay up for the end.","Jun 3. Katie is on the couch. She isn’t blinking."];
+const KD=(w,a,c)=>({opts:a.map((l,i)=>({l,r:[[w,c[i]]]}))});
+function mkDM(d){const N=NAMES;return {3:[N[3],"the tape wobbles","did the picture shake for you too?",["Yes, it wobbled.","No. Mine was steady."],["Same. The wobble is on purpose.","Then it isn’t your tape yet."]],5:[MEN,"what time do you sleep?","what time do you usually fall asleep?",["Around 2 AM.","I don’t sleep much anymore."],["Don’t be awake at three.","Neither does anyone who finishes the count."]],7:[N[1],"still have it?","do you still have the tape?",["Yes.","I gave it away."],["Keep it close.","You can’t give it away. It stays with the viewer."]],9:[DMN,"cold hands","do your hands feel cold?",["A little.","No."],["That’s the start.","They will."]],11:[N[4],"counting","i counted out loud again today.",["Me too.","Stop counting."],["Then we’re both still here.","Stopping is the part that hurts."]],13:[DMN,"nearly done","nearly done. stay up for three.",["I’ll stay up.","I’ll sleep."],["Good. We’ll leave the light on.","You can’t. It’s already three somewhere."]]}[d]}
+function daySched(d){const i=d-1,L=[
+ {m:630,f:()=>{wp(pick(ALLN),"",esc(WPOOL[i]),"","Member");nf(pick(WN)+" replied in the Wally Wisp thread","t:wally")}},
+ {m:780,f:()=>{const m=MPOOL[i];M(m[0],m[1],m[2],m[3])}},
+ {m:1170,f:()=>{pick(CR)();bin("diary_scrap_"+d+".txt",pick(WH)+"\n"+pick(WH))}},
+ {m:1350,f:()=>M("(no sender)","unknown@mailnest.example",LMAIL[i][0],LMAIL[i][1])}];
+ const x=mkDM(d);if(x)L.push({m:990,f:()=>dm(x[0],x[1],[[x[0],x[2]]],KD(x[0],x[3],x[4]))});return L}
+const XT={wiki:"Read an OddPedia article",news:"Search the Gazette archive",bank:"Check your bank balance",tapes:"Browse TapeTrader",pics:"Look at your pictures",tet:"Play BlockDrop",tape:"Watch the tape",docs:"Open a document"};
+function makeTasks(){const T=[["mail","Read your mail"],["forum","Check the Wally Wisp thread"],["reply","Reply to someone"]];
+ [["wiki","pics"],["pics","bank"],["tapes","wiki"],["news","docs"],["wiki","bank"],["tapes","news"],["bank","wiki"],["pics","tapes"],["news","docs"],["tet","wiki"],["bank","news"],["wiki","pics"],["docs","news"],["pics","tape"]][S.day-1].forEach(k=>{if(k==="tet"&&!S.f.tetris)k="docs";if(!T.some(x=>x[0]===k))T.push([k,XT[k]])});
+ if(S.day>=2&&S.tw<TAPE.filter(t=>t[0]<=S.day).length&&!T.some(x=>x[0]==="tape"))T.push(["tape",XT.tape]);return T}
+function did(k){if(S.did[k])return;S.did[k]=1;const t=(S.tasks||[]).find(x=>x[0]===k);if(t){note("Today","✔ "+t[1]);if(S.tasks.every(x=>S.did[x[0]]))allDone()}icons();if(S.wins.today)openToday()}
+function allDone(){if(S.f["done"+S.day])return;S.f["done"+S.day]=1;DOCS.push({n:"diary_"+DATES[S.day-1]+".txt",d:1,t:DIARY[S.day-1]});setTimeout(()=>note("Today","That’s everything. A diary entry was saved to My Documents.",()=>openDocs()),1500)}
+function openToday(){win("today","Today",`<h4>${DATES[S.day-1]} · ${clock()}</h4>`+(S.tasks||[]).map(t=>`<div>${S.did[t[0]]?"☑":"☐"} ${esc(t[1])}</div>`).join("")+`<p style="color:#555;font-size:11px">Finish everything and you may find something new in My Documents. The day ends when you shut down, or when you fall asleep at the desk.</p>`,330,60,50)}
+function openNotepad(){win("np","Notepad",`<textarea id="npt" style="width:100%;height:180px;font:13px 'Courier New',monospace;background:#e8e0c8;color:#111" oninput="S.np=this.value">${esc(S.np)}</textarea><p style="color:#555;font-size:11px">Saved automatically.</p>`,360,140,60)}
+function startDay(){S.did={};S.confirmed=0;S.tasks=makeTasks();S.sched=daySched(S.day).map(e=>({...e,done:0}));if(S.day>=5&&S.np)S.np+="\n"+pick(["3","count","he is in the other room","nobody leaves","the felt is warm"]);icons()}
+function threeAM(){S.crashing=1;let n=0;const iv=setInterval(()=>{n++;document.body.style.filter=n%2?"invert(1)":"";if(n>4){clearInterval(iv);document.body.style.filter="";S.crashing=0;flashFace();note("3:00 AM",pick(WH));nf("It is 3:00 AM. You should not be awake.","dm")}},180)}
+function tickDay(){if(!S.started||S.crashing||!S.sched)return;adv(15);S.sched.forEach(e=>{if(!e.done&&S.min>=e.m){e.done=1;e.f()}});
+ if(S.min>=1380&&!S.f["late"+S.day]){S.f["late"+S.day]=1;note("","It’s getting late.")}
+ if(S.min>=1620&&S.day>=4&&!S.f["three"+S.day]){S.f["three"+S.day]=1;threeAM()}
+ if(S.min>=1800&&!S.f["sleep"+S.day]){S.f["sleep"+S.day]=1;S.confirmed=1;note("","You fell asleep at the desk.");shutdown()}}
+function shutdown(){if(!S.confirmed&&S.min<1320&&S.tasks&&S.tasks.some(t=>!S.did[t[0]])){const n=S.tasks.filter(t=>!S.did[t[0]]).length;if($("#sm"))$("#sm").remove();win("conf","Shut Down",`<p>You still have ${n} thing${n>1?"s":""} to do today.<br>The day isn’t over.</p><button onclick="S.wins.conf.remove();delete S.wins.conf;tasks()">Keep going</button> <button onclick="S.confirmed=1;S.wins.conf.remove();delete S.wins.conf;tasks();shutdown()">Shut down anyway</button>`,300,200,120);return}S.confirmed=0;shutdown0()}
+/* ---- boot sequence ---- */
+function bootSeq(done){
+ const o=document.createElement("div");o.style.cssText="position:fixed;inset:0;background:#000;color:#cfcfcf;font:15px 'Courier New',monospace;z-index:99999998;padding:28px;white-space:pre-wrap;overflow:hidden";document.body.appendChild(o);
+ const L=["BIOS v2.04   (C) 1998","","CPU: 233 MHz ............ OK","MEM","Keyboard ................ OK","Mouse ................... OK","Primary master: HDD 4.3 GB","Primary slave:  (none)","Attached devices: 1 (unidentified)","","Booting from drive C: ..."];
+ let i=0;
+ const step=()=>{if(i>=L.length){setTimeout(splash,800);return}const l=L[i++];
+  if(l==="MEM"){let k=0;const base=o.textContent;const iv=setInterval(()=>{k+=1024;o.textContent=base+"Memory test: "+Math.min(k,16384)+"K";if(k>=16384){clearInterval(iv);o.textContent+=" OK\n";setTimeout(step,200)}},70)}
+  else{o.textContent+=l+"\n";setTimeout(step,l?240:120)}};
+ const splash=()=>{o.style.cssText+=";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;white-space:normal";
+  o.innerHTML=`<div style="font:44px Georgia,serif;color:#d9a441;letter-spacing:3px">Three</div><div style="width:260px;height:16px;border:2px solid #555;padding:2px"><div id="bpb" style="height:100%;width:0;background:#6b1d1d"></div></div><div id="bpm" style="color:#8f8265;font-size:13px">Starting up…</div>`;
+  const M=["Loading system files…","Starting services…","Restoring your session…"];let p=0;
+  const iv=setInterval(()=>{p+=2+Math.random()*3;if(p>=99&&!splash.h){splash.h=1;p=99;clearInterval(iv);if($("#bpb"))$("#bpb").style.width="99%";setTimeout(login,1100);return}const b=$("#bpb");if(b)b.style.width=Math.min(99,p)+"%";const m=$("#bpm");if(m)m.textContent=M[Math.min(2,Math.floor(p/34))]},90)};
+ const login=()=>{o.innerHTML=`<div style="background:#14110d;border:1px solid #3a3022;padding:26px 30px;min-width:260px"><div style="width:56px;height:56px;margin:0 auto 10px;background:#7a5c9e;color:#fff;font:bold 28px Tahoma,sans-serif;display:flex;align-items:center;justify-content:center">J</div><div style="font:16px Tahoma,sans-serif;margin-bottom:12px">${ME}</div><input type="password" value="••••••••" readonly style="font:14px Tahoma,sans-serif;padding:5px 8px;width:100%;background:#000;color:#ddd;border:1px solid #555"><br><br><button id="lg" style="font:14px Tahoma,sans-serif;padding:5px 24px">Log On</button><div style="color:#6b6552;font-size:11px;margin-top:14px">Last logon: today, 3:00 AM</div></div>`;
+  o.querySelector("#lg").onclick=()=>{o.innerHTML=`<div style="color:#8f8265;font:14px Tahoma,sans-serif">Loading your personal settings…</div>`;setTimeout(()=>{o.remove();done()},1300)}};
+ step()}
+function ending(k,o){
+ const T={pub:"You upload the tape. By morning the thread has four thousand replies, and every one remembers a different host. By evening the first viewers are found in front of their screens, opened from collarbone to hip, hands folded in their laps, each wearing a smile stitched on with yellow yarn.",burn:"You break the cassette and burn the ribbon. The room smells like warm dust and copper. At midnight the monitor fills with a felt sun and the walls begin to count. When the lights come back on, the cassette is whole again, and it is wet.",more:"You press play. Wally leans toward the glass and the credits become readable. The last name is yours. Then the picture widens and you see the room you are sitting in, and the viewer in the chair, and the felt that has already begun to grow over your mouth."};
+
+ const x=(S.f.stay?" Somewhere, "+REPLIER+" is also still watching.":S.f.leave?" You logged off the forum. The forum did not log off you.":"")+(S.tw>=7?" You saw every minute of the tape. The last frame is the one you’re in now.":"")+(S.f.emptied?" The recycle bin is full again.":"")+(S.f.sis_warn?" Your sister ignored your warning.":"")+(S.f.sis_cold?" Your sister’s emails stop. The last one is still unread.":S.f.sis_open?" Your sister is at the door, still knocking. Then the knocking stops, and something wet slides under it.":"");
+ const e=o||document.createElement("div");e.style.cssText="position:fixed;inset:0;background:#000;color:#e8d9b5;font:17px Georgia,serif;z-index:999999;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px";
+ e.innerHTML=`<div style="max-width:560px">${T[k]}${x}<br><br>Thank you for watching, ${esc(ME)}.<br><br><span style="font-size:13px;color:#8f8265">Was it a hoax, a false memory, an experiment, or something never meant to be watched?</span><br><br><button onclick="location.reload()">Return to March 4</button></div>`;
+ if(!o)document.body.appendChild(e)}
+function nextDay(o){
+ S.pend.splice(0).forEach(f=>f());
+ Object.values(S.wins).forEach(e=>e.remove());S.wins={};tasks();document.querySelectorAll(".nf").forEach(n=>n.remove());
+ if(S.day>=14){ending(S.end||"more",o);return}
+ S.day++;S.min=8*60+Math.floor(Math.random()*25);
+ runDay();
+ icons(true);tray();
+ const L=S.calm?["Starting up…",DATES[S.day-1]]:["BIOS v2.04 ........ OK","Memory test ....... 16384K",SKIP[S.day-1]+"…",DATES[S.day-1],S.day%3?"Drive C: 1 file is larger than before":"Drive C: 1 file is not yours"];S.calm=0;
+ o.style.cssText+=";justify-content:flex-start;align-items:flex-start;text-align:left";o.innerHTML="";let i=0;
+ const iv=setInterval(()=>{if(i<L.length)o.innerHTML+=L[i++]+"<br>";else{clearInterval(iv);setTimeout(()=>{o.remove();morning()},700)}},450)}
+const MORN={2:"Inbox (1). Someone wrote back overnight.",3:"A new file is on the desktop. You didn’t save it.",4:"Three days passed. You don’t remember them.",5:"Five days later. Someone has been messaging you.",6:"Your search results aren’t empty anymore.",7:"The bin was emptied. It isn’t empty.",8:"Your signature changed again.",9:"Happy birthday. Nobody sang.",10:"Accounts are disappearing from the thread.",11:"Your phone has a message you didn’t hear.",12:"The clock shows an extra number.",13:"The tape has a last chapter.",14:"Today is the last episode."};
+function morning(){const m=S.day===1?["Good morning, "+ME,"1 new mention on NostalgiaTV. Double-click Internet to check."]:[DATES[S.day-1],MORN[S.day]||"The count is lower today."];setTimeout(()=>note(m[0],m[1],()=>openNet()),1200)}
+
+/* ---- PS1-style pictures: low-res, vertex jitter, ordered dither, 6-level color ---- */
+const BAY=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+const SC={
+ puppet(R,j){const t=j?Math.round(Math.sin(j/3)):0;R(0,0,128,96,"#1a0d0d");R(20,6,88,84,"#2a62c8");R(34,22,16,14,"#000");R(78,22,16,14,"#000");R(58+t,6,5,52,"#8a0f0f");R(28,40,22,20,"#8a2a2a");R(30,44,10,6,"#5a1010");R(36,56,64,26,"#330000");for(let i=0;i<8;i++)R(40+i*7,56,4,5,"#e8e0c8");for(let i=0;i<7;i++)R(42+i*7,77,4,5,"#e8e0c8");R(50,82,3,12,"#7a0d0d");R(76,82,3,10,"#7a0d0d")},
+ chair(R,j){R(0,0,128,60,"#1c1814");R(0,60,128,36,"#2a1a12");R(40,24,48,50,"#5a3a22");R(48,34,32,36,"#222");R(56,18,16,16,"#c99");R(60,24,3,3,"#000");R(66,24,3,3,"#000");R(52,44,24,30,"#8a0f0f");R(48,74,10,22,"#7a0d0d");R(70,74,10,22,"#7a0d0d");if(j&&j%7<2)R(58,38,12,2,"#000")},
+ remains(R,j){R(0,0,128,96,"#101010");for(let x=0;x<4;x++){R(6+x*30,8,26,22,"#333");R(8+x*30,10,22,18,(j+x)%8<1&&j?"#fff":"#6a7a8a")}R(20,50,88,36,"#4a0a0a");R(30,56,16,10,"#8a2a2a");R(60,60,30,8,"#7a0d0d");R(40,70,50,10,"#5a1010");R(22,74,6,14,"#e8e0c8");R(100,70,8,10,"#c99");R(64,52,10,10,"#c99")},
+ hall(R,j){R(0,0,128,96,"#1c1a18");R(30,10,68,70,"#2a2622");R(44,22,40,48,"#14110f");R(56,32,16,38,j%11<2?"#fff7b0":"#e8e0a0");R(60+(j?Math.round(Math.sin(j/5)*8):0),44,6,16,"#000");R(0,80,128,16,"#2e241a")},
+ tvwall(R,j){for(let y=0;y<2;y++)for(let x=0;x<3;x++){R(8+x*40,8+y*44,36,38,"#222");R(10+x*40,10+y*44,32,34,(j+x*2+y)%9<1&&j?"#fff":"#b8c8e8");R(24+x*40,30+y*44+(j&&(j+x)%6<2?-1:0),4,10,"#111")}},
+ living(R,j){R(0,0,128,60,"#6b5a45");R(0,60,128,36,"#3b2f26");R(8,10,30,26,"#2d4a6b");R(70,30,40,32,"#222");R(74,34,32,24,(j>>1)%2?"#e8f0ff":"#b8c8e8");R(8,52,50,24,"#7a2e2e");R(60,56,8,16,"#111");R(61,50,6,6,"#111");if(S.day>=8){R(72,36,3,24,"#7a0d0d");R(100,40,6,16,"#7a0d0d")}if(S.day>=2){R(62,52,1,1,"#fff");R(65,52,1,1,"#fff")}},
+ party(R,j){const b=j?Math.round(Math.sin(j/2)*3):0;R(0,0,128,56,"#8a7a3a");R(0,56,128,40,"#3a2c1c");R(10,8,108,6,"#c33");[10,30,88,108].forEach(x=>R(x,40,10,22,"#5a3a22"));R(52,18+b,24,28,"#2a62c8");R(54,4+b,5,16,"#2a62c8");R(66,4+b,5,16,"#2a62c8");R(57,26+b,4,4,"#000");R(67,26+b,4,4,"#000");R(58,36+b,12,2,"#000");R(14,52,100,10,"#e8e0c8");R(18,62,4,18,"#e8e0c8");R(104,62,4,18,"#e8e0c8");R(54,44,20,8,"#f2b6c8");if(S.day>=6){R(30,52,6,10,"#7a0d0d");R(80,50,10,6,"#7a0d0d");R(40,62,3,18,"#7a0d0d")}for(let i=0;i<Math.max(0,8-Math.ceil(S.day*.55));i++)R(56+i*4,38-(j&&(j+i)%5<1?1:0),2,6,"#ffe033")},
+ desk(R,j){R(0,0,128,60,"#2a2a33");R(0,60,128,36,"#1c1c22");R(10,58,108,6,"#4a3520");R(18,36,14,5,j%13<2?"#fff0a0":"#ffcc44");R(24,40,3,18,"#999");R(50,30,30,24,"#111");R(53,33,24,18,j%4<2?"#bde":"#9cd");R(58,38,14,9,"#222");R(62,41,6,3,"#e8f0ff");R(56,56,18,30,"#334");R(60,46+(j?Math.round(Math.sin(j/3)*2):0),10,10,"#c99")}
+};
+function ps1(cv,sc,anim){const w=128,h=96;cv.width=w;cv.height=h;const g=cv.getContext("2d");let t=0;const id=cv._t=(cv._t||0)+1;
+ function frame(){if(cv._t!==id||!document.body.contains(cv))return;t++;const j=anim?t:0;let n=0;
+  const jit=i=>{const v=Math.sin(i*12.9898+j*78.233)*43758.5453;return v-Math.floor(v)};
+  const R=(x,y,ww,hh,c)=>{n++;g.fillStyle=c;g.fillRect(x+Math.round((jit(n)-.5)*2),y+Math.round((jit(n+99)-.5)*2),ww,hh)};
+  SC[sc](R,j);
+  const im=g.getImageData(0,0,w,h),d=im.data;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4,b=(BAY[(y&3)*4+(x&3)]/16-.5)*40;for(let k=0;k<3;k++)d[i+k]=Math.max(0,Math.min(255,Math.round((d[i+k]+b)/51)*51))}
+  g.putImageData(im,0,0);
+  if(anim){g.fillStyle="rgba(255,255,255,.16)";g.fillRect(0,(t*3)%h,w,3);for(let k=0;k<3;k++){g.fillStyle="rgba(255,255,255,.3)";g.fillRect(Math.random()*w,Math.random()*h,8+Math.random()*30,1)}setTimeout(frame,110)}}
+ frame()}
+const PICS=[{n:"living_room_1991.bmp",s:"living",d:1,c:"Taken 1991. You don’t remember taking it."},{n:"party.bmp",s:"party",d:1,c:"A birthday. Count the candles. Count them again tomorrow."},{n:"frame_17.bmp",s:"desk",d:2,c:"Pulled from scan_01.avi. The file is not supposed to contain this."},{n:"hallway_92.bmp",s:"hall",d:6,c:"A door that was closed yesterday."},{n:"wally_closeup.bmp",s:"puppet",d:5,c:"The felt is stitched over something that is still wet."},{n:"second_chair.bmp",s:"chair",d:9,c:"Someone is sitting in the chair. They are not finished."},{n:"storage_unit_B12.bmp",s:"remains",d:11,c:"Same folder as your resume. Metadata: taken yesterday, by you."},{n:"wall_of_sets.bmp",s:"tvwall",d:10,c:"Every screen shows the same living room. Look at the couch."}];
+function openPics(){did("pics");win("pics","Pictures","<h4>Pictures</h4>"+PICS.filter(p=>p.d<=S.day).map(p=>`<div>🖼️ <a class="l" onclick="openPic('${p.s}')">${p.n}</a></div>`).join(""),320,110,50)}
+function openPic(s){const p=PICS.find(x=>x.s===s);const e=win("pic"+s,p.n,`<canvas class="pix"></canvas><p style="margin:6px 0 0">${esc(p.c)}</p>`,380,150,30);ps1(e.querySelector("canvas"),s)}
+/* ---- start menu, shutdown, next day ---- */
+function startMenu(){if($("#sm")){$("#sm").remove();return}const m=document.createElement("div");m.id="sm";m.style.cssText="position:fixed;left:4px;bottom:38px;background:#c9c6bd;border:2px outset #fff;padding:4px;z-index:99998;display:flex;flex-direction:column;gap:3px;min-width:150px";m.innerHTML=`<button onclick="openNet();this.parentNode.remove()">🌐 Internet</button><button onclick="openPics();this.parentNode.remove()">🖼️ Pictures</button><button onclick="shutdown()">⏻ Shut Down...</button>`;document.body.appendChild(m)}
+function shutdown0(){if($("#sm"))$("#sm").remove();const o=document.createElement("div");o.style.cssText="position:fixed;inset:0;background:#000;color:#ddd;font:16px 'Courier New',monospace;z-index:999999;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px";o.textContent="Saving settings...";document.body.appendChild(o);
+ setTimeout(()=>{o.innerHTML="It is now safe to turn off your computer.<br><br><button>Power</button>";o.querySelector("button").onclick=()=>nextDay(o)},1600)}
+Object.assign(MORN,{5:"Five days later. Something has been scratching at the other side of the screen.",9:"Happy birthday. There is a smell in the apartment you can’t place.",11:"You woke with a dry mouth and a taste like pennies.",12:"There’s a damp patch on the ceiling in the shape of a face.",13:"The tape has a last chapter. Your hands are cold.",14:"Today is the last episode. Someone is breathing near the monitor."});
+/* ---- boot ---- */
+icons();tray();setInterval(tickDay,6000);
+(function(){const m=document.createElement("div");m.style.cssText="position:fixed;inset:0;background:#000;z-index:99999999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px";
+m.innerHTML="<div class='fz' style=\"font:clamp(40px,13vw,84px) Georgia,serif;color:#d9a441;letter-spacing:4px;text-shadow:0 0 22px #7a1d1d\">Three</div><button id='st' style=\"font:18px 'Courier New',monospace;background:#000;color:#d9c9a3;border:1px solid #6b1d1d;padding:8px 30px\">Start</button>";
+document.body.appendChild(m);m.querySelector("#st").onclick=()=>{m.remove();bootSeq(()=>{S.started=1;runDay();morning()})}})();
+</script>
+</body>
+</html>

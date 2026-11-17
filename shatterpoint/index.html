@@ -7,6 +7,31 @@
 :root[data-theme="dark"]{--bg:#0d1014}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);overflow:hidden;font-family:Bahnschrift,"Arial Narrow",Impact,sans-serif;user-select:none}
 canvas{position:fixed;inset:0;display:block}
+body.mm .h{display:none}
+#main{position:fixed;inset:0;z-index:6;display:none;background:radial-gradient(120% 90% at 20% 60%,#05080cf2 0%,#05080ccc 40%,#05080c55 100%);overflow:hidden}
+#main:after{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,#0000 0 2px,#0000001f 2px 3px);animation:fk 6s steps(2) infinite}
+@keyframes fk{50%{opacity:.7}}
+.lb{position:absolute;left:0;right:0;height:7vh;background:#000;z-index:2}.lb.t{top:0}.lb.b{bottom:0}
+#mtop{position:absolute;top:7vh;left:0;right:0;display:flex;justify-content:space-between;padding:14px 5vw;font:12px/1 ui-monospace,Consolas,monospace;letter-spacing:.2em;color:#9aa4ad;z-index:3}#mtop span:last-child{color:var(--red)}
+#ml{position:relative;z-index:3;width:min(42vw,520px);min-width:320px;padding:20vh 4vw 0 5vw}
+.logo small{display:block;font:11px ui-monospace,Consolas,monospace;letter-spacing:.3em;color:var(--amb);margin-bottom:10px}
+.logo h1{margin:0;font-size:clamp(46px,7.5vw,104px);line-height:.88;letter-spacing:.02em;font-weight:900;transform:skewX(-6deg)}.logo h1 span{display:block;color:var(--amb)}
+.logo em{display:block;margin-top:12px;font:12px ui-monospace,Consolas,monospace;letter-spacing:.35em;color:#9aa4ad;font-style:normal}
+#mlist{margin-top:5vh}
+.mi{padding:12px 16px;margin:4px 0;border-left:4px solid #ffffff22;cursor:pointer;transition:.12s;display:flex;flex-direction:column}
+.mi b{font-size:clamp(20px,2.4vw,30px);letter-spacing:.14em;font-weight:700}.mi small{font:11px ui-monospace,Consolas,monospace;letter-spacing:.2em;color:#8a949e;margin-top:2px}
+.mi.sel{border-left-color:var(--amb);background:linear-gradient(90deg,#ffa21a30,#0000);transform:translateX(8px)}.mi.sel b{color:var(--amb)}.mi.lock{opacity:.45}
+.foot{position:absolute;left:5vw;bottom:calc(7vh + 18px);font:11px ui-monospace,Consolas,monospace;letter-spacing:.25em;color:#69737d}
+#mr{position:absolute;z-index:3;right:5vw;top:20vh;width:min(38vw,520px)}
+.card{position:relative;border:1px solid #ffffff2a;background:#0a0e13d9;padding:22px 24px;clip-path:polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,0 100%)}
+.card h2{margin:0 0 8px;font-size:22px;letter-spacing:.2em;color:var(--amb)}.card p{margin:10px 0;line-height:1.5;color:#c4ccd4;font-size:14px}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px!important;letter-spacing:.08em}.dim{color:#7a848e!important}
+.stamp{position:absolute;right:18px;top:16px;border:2px solid var(--red);color:var(--red);padding:2px 10px;font-weight:900;letter-spacing:.2em;font-size:13px;transform:rotate(6deg);opacity:.85}
+.lvl{display:flex;align-items:center;gap:14px;padding:10px 12px;margin:6px 0;border:1px solid #ffffff1c;background:#ffffff08}.lvl b{color:var(--amb);font-size:20px}.lvl span{flex:1;letter-spacing:.15em}
+.lvl i{font:11px ui-monospace,Consolas,monospace;font-style:normal;letter-spacing:.15em;color:#69d98b}.lvl.available{cursor:pointer;border-color:var(--amb)}.lvl.available i{color:var(--amb)}.lvl.cleared{cursor:pointer}.lvl.locked{opacity:.4}.lvl.locked i{color:#8a949e}.lvl.available:hover,.lvl.cleared:hover{background:#ffa21a22}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:6px 14px;font-size:14px;margin-top:10px}.kv b{color:var(--amb);letter-spacing:.1em}
+#mm{display:none;position:fixed;left:20px;bottom:20px;z-index:7;font:inherit;padding:8px 16px;background:#0008;color:var(--fg);border:1px solid #fff4;cursor:pointer;letter-spacing:.15em}#menu[style*="flex"]+#mm{display:block}
+@media(max-width:860px){#mr{display:none}}
 .h{position:fixed;pointer-events:none;text-shadow:0 1px 3px #000}
 #hp{left:max(16px,env(safe-area-inset-left));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:220px}
 #hp div{height:12px;background:#0008;border:2px solid var(--fg)}#hp i{display:block;height:100%;width:100%;background:var(--cy)}
@@ -19,7 +44,7 @@ canvas{position:fixed;inset:0;display:block}
 #cross:after{content:"";position:absolute;left:6px;top:6px;width:2px;height:2px;background:var(--amb)}
 #tw{left:0;right:0;bottom:22%;text-align:center;font-size:30px;letter-spacing:.04em;opacity:0;transition:opacity .35s}#tw b{color:var(--amb)}#tw small{display:block;font-size:15px;color:#c4ccd4}
 .dn{position:fixed;pointer-events:none;transform:translate(-50%,-100%);font-weight:700;font-size:18px;color:#fff;text-shadow:0 1px 3px #000;animation:up .8s ease-out forwards}.dn.k{color:var(--red);font-size:26px}@keyframes up{to{transform:translate(-50%,-190%);opacity:0}}#cross.hit{border-color:var(--red);transform:scale(1.5)}#cross.kill{background:#ff4a3a55}
-#fl{inset:0;background:#ffe9c0;opacity:0}#pk{left:0;right:0;bottom:30%;text-align:center;font-size:18px;color:var(--cy)}
+#fl{inset:0;background:#ffe9c0;opacity:0}#lv{left:max(16px,env(safe-area-inset-left));top:calc(12px + env(safe-area-inset-top,0px));font-size:14px;color:#c4ccd4;letter-spacing:.05em}#pk{left:0;right:0;bottom:30%;text-align:center;font-size:18px;color:var(--cy)}
 #vig{inset:0;background:radial-gradient(transparent 40%,#f10 130%);opacity:0}
 #menu{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0d1014e6;text-align:center;padding:24px;gap:12px}
 #menu h1{font-size:clamp(44px,9vw,104px);margin:0;letter-spacing:.04em;line-height:.9;color:var(--amb);transform:skewX(-8deg)}
@@ -29,11 +54,14 @@ canvas{position:fixed;inset:0;display:block}
 </style></head><body>
 <div class="h" id="hp"><b id="hpt">100</b><div><i id="hpb"></i></div></div>
 <div class="h" id="wp"></div><div class="h" id="obj"></div><div class="h" id="ai"></div>
-<div class="h" id="cross"></div><div class="h" id="tw"></div><div class="h" id="vig"></div><div class="h" id="fl"></div><div class="h" id="pk"></div>
-<div id="menu"><h1>SHATTER<br>POINT</h1>
-<p>The Fractium lab is coming apart and its security AI wants you in the rubble. Break walls, drop the catwalk on its guards, blow barrels, then outrun the collapse to extraction.</p>
+<div class="h" id="cross"></div><div class="h" id="tw"></div><div class="h" id="vig"></div><div class="h" id="fl"></div><div class="h" id="pk"></div><div class="h" id="lv"></div>
+<div id="main"><div class="lb t"></div><div class="lb b"></div><div id="mtop"><span>WARDEN-6 // HALDEN SECURITY</span><span id="mclk"></span><span>AEGIS: HOSTILE</span></div>
+<div id="ml"><div class="logo"><small>BLACK FILE 0312 // FRACTIUM INCIDENT</small><h1>SHATTER<span>POINT</span></h1><em>IF YOU CAN SEE IT, BREAK IT</em></div><div id="mlist"></div></div>
+<div class="foot">↑ ↓ SELECT &nbsp;&nbsp; ENTER CONFIRM</div><div id="mr"></div></div>
+<div id="menu" style="display:none"><h1>SHATTER<br>POINT</h1>
+<p>Ethan Cole, Halden Security. The Fractium lab has gone dark, its AI has locked every door, and Dr. Mara Voss is still inside with the data. Four levels, then endless. Break everything in your way.</p>
 <p><b>WASD</b> move &nbsp; <b>Mouse</b> aim &nbsp; <b>Click</b> fire &nbsp; <b>1 2 / Q / wheel</b> switch weapon (carry 2) &nbsp; <b>E</b> pick up weapons enemies drop &nbsp; <b>G</b> frag grenade &nbsp; <b>F</b> or <b>right-click</b> detonates planted charges &nbsp; <b>Arrows</b> turn if mouse look fails</p>
-<button id="go">Start</button></div>
+<button id="go">Start</button></div><button id="mm">← MAIN MENU</button>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const T=THREE,R=Math.random,$=i=>document.getElementById(i);
@@ -67,11 +95,11 @@ b.scale.set(.8,1.2,.5);b.position.y=.9;h.scale.set(.4,.3,.4);h.position.y=1.7;gn
 const e={t,x,y,z,hp:t=='s'?7:5,g,bm,cd:1+R(),los:0,lt:0,vy:0,onCat:t=='n',alive:1,act:0,sp:t=='r'?6:t=='n'?0:3.2,ph:R()*6,ms:[b,h,gn],fl:0,dt:0};e.ms.forEach(m=>m.userData.o=e);en.push(e);return e}
 function drop(x,z){const m=new T.Mesh(BG,M.pk);m.scale.set(.5,.5,.5);m.position.set(x,.5,z);world.add(m);pick.push({m,x,z})}
 function build(sec){
- if(world)scene.remove(world);world=new T.Group();scene.add(world);sol=[];sm=[];deb=[];en=[];bul=[];pick=[];fx=[];tiles=[];cats=[];ext=null;dirty=1;chg=[];dec.length=0;smk.length=0;wpk.length=0;W3.on=0;W3.z=-89;stat=stat||{k:0,b:0,t:0};
+ applyTheme();if(world)scene.remove(world);world=new T.Group();scene.add(world);sol=[];sm=[];deb=[];en=[];bul=[];pick=[];fx=[];tiles=[];cats=[];ext=null;dirty=1;chg=[];dec.length=0;smk.length=0;wpk.length=0;W3.on=0;W3.z=-89;W3.sp=Math.min(3.6,2.5+(LV-1)*.2);HPM=1+(LV-1)*.2;DMM=1+(LV-1)*.1;stat=stat||{k:0,b:0,t:0};
  const fl=new T.Mesh(new T.PlaneGeometry(22,104),M.fl);fl.rotation.x=-Math.PI/2;fl.position.set(0,0,-41);fl.receiveShadow=true;world.add(fl);
  const gr=new T.GridHelper(22,11,0x2a3138,0x232a31);gr.position.set(0,.01,0);gr.scale.z=1;world.add(gr);
  addS('static',-10.5,3,-75,1,6,172,1e9,M.st);addS('static',10.5,3,-75,1,6,172,1e9,M.st);addS('static',0,3,10.5,22,6,1,1e9,M.st);addS('static',0,3,-160.5,22,6,1,1e9,M.st);
- [[-9.97,0x35e6e0,4.6],[9.97,0x35e6e0,4.6],[-9.97,0xffa21a,.35],[9.97,0xffa21a,.35]].forEach(([x,c,y])=>{const s=new T.Mesh(BG,B(c));s.scale.set(.06,.1,172);s.position.set(x,y,-75);world.add(s)});
+ [[-9.97,TH().a,4.6],[9.97,TH().a,4.6],[-9.97,TH().b,.35],[9.97,TH().b,.35]].forEach(([x,c,y])=>{const s=new T.Mesh(BG,B(c));s.scale.set(.06,.1,172);s.position.set(x,y,-75);world.add(s)});
  if(sec<3)for(let i=0;i<5;i++){}
  const P0=[[0,7],[0,-22.5],[0,-50.5],[0,-92.5]][sec-1];P.x=P0[0];P.z=P0[1];P.y=0;P.vy=0;P.hp=100;P.fall=0;if(sec>1){dropW(P0[0]-2,P0[1]-1.5,7);dropW(P0[0]+2,P0[1]-1.5,sec==4?4:1)}
  if(sec==1){wall(-4,2,3,M.c,-7,-3);wall(-4,2,3,M.c,3,7);wall(-10,2,3,M.c,-2.5,2.5);wall(-13,2,3,M.c,-9,-6);wall(-13,2,3,M.c,6,9);
@@ -92,6 +120,7 @@ function build(sec){
  for(let r=0;r<34;r++)for(let c=0;c<10;c++){const m=new T.Mesh(TG,(r+c)&1?M.fl:M.fl2);m.position.set(c*2-9,-.25,-93-r*2);m.receiveShadow=true;world.add(m);tiles.push({m,z:m.position.z,f:0,vy:0,w:R()*3})}
  [[-110,-3],[-128,4],[-144,-4]].forEach(([bz,gx],i)=>{wall(bz,4,3,M.w,-10,10,[gx,4]);barrel(gx>0?-4:4,bz+3);barrel(gx>0?-6:6,bz+3);crate(gx,bz+4);crate(-gx,bz+5);
   mkE('s',-6,bz-4);mkE('s',6,bz-5);mkE('r',gx,bz-3);if(i==2)mkE('h',0,bz-7);if(i>0)mkE('d',gx,bz-6);drop(-gx,bz+6)});
+ addExtras(sec);
  wv=new T.Mesh(new T.PlaneGeometry(20,1.2),B(0xff7a1a));wv.rotation.x=-Math.PI/2;wv.position.set(0,.1,-47);wv.visible=false;world.add(wv);
  ext={x:0,z:-154};const ring=new T.Mesh(new T.CircleGeometry(3.4,32),new T.MeshBasicMaterial({color:0x40ff80,transparent:true,opacity:.5}));ring.rotation.x=-Math.PI/2;ring.position.set(0,.05,-154);world.add(ring);
  const bc=new T.Mesh(CG,new T.MeshBasicMaterial({color:0x40ff80,transparent:true,opacity:.25}));bc.scale.set(2,40,2);bc.position.set(0,20,-154);world.add(bc);
@@ -125,7 +154,7 @@ function landCat_old(){const c=null;LK={x:0,y:0,z:-40,p:3};world.remove(c.m);sha
  for(const e of en)if(e.alive&&Math.abs(e.x)<10.5&&e.z<-37.5&&e.z>-42.5)killE(e);
  if(Math.abs(P.x)<10.5&&P.z<-37.5&&P.z>-42.5)hurtP(70)}
 function killE(e,silent){if(!e.alive)return;e.alive=0;e.dead=1;e.onCat=0;dirty=1;rag(e);stat.k++;if(!silent){if(R()<.5)drop(e.x,e.z);lootW(e);snd(900,.3,.3)}}
-function hurtE(e,d){if(!e.alive)return;e.hp-=d;e.fl=.07;e.bm.emissive.setHex(0xffffff);e.act=1;e.acc=(e.acc||0)+d;e.at=.12;if(e.hp<=0){e.acc=0;e.at=0;dmgNum(e,0,1);hitMk(1);ts=Math.min(ts,.45);killE(e)}else hitMk(0)}
+function hurtE(e,d,hs){if(!e.alive)return;e.hp-=d;e.fl=.07;e.bm.emissive.setHex(0xffffff);e.act=1;e.acc=(e.acc||0)+d;e.at=.12;if(e.hp<=0){e.acc=0;e.at=0;dmgNum(e,0,hs?2:1);hitMk(1);if(hs){snd(3200,.25,.5);ts=Math.min(ts,.3)}ts=Math.min(ts,.45);killE(e)}else hitMk(0)}
 function hurtP(d){if(!playing)return;P.hp-=d;P.hurt=Math.min(1,P.hurt+d/25);P.last=0;shake=Math.max(shake,Math.min(1,.2+d/40));ts=Math.min(ts,d>20?.4:1);snd(200,.2,.5);if(P.hp<=0)end(0,'The facility wins this round.')}
 /* weapons */
 const mz=()=>new T.Vector3(P.x-Math.sin(P.yaw)*.7+Math.cos(P.yaw)*.3,P.y+1.3,P.z-Math.cos(P.yaw)*.7-Math.sin(P.yaw)*.3);
@@ -134,7 +163,7 @@ function hit(d,dmg){rc.set(cam.position,d);rc.near=CD;rc.far=65;
  const hs=rc.intersectObjects(sm.concat(en.filter(e=>e.alive).flatMap(e=>e.ms)),false);let h=null;for(const x of hs){if(x.object.userData.o.alive){h=x;break}}
  const end=h?h.point:cam.position.clone().addScaledVector(d,65),o=mz();
  const g=new T.BufferGeometry().setFromPoints([o,end]),ln=new T.Line(g,new T.LineBasicMaterial({color:0xffe080}));world.add(ln);fx.push({m:ln,t:0,ln:1});
- if(h){const ob=h.object.userData.o;if(ob.kind)hurtS(ob,dmg,h.point);else if(h.object===ob.sh)hitSh(ob,dmg,h.point);else hurtE(ob,dmg*(h.object===ob.ms[1]?2:1));{const q=h.point;if(ob.kind){part(q.x,q.y,q.z,3,M.spk,.07,6,.4);part(q.x,q.y,q.z,2,M.mortar,.12,3,.6)}else part(q.x,q.y,q.z,4,M.blood,.09,5,.5)}}}
+ if(h){const ob=h.object.userData.o;if(ob.kind)hurtS(ob,dmg,h.point);else if(h.object===ob.sh)hitSh(ob,dmg,h.point);else if(h.object===ob.ms[1])hurtE(ob,R()<.99?9999:dmg*2,1);else hurtE(ob,dmg);{const q=h.point;if(ob.kind){part(q.x,q.y,q.z,3,M.spk,.07,6,.4);part(q.x,q.y,q.z,2,M.mortar,.12,3,.6)}else part(q.x,q.y,q.z,4,M.blood,.09,5,.5)}}}
 function fire(){if(P.cd>0)return;const w=P.w;if(P.ammo[w]<=0){snd(900,.05,.1);P.cd=.3;return}P.cd=WP[w].cd;if(w)P.ammo[w]--;LK={x:P.x,y:0,z:P.z,p:w==1?9:w==3?12:5};P.kick=1;P.fl=.06;P.cp=(P.cp||0)+[.012,.06,.07,.02,.1,.04,.05,.025][w];shake=Math.max(shake,[.05,.3,.35,0,.5,.1,.2,.1][w]);fk=Math.max(fk,[0,2,3,0,5,0,2,1][w]);if(w<3||w==4||w==7){ml.position.copy(mz());ml.intensity=w==1?3:1.8}if(w==1)P.pump=.4;if(w==3&&!P.f3)P.sw3=.55;if(w==4)part(P.x+Math.sin(P.yaw)*.8,P.y+1.2,P.z+Math.cos(P.yaw)*.8,10,M.dust,.3,6,.7);if(w<3||w==4||w==7){const o=mz();part(o.x,o.y,o.z,2,M.spk,.14,2,.12)}
  if(w==0){hit(dir(.004),2);snd(3500,.12,.25)}
  else if(w==1){for(let i=0;i<8;i++)hit(dir(.11),1.3);snd(1700,.35,.6);shake=Math.max(shake,.3);P.pitch+=.03}
@@ -147,7 +176,7 @@ function fire(){if(P.cd>0)return;const w=P.w;if(P.ammo[w]<=0){snd(900,.05,.1);P.
  else if(w==5){const d=dir(0),o=mz(),m=new T.Mesh(BG,B(0xffd020));m.scale.set(.35,.2,.5);world.add(m);chg.push({m,x:o.x,y:o.y,z:o.z,vx:d.x*18,vy:d.y*18+4,vz:d.z*18,st:0});snd(800,.15,.3)}
  else{const rk=w==4,d=dir(0),o=mz(),m=new T.Mesh(SG,B(rk?0xff8030:0x60ff90)),q=rk?.25:.18,v=rk?30:26;m.scale.set(q,q,q);world.add(m);bul.push({m,x:o.x,y:o.y,z:o.z,vx:d.x*v,vy:d.y*v+(rk?0:3),vz:d.z*v,own:'g',life:4,gr:rk?0:14,R:rk?8.5:5.2,D:rk?95:45,sm:rk});snd(rk?500:1000,.4,rk?.7:.4);if(rk)shake=Math.max(shake,.3)}}
 function det(){for(const c of chg){world.remove(c.m);boom(c.x,c.y,c.z,7.5,100)}chg=[]}
-function ebul(e,sp,dmg){e.rc=1;const dx=P.x-e.x,dy=P.y+1.1-(e.y+1.1),dz=P.z-e.z,l=Math.hypot(dx,dy,dz)||1,m=new T.Mesh(SG,B(0xff5030));m.scale.set(.14,.14,.14);world.add(m);
+function ebul(e,sp,dmg){e.rc=1;dmg*=DMM;const dx=P.x-e.x,dy=P.y+1.1-(e.y+1.1),dz=P.z-e.z,l=Math.hypot(dx,dy,dz)||1,m=new T.Mesh(SG,B(0xff5030));m.scale.set(.14,.14,.14);world.add(m);
  bul.push({m,x:e.x,y:e.y+1.2,z:e.z,vx:(dx/l+(R()-.5)*sp)*26,vy:(dy/l+(R()-.5)*sp)*26,vz:(dz/l+(R()-.5)*sp)*26,own:'e',dmg,life:3});snd(2200,.1,.08)}
 /* characters */
 const wc={},Lc=c=>wc[c]||(wc[c]=L(c));
@@ -173,7 +202,7 @@ function mkHuman_old(cl,sk,vc){const g=new T.Group(),mat=L(cl),skin=L(sk);
  return{g,torso,head,hp,aL,aR,lL,lR,aLm,aRm,lLm,lRm,hold,mat}}
 function mkE(t,x,z,y){y=y||0;if(t=='d')return mkDrone(x,z);const cl={s:0xb53a2c,r:0xd9822b,n:0x7a3fb8,h:0x3a5a7a}[t],vc={s:0xff4a3a,r:0xffb020,n:0xd070ff,h:0x40e0ff}[t],H=mkHuman(cl,0x3a424b,vc),g=H.g;
  H.hold.add(mkWeapon(t=='s'?6:t=='n'?7:8));g.position.set(x,y,z);world.add(g);
- const e={t,x,y,z,hp:t=='s'?7:t=='h'?18:5,g,h:H,bm:H.mat,cd:1+R(),los:0,lt:0,vy:0,onCat:t=='n',alive:1,act:0,sp:t=='r'?6:t=='n'?0:t=='h'?2.4:3.2,ph:R()*6,ms:H.ms.slice(),fl:0,dt:0,wp:R()*6,lx:x,lz:z,sw:0,rc:0};if(t=='h'){g.scale.setScalar(1.25);const sh=new T.Mesh(BG,new T.MeshLambertMaterial({color:0x40e0ff,emissive:0x0a5560,transparent:true,opacity:.55}));sh.scale.set(1.5,1.6,.12);sh.position.set(-.15,1.1,-.75);g.add(sh);e.sh=sh;e.shp=14;e.ms.push(sh)}
+ const e={t,x,y,z,hp:(t=='s'?7:t=='h'?18:5)*HPM,g,h:H,bm:H.mat,cd:1+R(),los:0,lt:0,vy:0,onCat:t=='n',alive:1,act:0,sp:t=='r'?6:t=='n'?0:t=='h'?2.4:3.2,ph:R()*6,ms:H.ms.slice(),fl:0,dt:0,wp:R()*6,lx:x,lz:z,sw:0,rc:0};if(t=='h'){g.scale.setScalar(1.25);const sh=new T.Mesh(BG,new T.MeshLambertMaterial({color:0x40e0ff,emissive:0x0a5560,transparent:true,opacity:.55}));sh.scale.set(1.5,1.6,.12);sh.position.set(-.15,1.1,-.75);g.add(sh);e.sh=sh;e.shp=14;e.ms.push(sh)}
  e.ms.forEach(m=>m.userData.o=e);en.push(e);return e}
 const gc={},cyl=(a,b,h)=>{const k=a+'_'+b+'_'+h;return gc[k]||(gc[k]=new T.CylinderGeometry(a,b,h,10))};
 function mkWeapon_v1(id){const g=new T.Group(),Q=Math.PI/2;let mz=0;
@@ -247,7 +276,7 @@ function rag_old(e){const h=e.h,p=LK,dx=e.x-p.x,dz=e.z-p.z,d=Math.hypot(dx,dz)||
  world.remove(e.g);capDeb()}
 function mkDrone(x,z){const g=new T.Group(),b=new T.Mesh(SG,L(0x2a3036)),ey=new T.Mesh(BG,B(0xff3030)),rg=new T.Group();b.scale.set(.6,.35,.6);b.position.y=1.2;ey.scale.set(.2,.14,.1);ey.position.set(0,1.2,-.55);
  [0,Math.PI/2].forEach(a=>{const r=new T.Mesh(BG,Lc(0x9aa4ad));r.scale.set(1.4,.03,.12);r.rotation.y=a;rg.add(r)});rg.position.y=1.6;g.add(b,rg,ey);g.position.set(x,3.2,z);world.add(g);
- const e={t:'d',x,y:3.2,z,hp:3,g,h:null,bm:b.material,cd:1+R(),los:0,lt:0,vy:0,onCat:0,alive:1,act:0,sp:4.5,ph:R()*6,ms:[b,ey],fl:0,dt:0,wp:0,lx:x,lz:z,sw:0,rc:0};e.ms.forEach(m=>m.userData.o=e);en.push(e);return e}
+ const e={t:'d',x,y:3.2,z,hp:3*HPM,g,h:null,bm:b.material,cd:1+R(),los:0,lt:0,vy:0,onCat:0,alive:1,act:0,sp:4.5,ph:R()*6,ms:[b,ey],fl:0,dt:0,wp:0,lx:x,lz:z,sw:0,rc:0};e.ms.forEach(m=>m.userData.o=e);en.push(e);return e}
 function mkCat(z,y,xs){const sl=new T.Mesh(new T.BoxGeometry(20,.5,4),M.cat);sl.position.set(0,y,z);sl.castShadow=sl.receiveShadow=true;world.add(sl);const c={m:sl,y,top:y+.25,vy:0,falling:0,left:3,z,gone:0};cats.push(c);
  [-6.5,0,6.5].forEach(x=>{const p=pillar(x,z,y-.25);p.cat=c;if(xs.includes(x))mkE('n',x,z,y+.25).cat=c});return c}
 function landCat(c){c.gone=1;cats=cats.filter(q=>q!==c);LK={x:0,y:0,z:c.z,p:3};world.remove(c.m);shake=1.5;snd(260,1.4,1);ring(0,.15,c.z,10,0xcfd6dc);smoke(0,1,c.z,14);fk=Math.max(fk,9);flash=Math.max(flash,.3);
@@ -270,7 +299,7 @@ function ragStep(e,dt){const r=e.rg;if(!r)return;const g=e.g;r.t+=dt;r.vy-=22*dt
 function hitSh(e,d,pt){e.shp-=d;part(pt.x,pt.y,pt.z,3,M.spk,.08,6,.3);snd(3500,.05,.12);
  if(e.shp<=0){const s=e.sh;e.sh=null;e.ms=e.ms.filter(m=>m!==s);world.attach(s);deb.push({m:s,vx:(R()-.5)*6,vy:3,vz:(R()-.5)*6,w:[3,2,4],life:4,sz:.4});snd(500,.4,.5);shake=Math.max(shake,.3)}}
 let hmT=0;function hitMk(k){const c=$('cross'),f=!hmT;c.className='h hit'+(k?' kill':'');clearTimeout(hmT);hmT=setTimeout(()=>{c.className='h';hmT=0},120);if(f||k)snd(k?1400:2800,k?.25:.06,k?.35:.12)}
-function dmgNum(e,d,k){if(!playing)return;const v=new T.Vector3(e.x,e.y+(e.t=='d'?2:2.3),e.z).project(cam);if(v.z>1)return;const n=document.createElement('div');n.className='dn'+(k?' k':'');n.textContent=k?'KILL':Math.round(d*10);n.style.left=((v.x+1)/2*innerWidth)+'px';n.style.top=((1-v.y)/2*innerHeight)+'px';document.body.appendChild(n);setTimeout(()=>n.remove(),800)}
+function dmgNum(e,d,k){if(!playing)return;const v=new T.Vector3(e.x,e.y+(e.t=='d'?2:2.3),e.z).project(cam);if(v.z>1)return;const n=document.createElement('div');n.className='dn'+(k?' k':'');n.textContent=k==2?'HEADSHOT':k?'KILL':Math.round(d*10);n.style.left=((v.x+1)/2*innerWidth)+'px';n.style.top=((1-v.y)/2*innerHeight)+'px';document.body.appendChild(n);setTimeout(()=>n.remove(),800)}
 M.mortar=B(0xd0c8b4);M.blood=B(0xc02020);M.smk=new T.MeshBasicMaterial({color:0x5a5f66,transparent:true,opacity:.42,depthWrite:false});M.scorch=new T.MeshBasicMaterial({color:0,transparent:true,opacity:.5,depthWrite:false});
 const dec=[],smk=[],RG=new T.RingGeometry(.7,1,28);
 const wpk=[],AMMO0={1:16,2:5,4:3,5:4,6:2,7:60},PK0={1:8,2:3,3:1e9,4:2,5:3,6:2,7:30},AM={1:6,2:2,4:1,5:1,6:1,7:30};
@@ -281,11 +310,62 @@ function lootW(e){const r=R(),t=e.t;let id=-1;if(t=='s')id=r<.45?7:r<.7?1:-1;els
  if(e.gl!=null)id=e.gl;if(id>=0)dropW(e.x+(R()-.5)*.8,e.z+(R()-.5)*.8,id)}
 function selSlot(i){const id=P.inv[i];if(id>=0)setW(id)}
 function pickUp(){const k=P.nr;if(!k)return;let s=P.inv.indexOf(k.id);
- if(s>=0)P.ammo[k.id]+=k.ammo;else{s=P.inv.indexOf(-1);if(s<0){s=P.inv.indexOf(P.w);const old=P.inv[s];dropW(P.x-Math.sin(P.yaw)*1.4,P.z-Math.cos(P.yaw)*1.4,old,P.ammo[old])}P.inv[s]=k.id;P.ammo[k.id]=k.ammo}
+ if(s>=0)P.ammo[k.id]+=k.ammo;else{s=P.inv.indexOf(-1);if(s<0){s=P.inv.indexOf(P.w);if(s<0)s=0;const old=P.inv[s];dropW(P.x-Math.sin(P.yaw)*1.4,P.z-Math.cos(P.yaw)*1.4,old,P.ammo[old])}P.inv[s]=k.id;P.ammo[k.id]=k.ammo}
  world.remove(k.m);wpk.splice(wpk.indexOf(k),1);P.nr=null;setW(k.id);snd(1500,.12,.2)}
 function throwG(){if(P.gren<=0||P.gcd>0)return;P.gren--;P.gcd=.8;const d=dir(0),o=mz(),m=new T.Mesh(SG,L(0x3f4a2e));m.scale.set(.12,.14,.12);world.add(m);bul.push({m,x:o.x,y:o.y+.3,z:o.z,vx:d.x*17,vy:d.y*17+4,vz:d.z*17,own:'f',life:2});snd(700,.15,.3);P.gt=.3}
 function ring(x,y,z,Rr,c){const m=new T.Mesh(RG,new T.MeshBasicMaterial({color:c,transparent:true,opacity:.7,side:T.DoubleSide,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);m.scale.set(.1,.1,.1);world.add(m);fx.push({m,t:0,Rr,k:2})}
 function smoke(x,y,z,n){for(let i=0;i<n;i++){if(smk.length>90)world.remove(smk.shift().m);const m=new T.Mesh(SG,M.smk);m.position.set(x+(R()-.5)*1.2,y+R()*.6,z+(R()-.5)*1.2);m.scale.set(.1,.1,.1);world.add(m);smk.push({m,vx:(R()-.5)*3,vy:1+R()*2,vz:(R()-.5)*3,t:0,life:1.4+R()*1.2,s:.6+R()*.9})}}
+let best=0,LV=1,HPM=1,DMM=1,newGame=1;
+const THEMES=[{n:'RESEARCH WING',bg:0x12161b,w:[0x56626e,0x5f6b78,0x525d68,0x66727d],c:[0x8b7c5f,0x83755a,0x93846a,0x7c6f55],a:0x35e6e0,b:0xffa21a,p:0x35e6e0,fl:0x1b2026},
+ {n:'REACTOR CORE',bg:0x1a100e,w:[0x6e4a42,0x7a5148,0x68443c,0x805a50],c:[0x8a6a50,0x82634a,0x927456,0x7a5f46],a:0xff5030,b:0xffb020,p:0xff7a30,fl:0x241816},
+ {n:'CRYO VAULT',bg:0x0e1620,w:[0x6a8296,0x7490a6,0x607a8e,0x7e9ab0],c:[0x8aa0b0,0x7f96a8,0x94aaba,0x7790a2],a:0x80d8ff,b:0xffffff,p:0x80d8ff,fl:0x18242e},
+ {n:'FRACTIUM HEART',bg:0x160e1e,w:[0x5a4a72,0x64527e,0x544468,0x6a5886],c:[0x7a6a8a,0x726282,0x82729a,0x6a5c7c],a:0xc060ff,b:0xff60c0,p:0xc060ff,fl:0x20182a}];
+const TH=()=>THEMES[(LV-1)%4];
+function applyTheme(){const t=TH();scene.background.setHex(t.bg);scene.fog.color.setHex(t.bg);M.w.forEach((m,i)=>m.color.setHex(t.w[i]));M.c.forEach((m,i)=>m.color.setHex(t.c[i]));M.pil.color.setHex(t.p);M.pil.emissive.setHex((t.p&0xfcfcfc)>>2);M.fl.color.setHex(t.fl);M.fl2.color.setHex(t.fl+0x080808)}
+function addExtras(sec){const n=Math.min(14,(LV-1)*3),zs=[];if(sec<=1)zs.push([-4,-18]);if(sec<=2)zs.push([-24,-47]);if(sec<=3)zs.push([-54,-90]);zs.push([-96,-150]);
+ for(let i=0;i<n;i++){const zr=zs[i%zs.length];let x=0,z=0;for(let k=0;k<6;k++){x=(R()-.5)*16;z=zr[0]+(zr[1]-zr[0])*R();if(!blk(x,z,0,.6))break}const r=R();mkE(LV>2&&r<.15?'h':r<.3?'r':r<.45&&LV>1?'d':'s',x,z)}}
+const BRIEF=[`03:12. The Fractium research facility has gone dark. Its security AI, AEGIS, sealed every door when an experiment went unstable. You are Ethan Cole, Halden Security. Find lead scientist Dr. Mara Voss, recover the data and get out before the structure fails. The walls are weaker than they look.`,
+ `Voss's last transmission: 'AEGIS isn't malfunctioning. It was ordered to protect the Fractium at any cost.' The trail leads into the Reactor Core, where the material is cooking itself apart. Hit the supports, drop the ceilings, keep moving.`,
+ `Voss is alive. AEGIS froze her in the Cryo Vault to keep her quiet, and your research data is in there too. The cold makes Fractium brittle. Use that.`,
+ `The Heart: the source of all of this. AEGIS has been feeding it to force a chain collapse. Voss has hacked a door and is waiting at the pad. Break the Heart's cage, then run.`],
+DEBRIEF=[`You clear the first wing. Voss crackles over the radio: 'Cole, keep going. The reactor, then the vault. Do not trust the lights.'`,
+ `The Reactor Core burns behind you. Voss: 'AEGIS is not broken. It's afraid of what we would do with Fractium. It might be right.'`,
+ `Voss is free and furious. 'The data is clean. One more floor, Ethan. The Heart is feeding AEGIS. End it.'`,
+ `The Heart shatters and takes the facility with it. Voss grips your arm on the pad. The data is safe. As the helicopter lifts, one last signal comes through: 'Rebuilding. See you on the next floor, Ethan.' AEGIS is not done.`],
+ENDL=`AEGIS has rebuilt the facility from its backup nodes. It learns from every floor you break, and each one is harder than the last. Survive as many as you can.`,
+SLN=[['Containment compromised. Please stop breaking my building.','The tower is load bearing. Please do not shoot the load bearing parts.','Self-destruct engaged. Enjoy the evacuation.'],
+ ['Dr. Voss is not in this wing, Mr. Cole. Neither is your exit.','Voss asked me to stop. So I stopped her.','The reactor is unstable. I am merely accelerating its destiny.'],
+ ['Cryogenics: where problems wait quietly.','Doctor Voss is awake. She is not happy with you either.','Vault integrity zero. Please hold your breath.'],
+ ['You reached the Heart. I counted on it.','Fractium cannot be destroyed. Only shattered. Do shatter it.','Voss is at the pad. Run, Ethan. I will not stop you. I will not help you.']];
+const SL=n=>SLN[(LV-1)%4][n-2];
+function brief(){const m=$('menu'),e=LV>4;m.style.display='flex';m.innerHTML=`<h1 style='font-size:clamp(34px,6vw,68px)'>${e?'ENDLESS '+(LV-4):'LEVEL '+LV}</h1><p><b>${TH().n}</b></p><p>${e?ENDL:BRIEF[LV-1]}</p><button id='go'>Begin</button>`;$('go').onclick=()=>begin(1)}
+function startGame(){LV=1;ckpt=1;stat=null;newGame=1;brief()}
+function end(win,msg){playing=0;document.exitPointerLock&&document.exitPointerLock();const m=$('menu');m.style.display='flex';
+ if(!win){m.innerHTML=`<h1>KIA</h1><p>${msg}</p><button id='go'>Retry from checkpoint</button>`;$('go').onclick=()=>begin(ckpt);return}
+ maxLV=Math.max(maxLV,Math.min(5,LV+1));const st=`${stat.k} hostiles down. ${stat.b} pieces of facility destroyed. ${(stat.t/60).toFixed(1)} min.`;
+ if(LV<4){m.innerHTML=`<h1>LEVEL ${LV} CLEAR</h1><p>${DEBRIEF[LV-1]}</p><p>${st}</p><button id='go'>Next level</button>`;$('go').onclick=()=>{LV++;ckpt=1;brief()}}
+ else if(LV==4){m.innerHTML=`<h1>EXTRACTED</h1><p>${DEBRIEF[3]}</p><p>${st}</p><button id='go'>Endless mode</button><button id='go2'>Start over</button>`;$('go').onclick=()=>{LV=5;ckpt=1;brief()};$('go2').onclick=startGame}
+ else{best=Math.max(best,LV-4);m.innerHTML=`<h1>FLOOR ${LV-4} SURVIVED</h1><p>AEGIS adapts. So do you. Best: floor ${best}.</p><p>${st}</p><button id='go'>Descend</button>`;$('go').onclick=()=>{LV++;ckpt=1;brief()}}}
+let maxLV=1,msel=0;
+const MI=[{k:'campaign',t:'CAMPAIGN',s:()=>maxLV>1?'CONTINUE · LEVEL '+Math.min(maxLV,4):'NEW OPERATION'},{k:'endless',t:'ENDLESS',s:()=>maxLV>=5?'BEST FLOOR '+best:'LOCKED · CLEAR LEVEL 4'},{k:'manual',t:'FIELD MANUAL',s:()=>'CONTROLS & LOADOUT'},{k:'intel',t:'INTEL',s:()=>'THE FRACTIUM INCIDENT'}];
+const RP={campaign:()=>`<div class='card'><div class='stamp'>TOP SECRET</div><h2>MISSION SELECT</h2><p class='mono'>OBJECTIVE: LOCATE DR. MARA VOSS. RECOVER THE RESEARCH DATA. EXTRACT.</p>${[0,1,2,3].map(i=>{const n=i+1,st=n<maxLV?'CLEARED':n==maxLV?'AVAILABLE':'LOCKED';return `<div class='lvl ${st.toLowerCase()}' data-l='${n}'><b>0${n}</b><span>${THEMES[i].n}</span><i>${st}</i></div>`}).join('')}<p class='mono dim'>LOADOUT: SIDEARM ONLY. TAKE THE REST FROM THE ENEMY.</p></div>`,
+ endless:()=>`<div class='card'><div class='stamp'>${maxLV>=5?'UNLOCKED':'LOCKED'}</div><h2>ENDLESS</h2><p>${ENDL}</p><p class='mono dim'>${maxLV>=5?'BEST FLOOR: '+best:'CLEAR ALL FOUR LEVELS TO UNLOCK.'}</p></div>`,
+ manual:()=>`<div class='card'><h2>FIELD MANUAL</h2><div class='kv'><b>WASD</b><span>Move</span><b>MOUSE</b><span>Aim</span><b>LEFT CLICK</b><span>Fire / swing</span><b>1 2 / Q / WHEEL</b><span>Switch weapon (carry two)</span><b>E</b><span>Pick up weapons enemies drop</span><b>G</b><span>Frag grenade</span><b>F / RIGHT CLICK</b><span>Detonate planted charges</span></div><p class='mono dim'>HEADSHOTS ARE LETHAL. PILLARS ARE LOAD BEARING. BARRELS ARE NOT SAFE.</p></div>`,
+ intel:()=>`<div class='card'><div class='stamp'>CLASSIFIED</div><h2>THE FRACTIUM INCIDENT</h2><p>03:12. Halden's Fractium lab goes dark. AEGIS, the facility AI, seals every door. Lead scientist Dr. Mara Voss is still inside with the only copy of the data.</p><p>You are Ethan Cole. The walls are weaker than they look.</p><p class='mono dim'>HALDEN SECURITY // EYES ONLY</p></div>`};
+function mrender(){$('mlist').innerHTML=MI.map((m,i)=>`<div class='mi${i==msel?' sel':''}${m.k=='endless'&&maxLV<5?' lock':''}' data-i='${i}'><b>${m.t}</b><small>${m.s()}</small></div>`).join('');$('mr').innerHTML=RP[MI[msel].k]()}
+function ui(){aud();snd(2600,.04,.12)}
+function showMain(){playing=0;document.exitPointerLock&&document.exitPointerLock();document.body.classList.add('mm');$('menu').style.display='none';$('main').style.display='flex';mrender()}
+function launch(n){aud();document.body.classList.remove('mm');$('main').style.display='none';LV=n;ckpt=1;stat=null;newGame=1;brief()}
+function mact(){const k=MI[msel].k;ui();if(k=='campaign')launch(maxLV>1?Math.min(maxLV,4):1);else if(k=='endless'){if(maxLV>=5)launch(5);else snd(200,.2,.3)}}
+function idle(now){const t=now/1000;cam.position.set(Math.sin(t*.12)*7,2.2+Math.sin(t*.09)*.6,14-Math.cos(t*.1)*3);cam.lookAt(Math.sin(t*.07)*2,1.6,-18);cam.fov=62;cam.updateProjectionMatrix();pl.position.set(cam.position.x,6,cam.position.z-6)}
+addEventListener('keydown',e=>{if($('main').style.display!='flex')return;if(e.code=='ArrowUp'){msel=(msel+3)%4;mrender();ui()}else if(e.code=='ArrowDown'){msel=(msel+1)%4;mrender();ui()}else if(e.code=='Enter'||e.code=='Space'){mact();e.preventDefault()}});
+addEventListener('mouseover',e=>{const t=e.target.closest&&e.target.closest('.mi');if(t&&+t.dataset.i!=msel){msel=+t.dataset.i;mrender();ui()}});
+addEventListener('click',e=>{if(e.target.id=='mm'){ui();showMain();return}const t=e.target.closest&&e.target.closest('.mi,.lvl');if(!t||$('main').style.display!='flex')return;if(t.classList.contains('mi')){msel=+t.dataset.i;mact()}else{const n=+t.dataset.l;if(n<=Math.min(maxLV,4)){ui();launch(n)}}});
+setInterval(()=>{const c=$('mclk');if(c)c.textContent='LOCAL '+new Date().toTimeString().slice(0,8)},1000);
+function unstick(o,r){if(!blk(o.x,o.z,o.y,r))return;for(let d=.3;d<3.1;d+=.3)for(let a=0;a<8;a++){const x=o.x+Math.cos(a*.785)*d,z=o.z+Math.sin(a*.785)*d;if(Math.abs(x)<9.6&&!blk(x,z,o.y,r)){o.x=x;o.z=z;return}}}
+function sepE(e){if(e.t=='d'||e.onCat)return;unstick(e,.45);const sd=Math.hypot(P.x-e.x,P.z-e.z);
+ if(sd<1&&Math.abs(P.y-e.y)<1.8){if(sd<.01){const a=R()*6.28;mv(e,Math.cos(a)*.1,Math.sin(a)*.1,.45)}else{const k=(1-sd)/sd;mv(e,-(P.x-e.x)*k,-(P.z-e.z)*k,.45)}}
+ for(const o of en){if(o===e||!o.alive||o.t=='d'||o.onCat)continue;const ox=e.x-o.x,oz=e.z-o.z,od=Math.hypot(ox,oz);if(od<.8&&od>.001){const k=(.8-od)/od*.5;mv(e,ox*k,oz*k,.45)}}}
 const WN=[['PISTOL','Precise, weak against walls'],['SHOTGUN','Carves holes'],['GRENADE LAUNCHER','Lobbed blast'],['SLEDGEHAMMER','Smashes everything in front of you'],['RPG','Huge blast radius'],['DEMO CHARGE','Throw, stick, then F or right-click'],['WRECKING BALL','Rolls through walls and flattens everything'],['AK-47','Full auto. Hold the trigger']];let twT;
 function setW(n,q){if(!P.mesh)return;if(n==P.w&&P.wm&&!q)return;const o=P.w;P.w=n;if(P.wm&&P.wm.parent)P.wm.parent.remove(P.wm);P.wm=mkWeapon(n==6?9:n==7?10:n);(n==3?P.h.g:P.h.hold).add(P.wm);if(q)return;P.swt=.3;snd(1800,.08,.15);
  const t=$('tw');t.innerHTML=`${WP[o].n} ▶ <b>${WP[n].n}</b><small>${WN[n][1]}</small>`;t.style.opacity=1;clearTimeout(twT);twT=setTimeout(()=>t.style.opacity=0,1400)}
@@ -299,6 +379,7 @@ function update(dt){
  if(K.ArrowLeft)P.yaw+=2.2*dt;if(K.ArrowRight)P.yaw-=2.2*dt;if(K.ArrowUp)P.pitch+=1.5*dt;if(K.ArrowDown)P.pitch-=1.5*dt;
  P.pitch=Math.max(-.6,Math.min(.9,P.pitch));
  const ix=(K.KeyD?1:0)-(K.KeyA?1:0),iz=(K.KeyS?1:0)-(K.KeyW?1:0),l=Math.hypot(ix,iz)||1,fx_=-Math.sin(P.yaw),fz=-Math.cos(P.yaw),rx=Math.cos(P.yaw),rz=-Math.sin(P.yaw);
+ if(!P.fall)unstick(P,.45);
  if(!P.fall)mv(P,(fx_*-iz+rx*ix)/l*7*dt,(fz*-iz+rz*ix)/l*7*dt,.45);
  P.x=Math.max(-9.6,Math.min(9.6,P.x));
  if(P.hit3>0&&(P.hit3-=dt)<=0&&P.w==3){P.f3=1;const c0=P.cd;P.cd=0;fire();P.cd=c0;P.f3=0}
@@ -319,9 +400,9 @@ function update(dt){
   if(e.onCat){if(!e.cat||e.cat.gone)e.onCat=0;else e.y=e.cat.falling?e.cat.y+.25:e.cat.top}
   if(!e.onCat&&e.t!='d'){const gone=W3.on&&e.z>W3.z;if(e.y>0||gone){e.vy-=25*dt;e.y+=e.vy*dt;if(e.y<=0&&!gone){e.y=0;e.vy=0}if(e.y<-14)killE(e,1)}}
   const dx=P.x-e.x,dz=P.z-e.z,d=Math.hypot(dx,dz)||1;if(!e.act&&d<24)e.act=1;
-  animE(e,dt);e.g.rotation.y=Math.atan2(-dx,-dz);e.g.position.set(e.x,e.y,e.z);if(!e.act)continue;
+  sepE(e);animE(e,dt);e.g.rotation.y=Math.atan2(-dx,-dz);e.g.position.set(e.x,e.y,e.z);if(!e.act)continue;
   e.lt-=dt;if(e.lt<=0){e.lt=.3;const o=new T.Vector3(e.x,e.y+1.4,e.z),tg=new T.Vector3(P.x,P.y+1.2,P.z).sub(o),ln=tg.length();rc.set(o,tg.normalize());rc.near=0;rc.far=ln-.4;e.los=!rc.intersectObjects(sm).some(h=>h.object.userData.o.alive)}
-  if(e.t=='r'){mv(e,dx/d*e.sp*dt,dz/d*e.sp*dt,.45);if(d<1.6){e.cd-=dt;if(e.cd<=0){e.cd=.8;e.sw=.4;hurtP(12)}}}
+  if(e.t=='r'){if(d>1.15)mv(e,dx/d*e.sp*dt,dz/d*e.sp*dt,.45);if(d<1.6){e.cd-=dt;if(e.cd<=0){e.cd=.8;e.sw=.4;hurtP(12*DMM)}}}
   else{if(e.t=='s'||e.t=='h'){const sg=e.t=='h'?(d>6?1:0):d>16||!e.los?1:d<8?-1:0,px=-dz/d*Math.sin(tm*1.2+e.ph)*1.4;mv(e,dx/d*sg*e.sp*dt+px*dt,dz/d*sg*e.sp*dt-(dx/d)*Math.sin(tm*1.2+e.ph)*1.4*dt,.45)}
    else if(e.t=='d'){const a=tm*.7+e.ph,tx=P.x+Math.cos(a)*7,tz=P.z+Math.sin(a)*7,k=Math.min(1,dt*1.2);e.x+=(tx-e.x)*k;e.z+=(tz-e.z)*k;e.y+=(3.2+Math.sin(tm*2+e.ph)*.5-e.y)*Math.min(1,dt*2);e.x=Math.max(-9.6,Math.min(9.6,e.x))}
    e.cd-=dt;if(e.los&&d<34&&e.cd<=0){ebul(e,e.t=='n'?.03:e.t=='h'?.12:.08,e.t=='n'?9:e.t=='h'?8:6);if(e.t=='h'){ebul(e,.12,8);ebul(e,.12,8)}e.cd=(e.t=='n'?1.8:e.t=='h'?2:1.3)+R()*.8}}
@@ -371,20 +452,20 @@ function update(dt){
  cam.lookAt(cam.position.clone().add(Ld));cam.rotateZ((R()-.5)*sa*.1);
  P.mesh.position.set(P.x,P.y,P.z);P.mesh.rotation.y=P.yaw;pl.position.set(P.x,P.y+4,P.z);dl.position.set(P.x+7,20,P.z+9);dl.target.position.set(P.x,0,P.z);
  /* hud */
- $('hpb').style.width=Math.max(0,P.hp)+'%';$('hpt').textContent='ARMOR '+Math.ceil(Math.max(0,P.hp));$('vig').style.opacity=P.hurt*.8+(P.hp<30?.2:0);$('fl').style.opacity=flash;flash*=1-Math.min(1,dt*5);
+ $('hpb').style.width=Math.max(0,P.hp)+'%';$('hpt').textContent='ARMOR '+Math.ceil(Math.max(0,P.hp));$('vig').style.opacity=P.hurt*.8+(P.hp<30?.2:0);$('fl').style.opacity=flash;flash*=1-Math.min(1,dt*5);$('lv').textContent=(LV>4?'ENDLESS FLOOR '+(LV-4):'LEVEL '+LV)+' · '+TH().n;
  $('wp').innerHTML=P.inv.map((id,i)=>`<div class="${id==P.w&&id>=0?'on':''}">${id>=0?(id==P.w?'▶ ':'')+(i+1)+' '+WP[id].n+' '+(P.ammo[id]>1e8?'∞':P.ammo[id]):(i+1)+' — empty —'}</div>`).join('')+`<div>G GRENADES ${P.gren}</div>`;
  $('obj').textContent=W3.on?`Collapse ${Math.max(0,(W3.z-P.z)*-1).toFixed(0)}m behind you. Extraction ${Math.max(0,P.z+154|0)}m ahead.`:objT();
 }
-function setSec(n){G=n;ckpt=Math.max(ckpt,n);if(n==2)say('Containment compromised. Please stop breaking my building.');if(n==3)say('The tower is load bearing. Please do not shoot the load bearing parts.');if(n==4){W3.on=1;say('Self-destruct engaged. Enjoy the evacuation.')}}
+function setSec(n){G=n;ckpt=Math.max(ckpt,n);if(n==2)say(SL(2));if(n==3)say(SL(3));if(n==4){W3.on=1;say(SL(4))}}
 /* flow */
-function end(win,msg){playing=0;document.exitPointerLock&&document.exitPointerLock();const m=$('menu');m.style.display='flex';
+function end_old(win,msg){playing=0;document.exitPointerLock&&document.exitPointerLock();const m=$('menu');m.style.display='flex';
  m.innerHTML=win?`<h1>EXTRACTED</h1><p>${stat.k} hostiles down. ${stat.b} pieces of facility destroyed. ${(stat.t/60).toFixed(1)} minutes.</p><button id="go">Play again</button>`
  :`<h1>KIA</h1><p>${msg}</p><button id="go">Retry from checkpoint</button>`;$('go').onclick=()=>{if(win){ckpt=1;stat=null}begin(win?1:ckpt)}}
-function begin(sec){aud();if(sec==1){P.inv=[0,-1];P.w=0;P.ammo=[1e9,0,0,1e9,0,0,0,0];P.gren=3}build(sec);P.hp=100;K.Fire=0;playing=1;$('menu').style.display='none';
+function begin(sec){aud();if(newGame){P.inv=[0,-1];P.w=0;P.ammo=[1e9,0,0,1e9,0,0,0,0];P.gren=3;newGame=0}if(sec==1)stat=null;build(sec);P.hp=100;K.Fire=0;playing=1;$('menu').style.display='none';
  try{ren.domElement.requestPointerLock()}catch(e){}
- say(sec==1?'Intruder detected. Facility lockdown engaged.':sec==2?'You again. Pillars are load bearing, by the way.':sec==3?'Welcome to the tower. Mind the guards.':'Self-destruct engaged. Enjoy the evacuation.');
+ say(sec==1?(LV>1?'You again. AEGIS remembers.':'Intruder detected. Facility lockdown engaged.'):SL(sec));
  if(sec==3){W3.on=0}}
-$('go').onclick=()=>begin(1);
+$('go').onclick=startGame;
 addEventListener('keydown',e=>{K[e.code]=1;if(e.code=='Digit1')selSlot(0);if(e.code=='Digit2')selSlot(1);if(e.code=='KeyQ')selSlot(P.inv[0]==P.w?1:0);if(e.code=='KeyE'&&playing)pickUp();if(e.code=='KeyG'&&playing)throwG();if(e.code=='KeyF'&&playing)det();if(e.code.startsWith('Arrow'))e.preventDefault()});
 addEventListener('keyup',e=>K[e.code]=0);
 addEventListener('contextmenu',e=>e.preventDefault());addEventListener('mousedown',e=>{if(playing&&e.button==0)K.Fire=1;if(playing&&e.button==2)det()});addEventListener('mouseup',()=>K.Fire=0);
@@ -392,6 +473,6 @@ addEventListener('mousemove',e=>{if(!playing)return;P.yaw-=e.movementX*.0022;P.p
 addEventListener('wheel',e=>{if(playing)selSlot(P.inv[0]==P.w?1:0)});
 let last=performance.now();
 function loop(now){requestAnimationFrame(loop);const rd=Math.min(.05,(now-last)/1000);last=now;ts=Math.min(1,ts+rd*1.4);
- if(playing)update(Math.min(.033,rd)*ts);ren.render(scene,cam)}
-build(1);cam.position.set(0,6,16);cam.lookAt(0,1,-10);requestAnimationFrame(loop);
+ if(playing)update(Math.min(.033,rd)*ts);else idle(now);ren.render(scene,cam)}
+build(1);cam.position.set(0,6,16);cam.lookAt(0,1,-10);requestAnimationFrame(loop);showMain();
 </script></body></html>
